@@ -1,1 +1,6 @@
+# Superfluous files
 .cpcache/
+.idea/workspace.xml
+.idea/libraries
+
+
