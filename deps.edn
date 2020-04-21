@@ -1,1 +1,2 @@
-{:deps {hodur/engine {:mvn/version "0.1.7"}}}
+{:deps {hodur/engine {:mvn/version "0.1.7"}
+        hodur/spec-schema {:mvn/version "0.1.5"}}}

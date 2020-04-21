@@ -1,25 +1,31 @@
 (ns dialog-core.data-model
-  (:require [hodur-engine.core :as hodur]))
+  (:require [hodur-engine.core :as hodur]
+            [hodur-spec-schema.core :as hodur-spec]))
 
 (def core-data (hodur/init-schema
-                 '[Statement
+                 '[^{:spec/tag-recursive true}
+                   Statement
                    [^Author author
                     ^String content
                     ^DateTime created
                     ^ID id]
 
+                   ^{:spec/tag-recursive true}
                    Author
                    [^String nickname
                     ^ID id]
 
-                   ^{:union true}
+                   ^{:union true
+                     :spec/tag-recursive true}
                    EdgeTarget
                    [Statement Edge]
 
-                   ^{:enum true}
+                   ^{:enum true
+                     :spec/tag-recursive true}
                    EdgeType
                    [SUPPORT ATTACK UNDERCUT]
 
+                   ^{:spec/tag-recursive true}
                    Edge
                    [^Author author
                     ^Statement source
@@ -31,6 +37,7 @@
                       :default 1} version
                     ^ID id]
 
+                   ^{:spec/tag-recursive true}
                    Discussion
                    [^String title
                     ^String description
@@ -47,3 +54,5 @@
 ;; * Braucht in dieser Art zu denken jedes objekt eine ID?
 
 
+(def spec-schema (hodur-spec/schema core-data))
+spec-schema
