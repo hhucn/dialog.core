@@ -9,12 +9,13 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Deps: org.clojure/clojure:1.10.1" level="project" />
-    <orderEntry type="library" name="Deps: hodur/engine:0.1.7" level="project" />
     <orderEntry type="library" name="Deps: hodur/spec-schema:0.1.5" level="project" />
-    <orderEntry type="library" name="Deps: org.clojure/spec.alpha:0.2.176" level="project" />
     <orderEntry type="library" name="Deps: org.clojure/core.specs.alpha:0.2.44" level="project" />
+    <orderEntry type="library" name="Deps: org.clojure/spec.alpha:0.2.176" level="project" />
+    <orderEntry type="library" name="Deps: hodur/engine:0.1.7" level="project" />
+    <orderEntry type="library" name="Deps: hodur/datomic-schema:0.1.0" level="project" />
+    <orderEntry type="library" name="Deps: persistent-sorted-set:0.1.2" level="project" />
     <orderEntry type="library" name="Deps: datascript:0.18.7" level="project" />
     <orderEntry type="library" name="Deps: camel-snake-kebab:0.4.1" level="project" />
-    <orderEntry type="library" name="Deps: persistent-sorted-set:0.1.2" level="project" />
   </component>
 </module>
