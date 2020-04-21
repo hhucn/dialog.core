@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/daphne.iml" filepath="$PROJECT_DIR$/daphne.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dialog-core.iml" filepath="$PROJECT_DIR$/dialog-core.iml" />
     </modules>
   </component>
 </project>
