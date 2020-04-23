@@ -1,4 +1,4 @@
-(ns dialog-core.data-model
+(ns dialog.core.models
   (:require [hodur-engine.core :as hodur]
             [hodur-spec-schema.core :as hodur-spec]
             [hodur-datomic-schema.core :as hodur-datomic]))
@@ -10,37 +10,43 @@
      Statement
      [^Author author
       ^String content
+      ^{:type Integer
+        :default 1} version
       ^DateTime created
+      ^DateTime modified
       ^ID id]
 
      ^{:spec/tag-recursive true
        :datomic/tag-recursive true}
      Author
      [^String nickname
+      ^DateTime created
+      ^DateTime modified
       ^ID id]
 
      ^{:union true
        :spec/tag-recursive true
        :datomic/tag-recursive true}
-     EdgeTarget
-     [Statement Edge]
+     ArgumentTarget
+     [Statement Argument]
 
      ^{:enum true
        :spec/tag-recursive true
        :datomic/tag-recursive true}
-     EdgeType
+     ArgumentType
      [SUPPORT ATTACK UNDERCUT]
 
      ^{:spec/tag-recursive true
        :datomic/tag-recursive true}
-     Edge
+     Argument
      [^Author author
-      ^Statement source
-      ^EdgeType type
-      ^EdgeTarget target
+      ^{:type Statement
+        :cardinality [0 n]} premises
+      ^ArgumentType type
+      ^ArgumentTarget conclusion
       ^DateTime created
+      ^DateTime modified
       ^{:type Integer
-        :optional true
         :default 1} version
       ^ID id]
 
@@ -49,18 +55,11 @@
      Discussion
      [^String title
       ^String description
-      ^{:type Edge
-        :cardinality [0 n]} starting-edges
+      ^DateTime created
+      ^DateTime modified
+      ^{:type Argument
+        :cardinality [0 n]} starting-arguments
       ^ID id]]))
-
-;; Hauptsächliche Fragen:
-;; * Geht man den DBAS Weg mit Topics zu denen statements und argumente
-;;   eindeutig zugewiesen sind?
-;  * Geht man den EDEN weg in dem Statements und Argumente frei sind
-;;   (siehe oben) Dann ist eine Diskussion nur eine Fragestellung mit
-;;   argumenten die am Root hängen
-;; * Braucht in dieser Art zu denken jedes objekt eine ID?
-
 
 (def spec-schema (hodur-spec/schema core-data))
 (comment spec-schema)
