@@ -3,54 +3,55 @@
             [hodur-spec-schema.core :as hodur-spec]
             [hodur-datomic-schema.core :as hodur-datomic]))
 
-(def core-data (hodur/init-schema
-                 '[^{:spec/tag-recursive true
-                     :datomic/tag-recursive true}
-                   Statement
-                   [^Author author
-                    ^String content
-                    ^DateTime created
-                    ^ID id]
+(def core-data
+  (hodur/init-schema
+   '[^{:spec/tag-recursive true
+       :datomic/tag-recursive true}
+     Statement
+     [^Author author
+      ^String content
+      ^DateTime created
+      ^ID id]
 
-                   ^{:spec/tag-recursive true
-                     :datomic/tag-recursive true}
-                   Author
-                   [^String nickname
-                    ^ID id]
+     ^{:spec/tag-recursive true
+       :datomic/tag-recursive true}
+     Author
+     [^String nickname
+      ^ID id]
 
-                   ^{:union true
-                     :spec/tag-recursive true
-                     :datomic/tag-recursive true}
-                   EdgeTarget
-                   [Statement Edge]
+     ^{:union true
+       :spec/tag-recursive true
+       :datomic/tag-recursive true}
+     EdgeTarget
+     [Statement Edge]
 
-                   ^{:enum true
-                     :spec/tag-recursive true
-                     :datomic/tag-recursive true}
-                   EdgeType
-                   [SUPPORT ATTACK UNDERCUT]
+     ^{:enum true
+       :spec/tag-recursive true
+       :datomic/tag-recursive true}
+     EdgeType
+     [SUPPORT ATTACK UNDERCUT]
 
-                   ^{:spec/tag-recursive true
-                     :datomic/tag-recursive true}
-                   Edge
-                   [^Author author
-                    ^Statement source
-                    ^EdgeType type
-                    ^EdgeTarget target
-                    ^DateTime created
-                    ^{:type Integer
-                      :optional true
-                      :default 1} version
-                    ^ID id]
+     ^{:spec/tag-recursive true
+       :datomic/tag-recursive true}
+     Edge
+     [^Author author
+      ^Statement source
+      ^EdgeType type
+      ^EdgeTarget target
+      ^DateTime created
+      ^{:type Integer
+        :optional true
+        :default 1} version
+      ^ID id]
 
-                   ^{:spec/tag-recursive true
-                     :datomic/tag-recursive true}
-                   Discussion
-                   [^String title
-                    ^String description
-                    ^{:type Edge
-                      :cardinality [0 n]} starting-edges
-                    ^ID id]]))
+     ^{:spec/tag-recursive true
+       :datomic/tag-recursive true}
+     Discussion
+     [^String title
+      ^String description
+      ^{:type Edge
+        :cardinality [0 n]} starting-edges
+      ^ID id]]))
 
 ;; Hauptsächliche Fragen:
 ;; * Geht man den DBAS Weg mit Topics zu denen statements und argumente
