@@ -5,8 +5,8 @@
 
 (def core-data
   (hodur/init-schema
-   '[^{:spec/tag-recursive true
-       :datomic/tag-recursive true}
+   '[^{:spec/tag true
+       :datomic/tag true}
      default
 
      Statement
