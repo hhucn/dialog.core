@@ -7,6 +7,8 @@
   (hodur/init-schema
    '[^{:spec/tag-recursive true
        :datomic/tag-recursive true}
+     default
+
      Statement
      [^Author author
       ^String content
@@ -16,28 +18,20 @@
       ^DateTime modified
       ^ID id]
 
-     ^{:spec/tag-recursive true
-       :datomic/tag-recursive true}
      Author
      [^String nickname
       ^DateTime created
       ^DateTime modified
       ^ID id]
 
-     ^{:union true
-       :spec/tag-recursive true
-       :datomic/tag-recursive true}
+     ^{:union true}
      ArgumentTarget
      [Statement Argument]
 
-     ^{:enum true
-       :spec/tag-recursive true
-       :datomic/tag-recursive true}
+     ^{:enum true}
      ArgumentType
      [SUPPORT ATTACK UNDERCUT]
 
-     ^{:spec/tag-recursive true
-       :datomic/tag-recursive true}
      Argument
      [^Author author
       ^{:type Statement
@@ -50,8 +44,6 @@
         :default 1} version
       ^ID id]
 
-     ^{:spec/tag-recursive true
-       :datomic/tag-recursive true}
      Discussion
      [^String title
       ^String description
