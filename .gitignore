@@ -1,6 +1,7 @@
 # Superfluous files
 .cpcache/
 .idea/workspace.xml
+.idea/watcherTasks.xml
 .idea/libraries
 .nrepl-port
-
+.clj-kondo/
