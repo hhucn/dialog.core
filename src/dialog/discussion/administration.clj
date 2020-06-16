@@ -1,4 +1,6 @@
-(ns dialog.discussion.engine)
+(ns dialog.discussion.administration
+  (:import (java.util UUID)
+           (java.time LocalDateTime)))
 
 (def database (atom {:closed-discussions #{}}))
 ;; :closed-discussions must be a set that is present. Otherwise the close and
@@ -10,9 +12,9 @@
   [title description]
   {:title title
    :description description
-   :created (java.time.LocalDateTime/now)
-   :modified (java.time.LocalDateTime/now)
-   :id (java.util.UUID/randomUUID)
+   :created (LocalDateTime/now)
+   :modified (LocalDateTime/now)
+   :id (UUID/randomUUID)
    :starting-arguments []})
 
 (defn add-starting-argument
@@ -22,7 +24,7 @@
     (when-not (some #(= (:id argument) %) starting-arguments-ids)
       (update discussion :starting-arguments conj argument))))
 
-(defn save-discussion!
+(defn ^:private save-discussion!
   "Saves discussion into the database."
   [discussion]
   (swap! database assoc-in [:discussions (:id discussion)] discussion))
