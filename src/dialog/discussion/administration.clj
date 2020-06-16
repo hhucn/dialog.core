@@ -18,13 +18,13 @@
    :starting-arguments []})
 
 (defn add-starting-argument
-  [discussion argument]
   "Adds a starting argument and returns the modified discussion. Checks for duplicates."
+  [discussion argument]
   (let [starting-arguments-ids (map :id (:starting-arguments discussion))]
     (when-not (some #(= (:id argument) %) starting-arguments-ids)
       (update discussion :starting-arguments conj argument))))
 
-(defn ^:private save-discussion!
+(defn- save-discussion!
   "Saves discussion into the database."
   [discussion]
   (swap! database assoc-in [:discussions (:id discussion)] discussion))
