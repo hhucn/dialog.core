@@ -1,3 +1,4 @@
 {:deps {hodur/engine {:mvn/version "0.1.7"}
         hodur/spec-schema {:mvn/version "0.1.5"}
-        hodur/datomic-schema {:mvn/version "0.1.0"}}}
+        hodur/datomic-schema {:mvn/version "0.1.0"}
+        com.datomic/client-pro {:mvn/version "0.9.41"}}}
