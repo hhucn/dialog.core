@@ -5,53 +5,54 @@
 
 (def core-data
   (hodur/init-schema
-   '[^{:spec/tag true
-       :datomic/tag true}
-     default
+    '[^{:spec/tag true
+        :datomic/tag true}
+      default
 
-     Statement
-     [^Author author
-      ^String content
-      ^{:type Integer
-        :default 1} version
-      ^DateTime created
-      ^DateTime modified
-      ^ID id]
+      Statement
+      [^Author author
+       ^String content
+       ^{:type Integer
+         :default 1} version
+       ^DateTime created
+       ^DateTime modified
+       ^ID id]
 
-     Author
-     [^String nickname
-      ^DateTime created
-      ^DateTime modified
-      ^ID id]
+      Author
+      [^String nickname
+       ^DateTime created
+       ^DateTime modified
+       ^ID id]
 
-     ^{:union true}
-     ArgumentTarget
-     [Statement Argument]
+      ^{:union true}
+      ArgumentTarget
+      [Statement Argument]
 
-     ^{:enum true}
-     ArgumentType
-     [SUPPORT ATTACK UNDERCUT]
+      ^{:enum true}
+      ArgumentType
+      [SUPPORT ATTACK UNDERCUT]
 
-     Argument
-     [^Author author
-      ^{:type Statement
-        :cardinality [0 n]} premises
-      ^ArgumentType type
-      ^ArgumentTarget conclusion
-      ^DateTime created
-      ^DateTime modified
-      ^{:type Integer
-        :default 1} version
-      ^ID id]
+      Argument
+      [^Author author
+       ^{:type Statement
+         :cardinality [0 n]} premises
+       ^ArgumentType type
+       ^ArgumentTarget conclusion
+       ^DateTime created
+       ^DateTime modified
+       ^{:type Integer
+         :default 1} version
+       ^ID id]
 
-     Discussion
-     [^String title
-      ^String description
-      ^DateTime created
-      ^DateTime modified
-      ^{:type Argument
-        :cardinality [0 n]} starting-arguments
-      ^ID id]]))
+      Discussion
+      [^String title
+       ^String description
+       ^DateTime created
+       ^DateTime modified
+       ^{:type Argument
+         :cardinality [0 n]} starting-arguments
+       ^ID id
+       ^Boolean closed]]))
 
 (def spec-schema (hodur-spec/schema core-data))
 (comment spec-schema)
