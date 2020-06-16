@@ -7,15 +7,18 @@
 ;; open discussions functions behave improperly. Wont matter once, we use a real
 ;; database
 
-(defn create-discussion
-  "Returns a newly created discussion map. Checks for duplicates"
-  [title description]
-  {:title title
-   :description description
-   :created (LocalDateTime/now)
-   :modified (LocalDateTime/now)
-   :id (UUID/randomUUID)
-   :starting-arguments []})
+(defn empty-discussion
+  "Returns a newly created discussion map."
+  [title description & opts]
+  (merge
+    {:created (LocalDateTime/now)
+     :modified (LocalDateTime/now)
+     :id (UUID/randomUUID)
+     :closed false
+     :starting-arguments []}
+    opts
+    {:title title
+     :description description}))
 
 (defn add-starting-argument
   "Adds a starting argument and returns the modified discussion. Checks for duplicates."

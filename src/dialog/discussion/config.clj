@@ -4,7 +4,7 @@
 ;; ##################################################################
 (def datomic
   {:server-type :peer-server
-   :access-key "secretacces"
+   :access-key "secretaccess"
    :secret "secretsecret"
    :endpoint "localhost:8998"
    :validate-hostnames false})
