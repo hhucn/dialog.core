@@ -28,7 +28,7 @@
 
       ^{:enum true}
       ArgumentType
-      [SUPPORT ATTACK UNDERCUT]
+      [support attack undercut]
 
       Argument
       [^Author author
@@ -41,6 +41,10 @@
        ^{:type Integer
          :default 1} version]
 
+      ^{:enum true}
+      State
+      [closed private open]
+
       Discussion
       [^String title
        ^String description
@@ -48,7 +52,8 @@
        ^DateTime modified
        ^{:type Argument
          :cardinality [0 n]} starting-arguments
-       ^Boolean closed]]))
+       ^{:type State
+         :cardinality [0 n]} state]]))
 
 (def spec-schema (hodur-spec/schema core-data))
 ;; This defspecs needs to be run to have the specs in this namespace.

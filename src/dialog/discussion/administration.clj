@@ -29,7 +29,7 @@
   (merge
     {:created (Date.)
      :modified (Date.)
-     :closed false
+     :state [:open]
      :starting-arguments []}
     opts
     {:title title
