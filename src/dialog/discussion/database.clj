@@ -1,5 +1,5 @@
 (ns dialog.discussion.database
-  [:require [dialog.core.models :as models]
+  [:require [dialog.discussion.models :as models]
             [dialog.discussion.config :as config]
             [dialog.utils :as utils]
             [datomic.client.api :as d]])

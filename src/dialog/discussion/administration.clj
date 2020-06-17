@@ -8,15 +8,16 @@
   ([title description]
    (empty-discussion title description {}))
   ([title description opts]
-   {:pre [(s/valid? ::models/title title)
-          (s/valid? ::models/description description)]
-    :post [(s/valid? ::models/discussion %)]}
    (merge
      {:states [:discussion.state/open]
       :starting-arguments []}
      opts
      {:title title
       :description description})))
+
+(s/fdef empty-discussion
+        :args (s/cat :title string? :description ::models/description)
+        :ret ::models/discussion)
 
 ;; TODO this has to be rewritten to work with a real db
 (defn add-starting-argument
