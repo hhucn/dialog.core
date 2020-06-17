@@ -8,17 +8,6 @@
 ;; open discussions functions behave improperly. Wont matter once, we use a real
 ;; database
 
-;; TODO move this to a util namespace
-(defn- map->nsmap
-  [m n]
-  (reduce-kv (fn [acc k v]
-               (let [new-kw (if (and (keyword? k)
-                                     (not (qualified-keyword? k)))
-                              (keyword (str n) (name k))
-                              k)]
-                 (assoc acc new-kw v)))
-             {} m))
-
 (defn empty-discussion
   "Returns a newly created discussion map."
   ([title description]
