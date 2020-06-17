@@ -15,14 +15,12 @@
        ^{:type Integer
          :default 1} version
        ^DateTime created
-       ^DateTime modified
-       ^ID id]
+       ^DateTime modified]
 
       Author
       [^String nickname
        ^DateTime created
-       ^DateTime modified
-       ^ID id]
+       ^DateTime modified]
 
       ^{:union true}
       ArgumentTarget
@@ -41,8 +39,7 @@
        ^DateTime created
        ^DateTime modified
        ^{:type Integer
-         :default 1} version
-       ^ID id]
+         :default 1} version]
 
       Discussion
       [^String title
@@ -51,10 +48,17 @@
        ^DateTime modified
        ^{:type Argument
          :cardinality [0 n]} starting-arguments
-       ^ID id
        ^Boolean closed]]))
 
 (def spec-schema (hodur-spec/schema core-data))
+;; This defspecs needs to be run to have the specs in this namespace.
+(hodur-spec/defspecs core-data)
 (comment spec-schema)
+;; The following will define all specs with the prefix foo instead of this namespace.
+;; We can use this in tests to generate correct specs. There seems to be no option to cut the namespace
+;; alltogether. one could annotate aliases for every attribute, but that is as tedious as writing
+;; separate specs and datomic.
+(comment (hodur-spec/defspecs core-data {:prefix :foo}))
+
 (def datomic-schema (hodur-datomic/schema core-data))
 (comment datomic-schema)

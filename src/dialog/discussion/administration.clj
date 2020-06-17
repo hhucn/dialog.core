@@ -1,24 +1,36 @@
 (ns dialog.discussion.administration
-  (:import (java.util UUID)
-           (java.time LocalDateTime)))
+  (:import (java.util Date))
+  (:require [clojure.spec.alpha :as s]
+            [dialog.core.models :as models]))
 
 (def database (atom {:closed-discussions #{}}))
 ;; :closed-discussions must be a set that is present. Otherwise the close and
 ;; open discussions functions behave improperly. Wont matter once, we use a real
 ;; database
 
+(defn- map->nsmap
+  [m n]
+  (reduce-kv (fn [acc k v]
+               (let [new-kw (if (and (keyword? k)
+                                     (not (qualified-keyword? k)))
+                              (keyword (str n) (name k))
+                              k)]
+                 (assoc acc new-kw v)))
+             {} m))
+
+;; TODO could have multiple entries and not only closed
 (defn empty-discussion
   "Returns a newly created discussion map."
   [title description & opts]
+  {:post [(s/valid? ::models/discussion %)]}
   (merge
-    {:discussion/created (LocalDateTime/now)
-     :discussion/modified (LocalDateTime/now)
-     :discussion/id (UUID/randomUUID)
-     :discussion/closed false
-     :discussion/starting-arguments []}
+    {:created (Date.)
+     :modified (Date.)
+     :closed false
+     :starting-arguments []}
     opts
-    {:discussion/title title
-     :discussion/description description}))
+    {:title title
+     :description description}))
 
 ;; TODO this has to be rewritten to work with a real db
 (defn add-starting-argument
