@@ -8,6 +8,7 @@
 ;; open discussions functions behave improperly. Wont matter once, we use a real
 ;; database
 
+;; TODO move this to a util namespace
 (defn- map->nsmap
   [m n]
   (reduce-kv (fn [acc k v]
@@ -22,7 +23,9 @@
 (defn empty-discussion
   "Returns a newly created discussion map."
   [title description & opts]
-  {:post [(s/valid? ::models/discussion %)]}
+  {:pre [(s/valid? :dialog.core.models.discussion/title title)
+         (s/valid? :dialog.core.models.discussion/description description)]
+   :post [(s/valid? ::models/discussion %)]}
   (merge
     {:created (Date.)
      :modified (Date.)
