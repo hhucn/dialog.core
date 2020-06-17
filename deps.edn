@@ -1,8 +1,6 @@
 {:paths ["src" "test"]
- :deps {org.clojure/clojure {:mvn/version "1.10.1"}
-        hodur/engine {:mvn/version "0.1.8"}
-        hodur/spec-schema {:mvn/version "0.1.5"}
-        hodur/datomic-schema {:mvn/version "0.1.0"}}
+ :deps {com.datomic/client-pro {:mvn/version "0.9.41"}
+        org.clojure/clojure {:mvn/version "1.10.1"}}
 
  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
              "clojars" {:url "https://repo.clojars.org/"}}
@@ -22,4 +20,5 @@
            {:extra-deps
             {luchiniatwork/cambada {:mvn/version "1.0.2"}}
             :main-opts ["-m" "cambada.uberjar"
-                        "-m" "landing.web"]}}}
+                        "-m" "dialog.discussion.core"]}}}
+

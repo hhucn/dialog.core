@@ -1,45 +1,29 @@
 (ns dialog.discussion.administration
-  (:import (java.util UUID)
-           (java.time LocalDateTime)))
+  (:require [clojure.spec.alpha :as s]
+            [dialog.discussion.models :as models]))
 
-(def database (atom {:closed-discussions #{}}))
-;; :closed-discussions must be a set that is present. Otherwise the close and
-;; open discussions functions behave improperly. Wont matter once, we use a real
-;; database
+;; TODO remove pre and post for fdef or similar
+(defn empty-discussion
+  "Returns a newly created discussion map."
+  ([title description]
+   (empty-discussion title description {}))
+  ([title description opts]
+   (merge
+     {:states [:discussion.state/open]
+      :starting-arguments []}
+     opts
+     {:title title
+      :description description})))
 
-(defn create-discussion
-  "Returns a newly created discussion map. Checks for duplicates"
-  [title description]
-  {:title title
-   :description description
-   :created (LocalDateTime/now)
-   :modified (LocalDateTime/now)
-   :id (UUID/randomUUID)
-   :starting-arguments []})
+(s/fdef empty-discussion
+        :args (s/cat :title string? :description ::models/description)
+        :ret ::models/discussion)
 
+;; TODO this has to be rewritten to work with a real db
 (defn add-starting-argument
   "Adds a starting argument and returns the modified discussion. Checks for duplicates."
   [discussion argument]
-  (let [starting-arguments-ids (map :id (:starting-arguments discussion))]
-    (when-not (some #(= (:id argument) %) starting-arguments-ids)
-      (update discussion :starting-arguments conj argument))))
-
-(defn- save-discussion!
-  "Saves discussion into the database."
-  [discussion]
-  (swap! database assoc-in [:discussions (:id discussion)] discussion))
-
-(defn delete-discussion!
-  "Deletes the discussion from the database."
-  [discussion]
-  (swap! database update :discussions dissoc (:id discussion)))
-
-(defn close-discussion!
-  "Closes a discussion. Users can not discuss in this issue anymore."
-  [discussion]
-  (swap! database update :closed-discussions conj (:id discussion)))
-
-(defn open-discussion!
-  "Opens a closed discussion. Does not check whether the discussion is closed."
-  [discussion]
-  (swap! database update :closed-discussions disj (:id discussion)))
+  (let [starting-arguments-ids
+        (map :discussion/id (:discussion/starting-arguments discussion))]
+    (when-not (some #(= (:discussion/id argument) %) starting-arguments-ids)
+      (update discussion :discussion/starting-arguments conj argument))))
