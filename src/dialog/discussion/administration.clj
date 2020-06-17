@@ -21,18 +21,20 @@
 
 (defn empty-discussion
   "Returns a newly created discussion map."
-  [title description & opts]
-  {:pre [(s/valid? :dialog.core.models.discussion/title title)
-         (s/valid? :dialog.core.models.discussion/description description)]
-   :post [(s/valid? ::models/discussion %)]}
-  (merge
-    {:created (Date.)
-     :modified (Date.)
-     :state [:open]
-     :starting-arguments []}
-    opts
-    {:title title
-     :description description}))
+  ([title description]
+   (empty-discussion title description {}))
+  ([title description opts]
+   {:pre [(s/valid? :dialog.core.models.discussion/title title)
+          (s/valid? :dialog.core.models.discussion/description description)]
+    :post [(s/valid? ::models/discussion %)]}
+   (merge
+     {:created (Date.)
+      :modified (Date.)
+      :state [:open]
+      :starting-arguments []}
+     opts
+     {:title title
+      :description description})))
 
 ;; TODO this has to be rewritten to work with a real db
 (defn add-starting-argument
