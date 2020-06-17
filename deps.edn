@@ -23,5 +23,5 @@
            {:extra-deps
             {luchiniatwork/cambada {:mvn/version "1.0.2"}}
             :main-opts ["-m" "cambada.uberjar"
-                        "-m" "landing.web"]}}}
+                        "-m" "dialog.discussion.core"]}}}
 

@@ -6,16 +6,17 @@
 ;; Setting the client to private breaks some async routine in datomic
 (defonce datomic-client (d/client config/datomic))
 
-(def connection
+(defn new-connection
+  []
   (d/connect datomic-client {:db-name config/db-name}))
 
 (defn- create-discussion-schema
   "Creates the schema for discussions inside the database"
-  []
+  [connection]
   (d/transact connection {:tx-data models/datomic-schema}))
 
 
 (defn init
   "Initialization function, which does everything needed at a fresh app-install."
   []
-  (create-discussion-schema))
+  (create-discussion-schema (new-connection)))

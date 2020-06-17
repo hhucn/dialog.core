@@ -1,6 +1,8 @@
 # Superfluous files
 .cpcache/
+target/
 .idea/workspace.xml
 .idea/watcherTasks.xml
 .idea/libraries
 .nrepl-port
+pom.xml
