@@ -19,7 +19,6 @@
                  (assoc acc new-kw v)))
              {} m))
 
-;; TODO could have multiple entries and not only closed
 (defn empty-discussion
   "Returns a newly created discussion map."
   [title description & opts]
