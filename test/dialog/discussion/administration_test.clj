@@ -12,8 +12,8 @@
   "Tests whether two discussion states are conflicting."
   [discussion]
   (let [states (set (:state discussion))]
-    (and (contains? states :open)
-         (contains? states :closed))))
+    (and (contains? states :discussion.state/open)
+         (contains? states :discussion.state/closed))))
 
 (deftest test-empty-discussion
   (let [new-discussion (discussion/empty-discussion "test" "some description"
