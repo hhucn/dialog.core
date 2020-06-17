@@ -1,8 +1,5 @@
 {:paths ["src" "test"]
  :deps {com.datomic/client-pro {:mvn/version "0.9.41"}
-        hodur/engine {:mvn/version "0.1.8"}
-        hodur/spec-schema {:mvn/version "0.1.5"}
-        hodur/datomic-schema {:mvn/version "0.1.0"}
         org.clojure/clojure {:mvn/version "1.10.1"}}
 
  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
