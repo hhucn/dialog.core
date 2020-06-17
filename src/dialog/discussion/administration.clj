@@ -1,11 +1,6 @@
 (ns dialog.discussion.administration
   (:require [clojure.spec.alpha :as s]
-            [dialog.core.models :as models]))
-
-(def database (atom {:closed-discussions #{}}))
-;; :closed-discussions must be a set that is present. Otherwise the close and
-;; open discussions functions behave improperly. Wont matter once, we use a real
-;; database
+            [dialog.discussion.models :as models]))
 
 ;; TODO remove pre and post for fdef or similar
 (defn empty-discussion
@@ -13,10 +8,9 @@
   ([title description]
    (empty-discussion title description {}))
   ([title description opts]
-   {:pre [(s/valid? :dialog.core.models.discussion/title title)
-          (s/valid? :dialog.core.models.discussion/description description)]
-    :post [(s/valid? ::models/discussion %)]
-    }
+   {:pre [(s/valid? ::models/title title)
+          (s/valid? ::models/description description)]
+    :post [(s/valid? ::models/discussion %)]}
    (merge
      {:states [:discussion.state/open]
       :starting-arguments []}

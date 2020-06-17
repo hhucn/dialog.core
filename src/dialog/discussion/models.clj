@@ -1,4 +1,4 @@
-(ns dialog.core.models
+(ns dialog.discussion.models
   (:require [clojure.spec.alpha :as s]))
 
 (def datomic-schema
@@ -68,15 +68,11 @@
     :db/doc "The arguments at the source of the discussion-graph"}])
 
 ;; Specs. Please keep in sync with model above. Extend as needed.
-(s/def :discussion/title string?)
-(s/def :discussion/description string?)
-(s/def :discussion/states
+(s/def ::title string?)
+(s/def ::description string?)
+(s/def ::states
   (s/coll-of #{:discussion.state/open :discussion.state/closed :discussion.state/private}
              :distinct true))
-(s/def :discussion/starting-arguments (s/coll-of map?))     ;; TODO Specify more
-(s/def ::discussion (s/keys :req-un [:discussion/title :discussion/description :discussion/states
-                                     :discussion/starting-arguments]))
-
-(s/explain ::discussion {:title "bärchen" :description "pärchen"
-                         :states [:discussion.state/open :discussion.state/private]
-                         :starting-arguments []})
+(s/def ::starting-arguments (s/coll-of map?))               ;; TODO Specify more
+(s/def ::discussion (s/keys :req-un [::title ::description ::states
+                                     ::starting-arguments]))
