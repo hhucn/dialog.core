@@ -15,7 +15,6 @@
   [connection]
   (d/transact connection {:tx-data models/datomic-schema}))
 
-
 (defn init
   "Initialization function, which does everything needed at a fresh app-install."
   []

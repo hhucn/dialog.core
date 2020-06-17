@@ -1,7 +1,10 @@
 (ns dialog.discussion.administration
   (:import (java.util Date))
   (:require [clojure.spec.alpha :as s]
-            [dialog.core.models :as models]))
+            [datomic.client.api :as datomic]
+            [dialog.core.models :as models]
+            [dialog.discussion.database :as db]
+            [dialog.utils :as utils]))
 
 (def database (atom {:closed-discussions #{}}))
 ;; :closed-discussions must be a set that is present. Otherwise the close and
@@ -19,7 +22,7 @@
    (merge
      {:created (Date.)
       :modified (Date.)
-      :state [:open]
+      :state [:state/open]
       :starting-arguments []}
      opts
      {:title title
@@ -36,9 +39,12 @@
 
 ;; TODO this has to be rewritten to work with a real db
 (defn- save-discussion!
-  "Saves discussion into the database."
+  "Saves discussion into the database.
+  The discussion is prefixed with the discussion ns automatically for datomic."
   [discussion]
-  (swap! database assoc-in [:discussions (:id discussion)] discussion))
+  {:pre [(s/valid? ::models/discussion discussion)]}
+  (datomic/transact (db/new-connection)
+                    {:tx-data [(utils/map->nsmap discussion "discussion")]}))
 
 ;; TODO this has to be rewritten to work with a real db
 (defn delete-discussion!
