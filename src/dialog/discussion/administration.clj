@@ -16,7 +16,7 @@
       :description description})))
 
 (s/fdef empty-discussion
-        :args (s/cat :title string? :description ::models/description)
+        :args (s/cat :title ::models/title :description ::models/description)
         :ret ::models/discussion)
 
 ;; TODO this has to be rewritten to work with a real db
