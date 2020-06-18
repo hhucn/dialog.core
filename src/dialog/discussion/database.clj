@@ -21,23 +21,25 @@
   []
   (create-discussion-schema (new-connection)))
 
-
-;; Concrete Transactions
-(defn- save-discussion!
+;; Concrete Transactions ########################
+(defn save-discussion!
   "Saves discussion into the database.
   The discussion is prefixed with the discussion ns automatically for datomic."
   [discussion]
   (d/transact (new-connection)
-              {:tx-data [(utils/map->nsmap discussion "discussion")]}))
+              {:tx-data [(utils/map->nsmap discussion :discussion)]}))
 
-;; TODO this has to be rewritten to work with a real db
+
 (defn delete-discussion!
-  "Deletes the discussion from the database."
-  [discussion]
-  #_(swap! database update :discussions dissoc (:id discussion)))
+  "Sets the discussion with the corresponding title to `deleted`."
+  [title]
+  (d/transact (new-connection)
+              {:tx-data [{:db/id [:discussion/title title]
+                          :discussion/states #{:discussion.state/deleted}}]}))
 
-;; TODO this has to be rewritten to work with a real db
 (defn open-discussion!
   "Opens a closed discussion. Does not check whether the discussion is closed."
-  [discussion]
-  #_(swap! database update :closed-discussions disj (:id discussion)))
+  [title]
+  (d/transact (new-connection)
+              {:tx-data [[:db/retract [:discussion/title title] :discussion/states :discussion.state/closed]
+                         [:db/add [:discussion/title title] :discussion/states :discussion.state/open]]}))

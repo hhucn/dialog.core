@@ -49,11 +49,14 @@
    {:db/ident :discussion.state/open}
    {:db/ident :discussion.state/closed}
    {:db/ident :discussion.state/private}
+   {:db/ident :discussion.state/deleted}
+   ;; Deletion is a marker. We don't really delete anything from datomic
    ;; Discussion
    {:db/ident :discussion/title
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
-    :db/doc "The title / heading of a discussion"}
+    :db/unique :db.unique/value
+    :db/doc "The title / heading of a discussion. This should be system-widely unique."}
    {:db/ident :discussion/description
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
@@ -71,7 +74,8 @@
 (s/def ::title string?)
 (s/def ::description string?)
 (s/def ::states
-  (s/coll-of #{:discussion.state/open :discussion.state/closed :discussion.state/private}
+  (s/coll-of #{:discussion.state/open :discussion.state/closed :discussion.state/private
+               :discussion.state/deleted}
              :distinct true))
 (s/def ::starting-arguments (s/coll-of map?))               ;; TODO Specify more
 (s/def ::discussion (s/keys :req-un [::title ::description ::states

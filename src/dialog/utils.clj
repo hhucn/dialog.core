@@ -19,7 +19,7 @@
 
 (s/fdef
   map->nsmap
-  :args (s/cat :m map? :namespace (s/or keyword? string? symbol?))
+  :args (s/cat :m map? :namespace (s/or :k keyword? :str string? :sym symbol?))
   :ret map?
   :fn (s/and #(= (count (->> % :args :m keys (filter keyword?)))
                  (count (->> % :ret keys (filter qualified-keyword?))))))
