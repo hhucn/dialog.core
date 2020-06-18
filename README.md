@@ -1,25 +1,11 @@
+# dialog.core
+
 This repository contains the core logic needed to conduct a dialog-based discussion.
 
-# Prerequisites
-* A version of Clojure
+## CLI
 
-# Dev Notes
+Configure the application and a datomic database with the script `run.sh`.
 
-Lorem Ipsum TODO
+Usage:
 
-# Setup
-How to run it in production TODO
-
-# Contributions
-
-Rules for contributions TODO
- 
-# Acknowledgements
-This work is based on the research of the argYou Group Düsseldorf.
-
-# Contact Information
-write us a mail at foobar@dialogo.io
-
-# Licence
-
-None yet
+    bb run.clj [options] argument
