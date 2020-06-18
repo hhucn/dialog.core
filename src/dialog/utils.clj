@@ -1,4 +1,5 @@
-(ns dialog.utils)
+(ns dialog.utils
+  (:require [clojure.spec.alpha :as s]))
 
 (defn- keyword->str
   "Stringify a keyword without the colon."
@@ -15,3 +16,10 @@
                               k)]
                  (assoc acc new-kw v)))
              {} m))
+
+(s/fdef
+  map->nsmap
+  :args (s/cat :m map? :namespace (s/or keyword? string? symbol?))
+  :ret map?
+  :fn (s/and #(= (count (->> % :args :m keys (filter keyword?)))
+                 (count (->> % :ret keys (filter qualified-keyword?))))))
