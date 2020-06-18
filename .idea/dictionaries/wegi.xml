@@ -2,6 +2,7 @@
   <dictionary name="wegi">
     <words>
       <w>datomic</w>
+      <w>nsmap</w>
     </words>
   </dictionary>
 </component>

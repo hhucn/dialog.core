@@ -2,7 +2,6 @@
   (:require [clojure.spec.alpha :as s]
             [dialog.discussion.models :as models]))
 
-;; TODO remove pre and post for fdef or similar
 (defn empty-discussion
   "Returns a newly created discussion map."
   ([title description]
