@@ -16,27 +16,25 @@
 (defmulti step (fn [step args] step))
 
 (defmethod step :discussion/title
-  [_step {:keys [discussion/title]}]
-  ;; Suche alle starting-arguments zu title
-  {:arguments/starting []})
+  [_step args]
+  [[:arguments/starting args]])
 
 (defmethod step :arguments/present
-  [_step {:keys [discussion/title argument/is-starting?]}]
-  [[:arguments/pro title is-starting?]
-   [:arguments/con title is-starting?]])
+  [_step args]
+  [[:argument/chosen args]])
 
 (defmethod step :reactions/present
-  [_step argument]
-  [[:reaction/support argument]
-   [:reaction/defend argument]
-   [:reaction/undermine argument]
-   [:reaction/undercut argument]
-   [:reaction/rebut argument]])
+  [_step args]
+  [[:reaction/support args]
+   [:reaction/defend args]
+   [:reaction/undermine args]
+   [:reaction/undercut args]
+   [:reaction/rebut args]])
 
 (defmethod step :reasons/present
-  [_step {:keys [argument attack/type]}]
-  [[:reason/select argument type]
-   [:reason/new argument type]])
+  [_step args]
+  [[:reason/select args]
+   [:reason/new args]])
 
 
 ;; -----------------------------------------------------------------------------
