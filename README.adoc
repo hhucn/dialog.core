@@ -1,0 +1,18 @@
+= dialog.core
+
+This repository contains the core logic needed to conduct a dialog-based discussion.
+
+== CLI
+
+Configure the application and a datomic database with the script `run.clj`.
+You need to install https://github.com/borkdude/babashka/[babashka] for this script.
+
+Usage:
+
+    bb run.clj [options] argument
+
+== Structure
+
+=== Argumentation Engine
+
+image::doc/structure/dialog_engine.drawio.png[]
