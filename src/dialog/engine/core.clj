@@ -106,11 +106,36 @@
     [[:arguments/present (merge args {:arguments/present arguments-supporting-user
                                       :user/attitude :attitude/pro})]]))
 
-(defmethod react :reaction/undermine
-  ;; User wants to attack the premise of the shown `argument/chosen`.
-  [_step {:keys [argument/chosen] :as args}]
-  [[:reasons/present ]])
+(defn- generic-attack-reaction
+  "Query statements using `f` and return attack relation result needed by
+   `next`."
+  [f chosen args]
+  (let [statements (f chosen)]
+    [[:reasons/present (merge args {:reasons/present statements})]]))
 
-(defmethod react :arguments/pro
-  [_current-step argument]
-  [[:reactions/present argument]])
+(defmethod react :reaction/undermine
+  ;; User wants to attack the premises of the shown `argument/chosen`.
+  [_step {:keys [argument/chosen] :as args}]
+  (generic-attack-reaction database/statements-attacking-a-premise chosen args))
+
+(defmethod react :reaction/rebut
+  ;; User wants to attack the premises of the shown `argument/chosen`.
+  [_step {:keys [argument/chosen] :as args}]
+  (generic-attack-reaction database/statements-attacking-a-conclusion chosen args))
+
+(defmethod react :reaction/undercut
+  ;; User wants to attack the premises of the shown `argument/chosen`.
+  [_step {:keys [argument/chosen] :as args}]
+  (generic-attack-reaction database/statements-undercutting-argument chosen args))
+
+(defmethod react :reasons/new
+  ;; User can provide a new reason for their attack on the chosen argument.
+  [_step {:keys [argument/new] :as args}]
+  (let [arguments (find-attacking-argument :attitude/pro new)]
+    [[:arguments/present (merge args {:arguments/present arguments
+                                      :user/attitude :attitude/pro})]]))
+
+(defmethod react :reasons/select
+  ;; User finds a suitable reason and selects it.
+  [_step args]
+  (react :reasons/new args))
