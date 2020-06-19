@@ -19,15 +19,15 @@
   [])
 
 ;; TODO
-(defn database/statements-attacking-a-premise [argument]
+(defn statements-attacking-a-premise [argument]
   [])
 
 ;; TODO
-(defn database/statements-attacking-a-conclusion [argument]
+(defn statements-attacking-a-conclusion [argument]
   [])
 
 ;; TODO
-(defn database/statements-undercutting-argument [argument]
+(defn statements-undercutting-argument [argument]
   [])
 
 ;; Setting the client to private breaks some async routine in datomic
