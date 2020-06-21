@@ -4,6 +4,32 @@
             [dialog.utils :as utils]
             [datomic.client.api :as d]])
 
+;; Stubs
+
+;; TODO
+(defn all-arguments-for-discussion [discussion-title]
+  [])
+
+;; TODO
+(defn starting-arguments-by-title [discussion-title]
+  [])
+
+;; TODO
+(defn arguments-by-title [discussion-title]
+  [])
+
+;; TODO
+(defn statements-attacking-a-premise [argument]
+  [])
+
+;; TODO
+(defn statements-attacking-a-conclusion [argument]
+  [])
+
+;; TODO
+(defn statements-undercutting-argument [argument]
+  [])
+
 ;; Setting the client to private breaks some async routine in datomic
 (defonce datomic-client (d/client config/datomic))
 
