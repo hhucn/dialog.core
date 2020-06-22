@@ -36,8 +36,11 @@
   []
   )
 
-;; TODO maybe reformat the return map
-;; TODO pull only for deeper nested structures
+(defn- ident-map->value
+  "Change an ident-map to a single value"
+  [data key]
+  (update data key #(:db/ident %)))
+
 (defn starting-arguments-by-title [discussion-title]
   (let [db (d/db (new-connection))
         argument-pattern [:argument/version
@@ -48,16 +51,18 @@
                                                {:statement/author [:author/nickname]}]}
                           {:argument/conclusion [:statement/content
                                                  :statement/version
-                                                 {:statement/author [:author/nickname]}]}]]
-    (d/q
-      '[:find (pull ?starting-arguments pattern)
-        :in $ pattern ?discussion-title
-        :where [?discussion :discussion/title ?discussion-title]
-        [?discussion :discussion/starting-arguments ?starting-arguments]]
-      db argument-pattern discussion-title)))
+                                                 {:statement/author [:author/nickname]}]}]
+        arguments (d/q
+                    '[:find (pull ?starting-arguments argument-pattern)
+                      :in $ argument-pattern ?discussion-title
+                      :where [?discussion :discussion/title ?discussion-title]
+                      [?discussion :discussion/starting-arguments ?starting-arguments]]
+                    db argument-pattern discussion-title)]
+    (ident-map->value arguments :argument/type)))
 
 (comment
-  (starting-arguments-by-title "Cat or Dog?"))
+  (starting-arguments-by-title "Cat or Dog?")
+  )
 
 ;; TODO
 (defn statements-attacking-a-premise [argument]
