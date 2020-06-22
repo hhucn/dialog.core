@@ -2,7 +2,7 @@
 
 (def ^:private cat-or-dog-authors
   [{:db/id "author/wegi" :author/nickname "Wegi"}
-   {:db/id "author/tobi" :author/nickname "Tobias"}
+   {:db/id "author/schredder" :author/nickname "Der Schredder"}
    {:db/id "author/rambo" :author/nickname "Christian"}
    {:db/id "author/stinky" :author/nickname "Der miese Peter"}])
 
@@ -12,7 +12,7 @@
     :statement/content "we should get a dog"
     :statement/version 1}
    {:db/id "statement/get-cat"
-    :statement/author "author/tobi"                         ; Use the tempid above
+    :statement/author "author/schredder"                    ; Use the tempid above
     :statement/content "we should get a cat"
     :statement/version 1}
    {:db/id "statement/get-both"
@@ -31,9 +31,9 @@
     :argument/version 1
     :argument/type :argument.type/support}
    {:db/id "argument/tedious-dogs"
-    :argument/author "author/tobi"
+    :argument/author "author/schredder"
     :argument/premises [{:db/id "statement/walks"
-                         :statement/author "author/tobi"    ; Use the tempid above
+                         :statement/author "author/schredder" ; Use the tempid above
                          :statement/content "you have to take the dog for a walk every
                          day, which is tedious"
                          :statement/version 1}]
@@ -90,9 +90,9 @@
     :argument/version 1
     :argument/type :argument.type/undercut}
    {:db/id "argument/independent-cats"
-    :argument/author "author/tobi"
+    :argument/author "author/schredder"
     :argument/premises [{:db/id "statement/independent"
-                         :statement/author "author/tobi"
+                         :statement/author "author/schredder"
                          :statement/content "cats are very independent"
                          :statement/version 1}]
     :argument/conclusion "statement/get-cat"
@@ -115,9 +115,9 @@
     :argument/conclusion "statement/independent"
     :argument/version 1
     :argument/type :argument.type/attack}
-   {:argument/author "author/tobi"
+   {:argument/author "author/schredder"
     :argument/premises [{:db/id "statement/darwin-likes"
-                         :statement/author "author/tobi"
+                         :statement/author "author/schredder"
                          :statement/content "this lies in their natural conditions"
                          :statement/version 1}]
     :argument/conclusion "statement/independent"
@@ -142,9 +142,9 @@
     :argument/version 1
     :argument/type :argument.type/undercut}
    {:db/id "argument/no-taxes"
-    :argument/author "author/tobi"
+    :argument/author "author/schredder"
     :argument/premises [{:db/id "statement/taxes"
-                         :statement/author "author/tobi"
+                         :statement/author "author/schredder"
                          :statement/content "a cat does not cost taxes like a dog does"
                          :statement/version 1}]
     :argument/conclusion "statement/get-cat"
@@ -186,27 +186,27 @@
     :argument/conclusion "statement/get-cat"
     :argument/version 1
     :argument/type :argument.type/attack}
-   {:argument/author "author/tobi"
+   {:argument/author "author/schredder"
     :argument/premises [{:db/id "statement/race-dogs"
-                         :statement/author "author/tobi"
+                         :statement/author "author/schredder"
                          :statement/content "this is based on the cats race and
                           on the breeding, and is not inherent for cats."
                          :statement/version 1}]
     :argument/conclusion "argument/moody-cats"
     :argument/version 1
     :argument/type :argument.type/undercut}
-   {:argument/author "author/tobi"
+   {:argument/author "author/schredder"
     :argument/premises [{:db/id "statement/catcatcatcat"
-                         :statement/author "author/tobi"
+                         :statement/author "author/schredder"
                          :statement/content "the fact, that cats are capricious,
                          is based on the cats race"
                          :statement/version 1}]
     :argument/conclusion "statement/moody"
     :argument/version 1
     :argument/type :argument.type/attack}
-   {:argument/author "author/tobi"
+   {:argument/author "author/schredder"
     :argument/premises [{:db/id "statement/not-all-cats"
-                         :statement/author "author/tobi"
+                         :statement/author "author/schredder"
                          :statement/content "not every cat is capricious"
                          :statement/version 1}]
     :argument/conclusion "statement/moody"
