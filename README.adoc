@@ -1,6 +1,8 @@
 = dialog.core
 
 This repository contains the core logic needed to conduct a dialog-based discussion.
+Everything here is highly unstable at the current time. Do *not* assume that
+the methods do not change.
 
 == CLI
 
