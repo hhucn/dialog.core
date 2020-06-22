@@ -37,6 +37,11 @@
   []
   (d/connect datomic-client {:db-name config/db-name}))
 
+(defn transact
+  "Shorthand for transaction"
+  [data]
+  (d/transact (new-connection) {:tx-data data}))
+
 (defn- create-discussion-schema
   "Creates the schema for discussions inside the database"
   [connection]
