@@ -5,32 +5,6 @@
             [dialog.utils :as utils]
             [datomic.client.api :as d]])
 
-;; Stubs
-
-;; TODO
-(defn all-arguments-for-discussion [discussion-title]
-  [])
-
-;; TODO
-(defn starting-arguments-by-title [discussion-title]
-  [])
-
-;; TODO
-(defn arguments-by-title [discussion-title]
-  [])
-
-;; TODO
-(defn statements-attacking-a-premise [argument]
-  [])
-
-;; TODO
-(defn statements-attacking-a-conclusion [argument]
-  [])
-
-;; TODO
-(defn statements-undercutting-argument [argument]
-  [])
-
 ;; Setting the client to private breaks some async routine in datomic
 (defonce datomic-client (d/client config/datomic))
 
@@ -53,6 +27,54 @@
   []
   (create-discussion-schema (new-connection))
   (transact test-data/testdata-cat-or-dog))
+
+;; Stubs
+
+;; TODO
+(defn all-arguments-for-discussion [discussion-title]
+  ;; TODO this needs a schema change, to carry which discussions an argument belongs to
+  []
+  )
+
+;; TODO maybe reformat the return map
+(defn starting-arguments-by-title [discussion-title]
+  (let [db (d/db (new-connection))
+        argument-pattern [:argument/version
+                          {:argument/author [:author/nickname]}
+                          {:argument/type [:db/ident]}
+                          {:argument/premises [:statement/content
+                                               :statement/version
+                                               {:statement/author [:author/nickname]}]}
+                          {:argument/conclusion [:statement/content
+                                                 :statement/version
+                                                 {:statement/author [:author/nickname]}]}]]
+    (d/q
+      '[:find (pull ?starting-arguments pattern)
+        :in $ pattern ?discussion-title
+        :where [?discussion :discussion/title ?discussion-title]
+        [?discussion :discussion/starting-arguments ?starting-arguments]]
+      db argument-pattern discussion-title)))
+
+(comment
+  (starting-arguments-by-title "Cat or Dog?"))
+
+;; TODO
+(defn arguments-by-title [discussion-title]
+  [])
+
+;; TODO
+(defn statements-attacking-a-premise [argument]
+  [])
+
+;; TODO
+(defn statements-attacking-a-conclusion [argument]
+  [])
+
+;; TODO
+(defn statements-undercutting-argument [argument]
+  [])
+
+
 
 ;; Concrete Transactions ########################
 (defn save-discussion!
