@@ -1,6 +1,7 @@
 (ns dialog.discussion.database
   [:require [dialog.discussion.models :as models]
             [dialog.discussion.config :as config]
+            [dialog.discussion.test-data :as test-data]
             [dialog.utils :as utils]
             [datomic.client.api :as d]])
 
@@ -50,7 +51,8 @@
 (defn init
   "Initialization function, which does everything needed at a fresh app-install."
   []
-  (create-discussion-schema (new-connection)))
+  (create-discussion-schema (new-connection))
+  (transact test-data/testdata-cat-or-dog))
 
 ;; Concrete Transactions ########################
 (defn save-discussion!
