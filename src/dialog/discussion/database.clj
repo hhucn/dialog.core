@@ -59,20 +59,17 @@
   "Saves discussion into the database.
   The discussion is prefixed with the discussion ns automatically for datomic."
   [discussion]
-  (d/transact (new-connection)
-              {:tx-data [(utils/map->nsmap discussion :discussion)]}))
+  (transact [(utils/map->nsmap discussion :discussion)]))
 
 
 (defn delete-discussion!
   "Sets the discussion with the corresponding title to `deleted`."
   [title]
-  (d/transact (new-connection)
-              {:tx-data [{:db/id [:discussion/title title]
-                          :discussion/states #{:discussion.state/deleted}}]}))
+  (transact [{:db/id [:discussion/title title]
+              :discussion/states #{:discussion.state/deleted}}]))
 
 (defn open-discussion!
   "Opens a closed discussion. Does not check whether the discussion is closed."
   [title]
-  (d/transact (new-connection)
-              {:tx-data [[:db/retract [:discussion/title title] :discussion/states :discussion.state/closed]
-                         [:db/add [:discussion/title title] :discussion/states :discussion.state/open]]}))
+  (transact [[:db/retract [:discussion/title title] :discussion/states :discussion.state/closed]
+             [:db/add [:discussion/title title] :discussion/states :discussion.state/open]]))
