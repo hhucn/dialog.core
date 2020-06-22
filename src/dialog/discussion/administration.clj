@@ -8,21 +8,12 @@
    (empty-discussion title description {}))
   ([title description opts]
    (merge
-     {:states [:discussion.state/open]
-      :starting-arguments []}
+     {:discussion/states [:discussion.state/open]
+      :discussion/starting-arguments []}
      opts
-     {:title title
-      :description description})))
+     {:discussion/title title
+      :discussion/description description})))
 
 (s/fdef empty-discussion
-        :args (s/cat :title ::models/title :description ::models/description)
+        :args (s/cat :title string? :description string?)
         :ret ::models/discussion)
-
-;; TODO this has to be rewritten to work with a real db
-(defn add-starting-argument
-  "Adds a starting argument and returns the modified discussion. Checks for duplicates."
-  [discussion argument]
-  (let [starting-arguments-ids
-        (map :discussion/id (:discussion/starting-arguments discussion))]
-    (when-not (some #(= (:discussion/id argument) %) starting-arguments-ids)
-      (update discussion :discussion/starting-arguments conj argument))))
