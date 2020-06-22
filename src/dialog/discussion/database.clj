@@ -37,6 +37,7 @@
   )
 
 ;; TODO maybe reformat the return map
+;; TODO pull only for deeper nested structures
 (defn starting-arguments-by-title [discussion-title]
   (let [db (d/db (new-connection))
         argument-pattern [:argument/version
@@ -57,10 +58,6 @@
 
 (comment
   (starting-arguments-by-title "Cat or Dog?"))
-
-;; TODO
-(defn arguments-by-title [discussion-title]
-  [])
 
 ;; TODO
 (defn statements-attacking-a-premise [argument]
