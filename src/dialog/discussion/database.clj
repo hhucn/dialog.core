@@ -58,7 +58,7 @@
                       :where [?discussion :discussion/title ?discussion-title]
                       [?discussion :discussion/starting-arguments ?starting-arguments]]
                     db argument-pattern discussion-title)]
-    (ident-map->value arguments :argument/type)))
+    (map #(ident-map->value (first %) :argument/type) arguments)))
 
 (comment
   (starting-arguments-by-title "Cat or Dog?")
