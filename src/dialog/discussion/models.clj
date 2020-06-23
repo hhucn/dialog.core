@@ -45,6 +45,10 @@
     :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one
     :db/doc "The version of an argument"}
+   {:db/ident :argument/discussions
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many
+    :db/doc "The discussions in which the argument is used"}
    ;; Discussion States
    {:db/ident :discussion.state/open}
    {:db/ident :discussion.state/closed}
@@ -71,12 +75,12 @@
     :db/doc "The arguments at the source of the discussion-graph"}])
 
 ;; Specs. Please keep in sync with model above. Extend as needed.
-(s/def ::title string?)
-(s/def ::description string?)
-(s/def ::states
+(s/def :discussion/title string?)
+(s/def :discussion/description string?)
+(s/def :discussion/states
   (s/coll-of #{:discussion.state/open :discussion.state/closed :discussion.state/private
                :discussion.state/deleted}
              :distinct true))
-(s/def ::starting-arguments (s/coll-of map?))               ;; TODO Specify more
-(s/def ::discussion (s/keys :req-un [::title ::description ::states
-                                     ::starting-arguments]))
+(s/def :discussion/starting-arguments (s/coll-of map?))     ;; TODO Specify more
+(s/def ::discussion (s/keys :req [:discussion/title :discussion/description
+                                  :discussion/states :discussion/starting-arguments]))

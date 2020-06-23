@@ -111,20 +111,38 @@
     [:reasons/present (merge args {:present/reasons statements
                                    :user/attitude :attitude/pro})]))
 
+;; TODO
+(defn statements-attacking-a-premise
+  "Returns all statements that attack the premise of `argument`."
+  [argument]
+  [])
+
+;; TODO
+(defn statements-attacking-a-conclusion
+  "Returns all statements that attack the conclusion of `argument`."
+  [argument]
+  [])
+
+;; TODO
+(defn statements-undercutting-argument
+  "Returns all statements that are used to undercut `argument`."
+  [argument]
+  [])
+
 (defmethod react :reaction/undermine
   ;; User wants to attack the premises of the shown `argument/chosen`.
   [_step {:keys [argument/chosen] :as args}]
-  (generic-attack-reaction database/statements-attacking-a-premise chosen args))
+  (generic-attack-reaction statements-attacking-a-premise chosen args))
 
 (defmethod react :reaction/rebut
   ;; User wants to attack the premises of the shown `argument/chosen`.
   [_step {:keys [argument/chosen] :as args}]
-  (generic-attack-reaction database/statements-attacking-a-conclusion chosen args))
+  (generic-attack-reaction statements-attacking-a-conclusion chosen args))
 
 (defmethod react :reaction/undercut
   ;; User wants to attack the premises of the shown `argument/chosen`.
   [_step {:keys [argument/chosen] :as args}]
-  (generic-attack-reaction database/statements-undercutting-argument chosen args))
+  (generic-attack-reaction statements-undercutting-argument chosen args))
 
 (defmethod react :reason/new
   ;; User can provide a new reason for their attack on the chosen argument.
