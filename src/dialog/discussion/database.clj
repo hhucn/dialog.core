@@ -93,7 +93,7 @@
   (transact [{:db/id [:discussion/title title]
               :discussion/states #{:discussion.state/deleted}}]))
 
-(defn open-discussion!
+(defn reopen-discussion!
   "Opens a closed discussion. Does not check whether the discussion is closed."
   [title]
   (transact [[:db/retract [:discussion/title title] :discussion/states :discussion.state/closed]
