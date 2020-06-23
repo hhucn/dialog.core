@@ -28,42 +28,54 @@
   (create-discussion-schema (new-connection))
   (transact test-data/testdata-cat-or-dog))
 
-;; Stubs
-
-;; TODO
-(defn all-arguments-for-discussion [discussion-title]
-  ;; TODO this needs a schema change, to carry which discussions an argument belongs to
-  []
-  )
+(def ^:private argument-pattern
+  [:argument/version
+   {:argument/author [:author/nickname]}
+   {:argument/type [:db/ident]}
+   {:argument/premises [:statement/content
+                        :statement/version
+                        {:statement/author [:author/nickname]}]}
+   {:argument/conclusion [:statement/content
+                          :statement/version
+                          {:statement/author [:author/nickname]}]}])
 
 (defn- ident-map->value
   "Change an ident-map to a single value"
   [data key]
   (update data key #(:db/ident %)))
 
+(defn- query-arguments
+  "Takes a `query` that returns arguments and applies an `argument-pattern` to it as
+  a second argument. Optional arguments for the query are input as third, fourth, etc.
+  parameter. A prettified list is returned."
+  [query & args]
+  (let [db (d/db (new-connection))
+        arguments (apply d/q query db argument-pattern args)]
+    (map #(ident-map->value (first %) :argument/type) arguments)))
+
+(defn all-arguments-for-discussion
+  "Returns all arguments belonging to a discussion, identified by title."
+  [discussion-title]
+  (query-arguments
+    '[:find (pull ?discussion-arguments argument-pattern)
+      :in $ argument-pattern ?discussion-title
+      :where [?discussion :discussion/title ?discussion-title]
+      [?discussion-arguments :argument/discussions ?discussion]]
+    discussion-title))
+
 (defn starting-arguments-by-title
   "Deep-Query all starting-arguments of a certain discussion."
   [discussion-title]
-  (let [db (d/db (new-connection))
-        argument-pattern [:argument/version
-                          {:argument/author [:author/nickname]}
-                          {:argument/type [:db/ident]}
-                          {:argument/premises [:statement/content
-                                               :statement/version
-                                               {:statement/author [:author/nickname]}]}
-                          {:argument/conclusion [:statement/content
-                                                 :statement/version
-                                                 {:statement/author [:author/nickname]}]}]
-        arguments (d/q
-                    '[:find (pull ?starting-arguments argument-pattern)
-                      :in $ argument-pattern ?discussion-title
-                      :where [?discussion :discussion/title ?discussion-title]
-                      [?discussion :discussion/starting-arguments ?starting-arguments]]
-                    db argument-pattern discussion-title)]
-    (map #(ident-map->value (first %) :argument/type) arguments)))
+  (query-arguments
+    '[:find (pull ?starting-arguments argument-pattern)
+      :in $ argument-pattern ?discussion-title
+      :where [?discussion :discussion/title ?discussion-title]
+      [?discussion :discussion/starting-arguments ?starting-arguments]]
+    discussion-title))
 
 (comment
-  (starting-arguments-by-title "Cat or Dog?")
+  (count (starting-arguments-by-title "Cat or Dog?"))
+  (count (all-arguments-for-discussion "Cat or Dog?"))
   )
 
 ;; TODO
