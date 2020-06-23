@@ -98,3 +98,9 @@
   [title]
   (transact [[:db/retract [:discussion/title title] :discussion/states :discussion.state/closed]
              [:db/add [:discussion/title title] :discussion/states :discussion.state/open]]))
+
+(defn close-discussion!
+  "Close a discussion."
+  [title]
+  (transact [[:db/retract [:discussion/title title] :discussion/states :discussion.state/open]
+             [:db/add [:discussion/title title] :discussion/states :discussion.state/closed]]))
