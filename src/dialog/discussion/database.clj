@@ -41,7 +41,9 @@
   [data key]
   (update data key #(:db/ident %)))
 
-(defn starting-arguments-by-title [discussion-title]
+(defn starting-arguments-by-title
+  "Deep-Query all starting-arguments of a certain discussion."
+  [discussion-title]
   (let [db (d/db (new-connection))
         argument-pattern [:argument/version
                           {:argument/author [:author/nickname]}

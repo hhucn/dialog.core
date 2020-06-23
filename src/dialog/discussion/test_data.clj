@@ -29,7 +29,8 @@
                          :statement/version 1}]
     :argument/conclusion "statement/get-dog"
     :argument/version 1
-    :argument/type :argument.type/support}
+    :argument/type :argument.type/support
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:db/id "argument/tedious-dogs"
     :argument/author "author/tobi"
     :argument/premises [{:db/id "statement/walks"
@@ -39,7 +40,8 @@
                          :statement/version 1}]
     :argument/conclusion "statement/get-dog"
     :argument/version 1
-    :argument/type :argument.type/attack}
+    :argument/type :argument.type/attack
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/stinky"
     :argument/premises [{:db/id "statement/no-use"
                          :statement/author "author/stinky"
@@ -47,7 +49,8 @@
                          :statement/version 1}]
     :argument/conclusion "argument/watchdogs"
     :argument/version 1
-    :argument/type :argument.type/undercut}
+    :argument/type :argument.type/undercut
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/stinky"
     :argument/premises [{:db/id "statement/exercise"
                          :statement/author "author/stinky"
@@ -57,7 +60,8 @@
                          :statement/version 1}]
     :argument/conclusion "argument/tedious-dogs"
     :argument/version 1
-    :argument/type :argument.type/undercut}
+    :argument/type :argument.type/undercut
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:db/id "argument/both-is-fine"
     :argument/author "author/rambo"
     :argument/premises [{:db/id "statement/no-problem"
@@ -66,7 +70,8 @@
                          :statement/version 1}]
     :argument/conclusion "statement/get-both"
     :argument/version 1
-    :argument/type :argument.type/support}
+    :argument/type :argument.type/support
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/wegi"
     :argument/premises [{:db/id "statement/moneeey"
                          :statement/author "author/wegi"
@@ -74,7 +79,8 @@
                          :statement/version 1}]
     :argument/conclusion "statement/no-problem"
     :argument/version 1
-    :argument/type :argument.type/attack}
+    :argument/type :argument.type/attack
+    :argument/discussions ["discussion/cat-or-dog"]}
    ;; Here be premise groups
    {:db/id "argument/hate"
     :argument/author "author/stinky"
@@ -89,7 +95,8 @@
                          :statement/version 1}]
     :argument/conclusion "argument/both-is-fine"
     :argument/version 1
-    :argument/type :argument.type/undercut}
+    :argument/type :argument.type/undercut
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:db/id "argument/independent-cats"
     :argument/author "author/tobi"
     :argument/premises [{:db/id "statement/independent"
@@ -98,7 +105,8 @@
                          :statement/version 1}]
     :argument/conclusion "statement/get-cat"
     :argument/version 1
-    :argument/type :argument.type/support}
+    :argument/type :argument.type/support
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/wegi"
     :argument/premises [{:db/id "statement/take-care-baby"
                          :statement/author "author/wegi"
@@ -107,7 +115,8 @@
                          :statement/version 1}]
     :argument/conclusion "argument/independent-cats"
     :argument/version 1
-    :argument/type :argument.type/undercut}
+    :argument/type :argument.type/undercut
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/wegi"
     :argument/premises [{:db/id "statement/overbred"
                          :statement/author "author/wegi"
@@ -115,7 +124,8 @@
                          :statement/version 1}]
     :argument/conclusion "statement/independent"
     :argument/version 1
-    :argument/type :argument.type/attack}
+    :argument/type :argument.type/attack
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/tobi"
     :argument/premises [{:db/id "statement/darwin-likes"
                          :statement/author "author/tobi"
@@ -123,7 +133,8 @@
                          :statement/version 1}]
     :argument/conclusion "statement/independent"
     :argument/version 1
-    :argument/type :argument.type/support}
+    :argument/type :argument.type/support
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:db/id "argument/hunters"
     :argument/author "author/rambo"
     :argument/premises [{:db/id "statement/ancestry"
@@ -134,7 +145,8 @@
                          :statement/version 1}]
     :argument/conclusion "statement/independent"
     :argument/version 1
-    :argument/type :argument.type/support}
+    :argument/type :argument.type/support
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/wegi"
     :argument/premises [{:db/id "statement/wild-thang"
                          :statement/author "author/wegi"
@@ -142,7 +154,8 @@
                          :statement/version 1}]
     :argument/conclusion "argument/hunters"
     :argument/version 1
-    :argument/type :argument.type/undercut}
+    :argument/type :argument.type/undercut
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:db/id "argument/no-taxes"
     :argument/author "author/tobi"
     :argument/premises [{:db/id "statement/taxes"
@@ -151,7 +164,8 @@
                          :statement/version 1}]
     :argument/conclusion "statement/get-cat"
     :argument/version 1
-    :argument/type :argument.type/support}
+    :argument/type :argument.type/support
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/stinky"
     :argument/premises [{:db/id "statement/credibility"
                          :statement/author "author/stinky"
@@ -159,7 +173,8 @@
                          :statement/version 1}]
     :argument/conclusion "argument/no-taxes"
     :argument/version 1
-    :argument/type :argument.type/undercut}
+    :argument/type :argument.type/undercut
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/rambo"
     :argument/premises [{:db/id "statement/germoney"
                          :statement/author "author/rambo"
@@ -168,7 +183,8 @@
                          :statement/version 1}]
     :argument/conclusion "statement/taxes"
     :argument/version 1
-    :argument/type :argument.type/support}
+    :argument/type :argument.type/support
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/rambo"
     :argument/premises [{:db/id "statement/doggo-same"
                          :statement/author "author/rambo"
@@ -177,7 +193,8 @@
                          :statement/version 1}]
     :argument/conclusion "statement/taxes"
     :argument/version 1
-    :argument/type :argument.type/support}
+    :argument/type :argument.type/support
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:db/id "argument/moody-cats"
     :argument/author "author/wegi"
     :argument/premises [{:db/id "statement/moody"
@@ -186,7 +203,8 @@
                          :statement/version 1}]
     :argument/conclusion "statement/get-cat"
     :argument/version 1
-    :argument/type :argument.type/attack}
+    :argument/type :argument.type/attack
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/tobi"
     :argument/premises [{:db/id "statement/race-dogs"
                          :statement/author "author/tobi"
@@ -196,7 +214,8 @@
                          :statement/version 1}]
     :argument/conclusion "argument/moody-cats"
     :argument/version 1
-    :argument/type :argument.type/undercut}
+    :argument/type :argument.type/undercut
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/tobi"
     :argument/premises [{:db/id "statement/catcatcatcat"
                          :statement/author "author/tobi"
@@ -206,7 +225,8 @@
                          :statement/version 1}]
     :argument/conclusion "statement/moody"
     :argument/version 1
-    :argument/type :argument.type/attack}
+    :argument/type :argument.type/attack
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/tobi"
     :argument/premises [{:db/id "statement/not-all-cats"
                          :statement/author "author/tobi"
@@ -214,7 +234,8 @@
                          :statement/version 1}]
     :argument/conclusion "statement/moody"
     :argument/version 1
-    :argument/type :argument.type/attack}
+    :argument/type :argument.type/attack
+    :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/rambo"
     :argument/premises [{:db/id "statement/fire-cats"
                          :statement/author "author/rambo"
@@ -223,10 +244,12 @@
                          :statement/version 1}]
     :argument/conclusion "statement/moody"
     :argument/version 1
-    :argument/type :argument.type/support}])
+    :argument/type :argument.type/support
+    :argument/discussions ["discussion/cat-or-dog"]}])
 
 (def ^:private cat-or-dog-discussion
-  [{:discussion/title "Cat or Dog?"
+  [{:db/id "discussion/cat-or-dog"
+    :discussion/title "Cat or Dog?"
     :discussion/description (str "Should a person looking for a pet rather buy a dog"
                                  " or a cat?")
     :discussion/states [:discussion.state/open]

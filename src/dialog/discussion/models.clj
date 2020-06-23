@@ -45,6 +45,10 @@
     :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one
     :db/doc "The version of an argument"}
+   {:db/ident :argument/discussions
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many
+    :db/doc "The discussions in which the argument is used"}
    ;; Discussion States
    {:db/ident :discussion.state/open}
    {:db/ident :discussion.state/closed}
