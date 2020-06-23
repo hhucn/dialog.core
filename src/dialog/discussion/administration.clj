@@ -29,3 +29,19 @@
       new-discussion)
     (catch Exception _e
       nil)))
+
+(defn delete-discussion!
+  "Marks a discussion as deleted. Users are not seeing the discussion anymore."
+  [discussion-title]
+  (database/delete-discussion! discussion-title))
+
+(defn close-discussion!
+  "Marks a discussion as closed. Users are able to see the discussion, but can not
+  contribute to it anymore."
+  [discussion-title]
+  (database/close-discussion! discussion-title))
+
+(defn reopen-discussion!
+  "Reopens an already closed discussion."
+  [discusison-title]
+  (database/reopen-discussion! discusison-title))
