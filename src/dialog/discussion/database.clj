@@ -78,19 +78,6 @@
   (count (all-arguments-for-discussion "Cat or Dog?"))
   )
 
-;; TODO
-(defn statements-attacking-a-premise [argument]
-  [])
-
-;; TODO
-(defn statements-attacking-a-conclusion [argument]
-  [])
-
-;; TODO
-(defn statements-undercutting-argument [argument]
-  [])
-
-
 
 ;; Concrete Transactions ########################
 (defn save-discussion!
