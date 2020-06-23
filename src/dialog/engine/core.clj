@@ -4,7 +4,10 @@
 ;; -----------------------------------------------------------------------------
 
 ;; Das was der user angezeigt bekommt
-(defmulti step (fn [step _] step))
+(defmulti ^:private step
+          "Execute one step in the discussion. Represents the states / nodes,
+          which require user interaction."
+          (fn [step _] step))
 
 (defmethod step :discussion/title
   ;; Show all starting arguments of a discussion.
@@ -57,7 +60,11 @@
   [argument])
 
 ;; Das was der user auswählt
-(defmulti react (fn [current-step _] current-step))
+(defmulti ^:private react
+          "Transitions from one state to the other. The payload for the
+          transitions is defined in the multimethods. Always provides the next
+          state / node when going through the discussion-loop."
+          (fn [current-step _args] current-step))
 
 (defmethod react :arguments/subset
   ;; Chooses the arguments presented to the user. `discussion/is-start?`
