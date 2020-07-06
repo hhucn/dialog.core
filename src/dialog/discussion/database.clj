@@ -100,12 +100,12 @@
       db statement-pattern argument-id part-attribute)))
 
 (defn statements-attacking-premise
-  "Returns all statements that are used to attack one of the premises of `argument-id`"
+  "Returns all statements that are used to attack one of the premises of `argument-id`."
   [argument-id]
   (statements-attacking-part argument-id :premises))
 
 (defn statements-attacking-conclusion
-  "Returns all statements that are used to attack the conclusion of `argument-id`"
+  "Returns all statements that are used to attack the conclusion of `argument-id`."
   [argument-id]
   (statements-attacking-part argument-id :conclusion))
 
@@ -123,7 +123,7 @@
 ;; TODO does only return first pull syntax for some reason
 ;; TODO according to docs it should pull all three...
 (defn get-attackers-for-argument
-  "Returns all arguments that attack `argument-id`"
+  "Returns all arguments that attack `argument-id`."
   [argument-id]
   (query-arguments
     '[:find (pull ?undercuts argument-pattern)
@@ -138,11 +138,12 @@
       [?attacking-conclusions :argument/conclusion ?attacked-conclusion]
       [?attacking-conclusions :argument/type :argument.type/attack]]
     argument-id))
-(get-attackers-for-argument 17592186045447)
+
 (comment
+  (get-attackers-for-argument 17592186045447)
   (count (starting-arguments-by-title "Cat or Dog?"))
   (count (all-arguments-for-discussion "Cat or Dog?"))
-  )
+  :end)
 
 
 ;; Concrete Transactions ########################
