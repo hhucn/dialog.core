@@ -29,7 +29,8 @@
   (transact test-data/testdata-cat-or-dog))
 
 (def ^:private argument-pattern
-  [:argument/version
+  [:db/id
+   :argument/version
    {:argument/author [:author/nickname]}
    {:argument/type [:db/ident]}
    {:argument/premises [:statement/content
