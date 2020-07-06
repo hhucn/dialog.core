@@ -80,20 +80,34 @@
    :statement/version
    {:statement/author [:author/nickname]}])
 
+(defn- statements-attacking-part
+  "Generic template query for statements either attacking a conclusion or the premises
+  of an argument."
+  [argument-id conclusion-or-premises]
+  (let [db (d/db (new-connection))
+        part-attribute (if (= :conclusion conclusion-or-premises)
+                         :argument/conclusion
+                         :argument/premises)]
+    (d/q
+      '[:find (pull ?attacking-premises statement-pattern)
+        :in $ statement-pattern ?argument-id ?part-attribute
+        :where [?argument-id ?part-attribute ?part]
+        ;; Give me the arguments where our premise is the conclusion and the type is
+        ;; an attack
+        [?potential-attackers :argument/conclusion ?part]
+        [?potential-attackers :argument/type :argument.type/attack]
+        [?potential-attackers :argument/premises ?attacking-premises]]
+      db statement-pattern argument-id part-attribute)))
+
 (defn statements-attacking-premise
   "Returns all statements that are used to attack one of the premises of `argument-id`"
   [argument-id]
-  (let [db (d/db (new-connection))]
-    (d/q
-      '[:find (pull ?attacking-premises statement-pattern)
-        :in $ statement-pattern ?argument-id
-        :where [?argument-id :argument/premises ?premises]
-        ;; Give me the arguments where our premise is the conclusion and the type is
-        ;; an attack
-        [?potential-attackers :argument/conclusion ?premises]
-        [?potential-attackers :argument/type :argument.type/attack]
-        [?potential-attackers :argument/premises ?attacking-premises]]
-      db statement-pattern argument-id)))
+  (statements-attacking-part argument-id :premises))
+
+(defn statements-attacking-conclusion
+  "Returns all statements that are used to attack the conclusion of `argument-id`"
+  [argument-id]
+  (statements-attacking-part argument-id :conclusion))
 
 (comment
   (count (starting-arguments-by-title "Cat or Dog?"))

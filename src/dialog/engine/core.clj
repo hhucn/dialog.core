@@ -120,7 +120,7 @@
 (defn statements-attacking-a-conclusion
   "Returns all statements that attack the conclusion of `argument`."
   [argument]
-  [])
+  (database/statements-attacking-conclusion (:db/id argument)))
 
 ;; TODO
 (defn statements-undercutting-argument

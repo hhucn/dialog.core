@@ -236,7 +236,8 @@
     :argument/version 1
     :argument/type :argument.type/attack
     :argument/discussions ["discussion/cat-or-dog"]}
-   {:argument/author "author/rambo"
+   {:db/id "argument/rambo-hates-cats"
+    :argument/author "author/rambo"
     :argument/premises [{:db/id "statement/fire-cats"
                          :statement/author "author/rambo"
                          :statement/content (str "several cats of my friends are real"
