@@ -207,7 +207,7 @@
     :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/schredder"
     :argument/premises [{:db/id "statement/race-dogs"
-                         :statement/author "author/tobi"
+                         :statement/author "author/schredder"
                          :statement/content
                          (str "this is based on the cats race and on the breeding"
                               ", and is not inherent for cats.")
@@ -218,7 +218,7 @@
     :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/schredder"
     :argument/premises [{:db/id "statement/catcatcatcat"
-                         :statement/author "author/tobi"
+                         :statement/author "author/schredder"
                          :statement/content
                          (str "the fact, that cats are capricious, is based on the"
                               " cats race")
