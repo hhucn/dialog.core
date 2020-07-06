@@ -116,17 +116,15 @@
   [argument]
   (database/statements-attacking-premise (:db/id argument)))
 
-;; TODO
 (defn statements-attacking-a-conclusion
   "Returns all statements that attack the conclusion of `argument`."
   [argument]
   (database/statements-attacking-conclusion (:db/id argument)))
 
-;; TODO
 (defn statements-undercutting-argument
   "Returns all statements that are used to undercut `argument`."
   [argument]
-  [])
+  (database/statements-undercutting-argument (:db/id argument)))
 
 (defmethod react :reaction/undermine
   ;; User wants to attack the premises of the shown `argument/chosen`.

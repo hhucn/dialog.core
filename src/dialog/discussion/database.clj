@@ -109,6 +109,17 @@
   [argument-id]
   (statements-attacking-part argument-id :conclusion))
 
+(defn statements-undercutting-argument
+  "Returns all statements uses to undercut `argument`."
+  [argument-id]
+  (let [db (d/db (new-connection))]
+    (d/q
+      '[:find (pull ?undercutting-premises statement-pattern)
+        :in $ statement-pattern ?argument-id
+        :where [?undercutting-arguments :argument/conclusion ?argument-id]
+        [?undercutting-arguments :argument/premises ?undercutting-premises]]
+      db statement-pattern argument-id)))
+
 (comment
   (count (starting-arguments-by-title "Cat or Dog?"))
   (count (all-arguments-for-discussion "Cat or Dog?"))
