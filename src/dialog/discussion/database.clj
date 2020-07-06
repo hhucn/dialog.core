@@ -28,7 +28,18 @@
   (create-discussion-schema (new-connection))
   (transact test-data/testdata-cat-or-dog))
 
+(defn- ident-map->value
+  "Change an ident-map to a single value"
+  [data key]
+  (update data key #(:db/ident %)))
+
+
+;; -----------------------------------------------------------------------------
+;; Patterns
+
 (def ^:private argument-pattern
+  "Defines the default pattern for arguments. Oftentimes used in pull-patterns
+  in a Datalog query bind the data to this structure."
   [:db/id
    :argument/version
    {:argument/author [:author/nickname]}
@@ -40,10 +51,16 @@
                           :statement/version
                           {:statement/author [:author/nickname]}]}])
 
-(defn- ident-map->value
-  "Change an ident-map to a single value"
-  [data key]
-  (update data key #(:db/ident %)))
+(def ^:private statement-pattern
+  "Representation of a statement. Oftentimes used in a Datalog pull pattern."
+  [:db/id
+   :statement/content
+   :statement/version
+   {:statement/author [:author/nickname]}])
+
+
+;; -----------------------------------------------------------------------------
+;; Queries
 
 (defn- query-arguments
   "Takes a `query` that returns arguments and applies an `argument-pattern` to it as
@@ -73,12 +90,6 @@
       :where [?discussion :discussion/title ?discussion-title]
       [?discussion :discussion/starting-arguments ?starting-arguments]]
     discussion-title))
-
-(def ^:private statement-pattern
-  [:db/id
-   :statement/content
-   :statement/version
-   {:statement/author [:author/nickname]}])
 
 (defn- statements-attacking-part
   "Generic template query for statements either attacking a conclusion or the premises
