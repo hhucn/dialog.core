@@ -50,7 +50,7 @@
 (defn find-argument-for-opinion
   "Choose an argument that defends the users opinion based on their `attitude`
   towards the current `argument` they are looking at."
-  [attitude argument]
+  [_attitude argument]
   argument)
 
 ;; TODO
@@ -59,7 +59,7 @@
   [argument]
   [argument])
 
-;; Das was der user auswählt
+;; react: Transitions the state based on what the user chose
 (defmulti ^:private react
           "Transitions from one state to the other. The payload for the
           transitions is defined in the multimethods. Always provides the next
@@ -111,11 +111,10 @@
     [:reasons/present (merge args {:present/reasons statements
                                    :user/attitude :attitude/pro})]))
 
-;; TODO
 (defn statements-attacking-a-premise
   "Returns all statements that attack the premise of `argument`."
   [argument]
-  [])
+  (database/statements-attacking-premise (:db/id argument)))
 
 ;; TODO
 (defn statements-attacking-a-conclusion

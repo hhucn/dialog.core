@@ -74,6 +74,27 @@
       [?discussion :discussion/starting-arguments ?starting-arguments]]
     discussion-title))
 
+(def ^:private statement-pattern
+  [:db/id
+   :statement/content
+   :statement/version
+   {:statement/author [:author/nickname]}])
+
+(defn statements-attacking-premise
+  "Returns all statements that are used to attack one of the premises of `argument-id`"
+  [argument-id]
+  (let [db (d/db (new-connection))]
+    (d/q
+      '[:find (pull ?attacking-premises statement-pattern)
+        :in $ statement-pattern ?argument-id
+        :where [?argument-id :argument/premises ?premises]
+        ;; Give me the arguments where our premise is the conclusion and the type is
+        ;; an attack
+        [?potential-attackers :argument/conclusion ?premises]
+        [?potential-attackers :argument/type :argument.type/attack]
+        [?potential-attackers :argument/premises ?attacking-premises]]
+      db statement-pattern argument-id)))
+
 (comment
   (count (starting-arguments-by-title "Cat or Dog?"))
   (count (all-arguments-for-discussion "Cat or Dog?"))
