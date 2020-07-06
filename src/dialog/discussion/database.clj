@@ -120,6 +120,25 @@
         [?undercutting-arguments :argument/premises ?undercutting-premises]]
       db statement-pattern argument-id)))
 
+;; TODO does only return first pull syntax for some reason
+;; TODO according to docs it should pull all three...
+(defn get-attackers-for-argument
+  "Returns all arguments that attack `argument-id`"
+  [argument-id]
+  (query-arguments
+    '[:find (pull ?undercuts argument-pattern)
+      (pull ?attacking-premises argument-pattern)
+      (pull ?attacking-conclusions argument-pattern)
+      :in $ argument-pattern ?argument-id
+      :where [?undercuts :argument/conclusion ?argument-id]
+      [?argument-id :argument/premises ?attacked-premises]
+      [?attacking-premises :argument/conclusion ?attacked-premises]
+      [?attacking-premises :argument/type :argument.type/attack]
+      [?argument-id :argument/conclusion ?attacked-conclusion]
+      [?attacking-conclusions :argument/conclusion ?attacked-conclusion]
+      [?attacking-conclusions :argument/type :argument.type/attack]]
+    argument-id))
+(get-attackers-for-argument 17592186045447)
 (comment
   (count (starting-arguments-by-title "Cat or Dog?"))
   (count (all-arguments-for-discussion "Cat or Dog?"))

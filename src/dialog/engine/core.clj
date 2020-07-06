@@ -41,10 +41,10 @@
 
 ;; TODO
 (defn find-attacking-argument
-  "Choose an attacker of `argument` based on user's `attitude`."
+  "Choose an attacker of `argument`."
   [argument]
-  ;; Query the db and choose
-  argument)
+  (let [attacking-arguments (database/get-attackers-for-argument (:db/id argument))]
+    (first attacking-arguments)))
 
 ;; TODO
 (defn find-argument-for-opinion
