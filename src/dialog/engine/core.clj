@@ -39,27 +39,25 @@
 
 ;; -----------------------------------------------------------------------------
 
-;; TODO
 (defn find-attacking-argument
-  "Choose an attacker of `argument` based on user's `attitude`."
+  "Choose an attacker of `argument`."
   [argument]
-  ;; Query the db and choose
-  argument)
+  (let [attacking-arguments (database/get-attackers-for-argument (:db/id argument))]
+    (rand-nth attacking-arguments)))
 
 ;; TODO
 (defn find-argument-for-opinion
   "Choose an argument that defends the users opinion based on their `attitude`
   towards the current `argument` they are looking at."
-  [attitude argument]
+  [_attitude argument]
   argument)
 
-;; TODO
 (defn find-defending-arguments
   "Choose a subset of arguments that defend the users original standpoint."
   [argument]
-  [argument])
+  (database/support-for-argument (:db/id argument)))
 
-;; Das was der user auswählt
+;; react: Transitions the state based on what the user chose
 (defmulti ^:private react
           "Transitions from one state to the other. The payload for the
           transitions is defined in the multimethods. Always provides the next
@@ -111,23 +109,20 @@
     [:reasons/present (merge args {:present/reasons statements
                                    :user/attitude :attitude/pro})]))
 
-;; TODO
 (defn statements-attacking-a-premise
   "Returns all statements that attack the premise of `argument`."
   [argument]
-  [])
+  (database/statements-attacking-premise (:db/id argument)))
 
-;; TODO
 (defn statements-attacking-a-conclusion
   "Returns all statements that attack the conclusion of `argument`."
   [argument]
-  [])
+  (database/statements-attacking-conclusion (:db/id argument)))
 
-;; TODO
 (defn statements-undercutting-argument
   "Returns all statements that are used to undercut `argument`."
   [argument]
-  [])
+  (database/statements-undercutting-argument (:db/id argument)))
 
 (defmethod react :reaction/undermine
   ;; User wants to attack the premises of the shown `argument/chosen`.

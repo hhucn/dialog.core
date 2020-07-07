@@ -1,5 +1,6 @@
 # Superfluous files
 .cpcache/
+.cache/
 target/
 .nrepl-port
 pom.xml

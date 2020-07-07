@@ -43,5 +43,5 @@
 
 (defn reopen-discussion!
   "Reopens an already closed discussion."
-  [discusison-title]
-  (database/reopen-discussion! discusison-title))
+  [discussion-title]
+  (database/reopen-discussion! discussion-title))

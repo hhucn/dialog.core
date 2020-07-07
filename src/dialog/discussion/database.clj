@@ -6,19 +6,21 @@
             [datomic.client.api :as d]])
 
 ;; Setting the client to private breaks some async routine in datomic
-(defonce datomic-client (d/client config/datomic))
+(defonce datomic-client
+  (d/client config/datomic))
 
 (defn new-connection
+  "Connects to the database and returns a connection."
   []
   (d/connect datomic-client {:db-name config/db-name}))
 
 (defn transact
-  "Shorthand for transaction"
+  "Shorthand for transaction."
   [data]
   (d/transact (new-connection) {:tx-data data}))
 
 (defn- create-discussion-schema
-  "Creates the schema for discussions inside the database"
+  "Creates the schema for discussions inside the database."
   [connection]
   (d/transact connection {:tx-data models/datomic-schema}))
 
@@ -28,21 +30,41 @@
   (create-discussion-schema (new-connection))
   (transact test-data/testdata-cat-or-dog))
 
+(defn- ident-map->value
+  "Change an ident-map to a single value."
+  [data key]
+  (update data key #(:db/ident %)))
+
+
+;; -----------------------------------------------------------------------------
+;; Patterns
+
 (def ^:private argument-pattern
-  [:argument/version
+  "Defines the default pattern for arguments. Oftentimes used in pull-patterns
+  in a Datalog query bind the data to this structure."
+  [:db/id
+   :argument/version
    {:argument/author [:author/nickname]}
    {:argument/type [:db/ident]}
-   {:argument/premises [:statement/content
+   {:argument/premises [:db/id
+                        :statement/content
                         :statement/version
                         {:statement/author [:author/nickname]}]}
    {:argument/conclusion [:statement/content
                           :statement/version
-                          {:statement/author [:author/nickname]}]}])
+                          {:statement/author [:author/nickname]}
+                          :db/id]}])
 
-(defn- ident-map->value
-  "Change an ident-map to a single value"
-  [data key]
-  (update data key #(:db/ident %)))
+(def ^:private statement-pattern
+  "Representation of a statement. Oftentimes used in a Datalog pull pattern."
+  [:db/id
+   :statement/content
+   :statement/version
+   {:statement/author [:author/nickname]}])
+
+
+;; -----------------------------------------------------------------------------
+;; Queries
 
 (defn- query-arguments
   "Takes a `query` that returns arguments and applies an `argument-pattern` to it as
@@ -73,10 +95,116 @@
       [?discussion :discussion/starting-arguments ?starting-arguments]]
     discussion-title))
 
+(defn- statements-attacking-part
+  "Generic template query for statements either attacking a conclusion or the premises
+  of an argument."
+  [argument-id conclusion-or-premises]
+  (let [db (d/db (new-connection))
+        part-attribute (if (= :conclusion conclusion-or-premises)
+                         :argument/conclusion
+                         :argument/premises)]
+    (d/q
+      '[:find (pull ?attacking-premises statement-pattern)
+        :in $ statement-pattern ?argument-id ?part-attribute
+        :where [?argument-id ?part-attribute ?part]
+        ;; Give me the arguments where our premise is the conclusion and the type is
+        ;; an attack
+        [?potential-attackers :argument/conclusion ?part]
+        [?potential-attackers :argument/type :argument.type/attack]
+        [?potential-attackers :argument/premises ?attacking-premises]]
+      db statement-pattern argument-id part-attribute)))
+
+(defn statements-attacking-premise
+  "Returns all statements that are used to attack one of the premises of `argument-id`."
+  [argument-id]
+  (statements-attacking-part argument-id :premises))
+
+(defn statements-attacking-conclusion
+  "Returns all statements that are used to attack the conclusion of `argument-id`."
+  [argument-id]
+  (statements-attacking-part argument-id :conclusion))
+
+(defn statements-undercutting-argument
+  "Returns all statements uses to undercut `argument`."
+  [argument-id]
+  (let [db (d/db (new-connection))]
+    (d/q
+      '[:find (pull ?undercutting-premises statement-pattern)
+        :in $ statement-pattern ?argument-id
+        :where [?undercutting-arguments :argument/conclusion ?argument-id]
+        [?undercutting-arguments :argument/premises ?undercutting-premises]]
+      db statement-pattern argument-id)))
+
+(defn- direct-argument-attackers
+  "Queries the arguments attacking the premises or conclusion of `argument-id`."
+  [argument-id qualified-attribute]
+  (query-arguments
+    '[:find (pull ?attacking-arguments argument-pattern)
+      :in $ argument-pattern ?argument-id ?qualified-attribute
+      :where [?argument-id ?qualified-attribute ?attacked-statement]
+      [?attacking-arguments :argument/type :argument.type/attack]
+      [?attacking-arguments :argument/conclusion ?attacked-statement]]
+    argument-id qualified-attribute))
+
+(defn arguments-attacking-premises
+  "Give back all arguments that attack the premises of `argument-id`"
+  [argument-id]
+  (direct-argument-attackers argument-id :argument/premises))
+
+(defn arguments-attacking-conclusion
+  "Give back all arguments that attack the conclusion of `argument-id`"
+  [argument-id]
+  (direct-argument-attackers argument-id :argument/conclusion))
+
+(defn undercuts-to-argument
+  "Return all arguments that undercut `argument-id`."
+  [argument-id]
+  (query-arguments
+    '[:find (pull ?undercutters argument-pattern)
+      :in $ argument-pattern ?argument-id
+      :where [?undercutters :argument/conclusion ?argument-id]]
+    argument-id))
+
+(defn get-attackers-for-argument
+  "Returns all arguments that attack `argument-id`."
+  [argument-id]
+  (let [attacks-on-premises (arguments-attacking-premises argument-id)
+        attacks-on-conclusion (arguments-attacking-conclusion argument-id)
+        undercuts (undercuts-to-argument argument-id)]
+    (concat attacks-on-conclusion attacks-on-premises undercuts)))
+
+(defn- direct-argument-supporters
+  "Queries the arguments attacking the premises or conclusion of `argument-id`."
+  [argument-id qualified-attribute]
+  (query-arguments
+    '[:find (pull ?supporting-arguments argument-pattern)
+      :in $ argument-pattern ?argument-id ?qualified-attribute
+      :where [?argument-id ?qualified-attribute ?supported-statement]
+      [?supporting-arguments :argument/type :argument.type/support]
+      [?supporting-arguments :argument/conclusion ?supported-statement]]
+    argument-id qualified-attribute))
+
+(defn arguments-supporting-premises
+  "All arguments that support the premises of `argument-id`."
+  [argument-id]
+  (direct-argument-supporters argument-id :argument/premises))
+
+(defn arguments-supporting-conclusion
+  "All arguments that support the conclusion of `argument-id`."
+  [argument-id]
+  (direct-argument-supporters argument-id :argument/conclusion))
+
+(defn support-for-argument
+  "Returns all arguments supporting the premises or conclusion of `argument-id`."
+  [argument-id]
+  (concat (arguments-supporting-premises argument-id)
+          (arguments-supporting-conclusion argument-id)))
+
 (comment
+  (support-for-argument 17592186045447)
   (count (starting-arguments-by-title "Cat or Dog?"))
   (count (all-arguments-for-discussion "Cat or Dog?"))
-  )
+  :end)
 
 
 ;; Concrete Transactions ########################
