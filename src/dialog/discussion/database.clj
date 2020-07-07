@@ -6,19 +6,21 @@
             [datomic.client.api :as d]])
 
 ;; Setting the client to private breaks some async routine in datomic
-(defonce datomic-client (d/client config/datomic))
+(defonce datomic-client
+  (d/client config/datomic))
 
 (defn new-connection
+  "Connects to the database and returns a connection."
   []
   (d/connect datomic-client {:db-name config/db-name}))
 
 (defn transact
-  "Shorthand for transaction"
+  "Shorthand for transaction."
   [data]
   (d/transact (new-connection) {:tx-data data}))
 
 (defn- create-discussion-schema
-  "Creates the schema for discussions inside the database"
+  "Creates the schema for discussions inside the database."
   [connection]
   (d/transact connection {:tx-data models/datomic-schema}))
 
@@ -29,7 +31,7 @@
   (transact test-data/testdata-cat-or-dog))
 
 (defn- ident-map->value
-  "Change an ident-map to a single value"
+  "Change an ident-map to a single value."
   [data key]
   (update data key #(:db/ident %)))
 
