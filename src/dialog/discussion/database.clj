@@ -49,7 +49,8 @@
                         {:statement/author [:author/nickname]}]}
    {:argument/conclusion [:statement/content
                           :statement/version
-                          {:statement/author [:author/nickname]}]}])
+                          {:statement/author [:author/nickname]}
+                          :db/id]}])
 
 (def ^:private statement-pattern
   "Representation of a statement. Oftentimes used in a Datalog pull pattern."
@@ -131,24 +132,43 @@
         [?undercutting-arguments :argument/premises ?undercutting-premises]]
       db statement-pattern argument-id)))
 
-;; TODO does only return first pull syntax for some reason
-;; TODO according to docs it should pull all three...
+(defn- direct-argument-attackers
+  "Queries the arguments attacking the premises or conclusion of `argument-id`."
+  [argument-id qualified-attribute]
+  (query-arguments
+    '[:find (pull ?attacking-arguments argument-pattern)
+      :in $ argument-pattern ?argument-id ?qualified-attribute
+      :where [?argument-id ?qualified-attribute ?attacked-statement]
+      [?attacking-arguments :argument/type :argument.type/attack]
+      [?attacking-arguments :argument/conclusion ?attacked-statement]]
+    argument-id qualified-attribute))
+
+(defn arguments-attacking-premises
+  "Give back all arguments that attack the premises of `argument-id`"
+  [argument-id]
+  (direct-argument-attackers argument-id :argument/premises))
+
+(defn arguments-attacking-conclusion
+  "Give back all arguments that attack the conclusion of `argument-id`"
+  [argument-id]
+  (direct-argument-attackers argument-id :argument/conclusion))
+
+(defn undercuts-to-argument
+  "Return all arguments that undercut `argument-id`."
+  [argument-id]
+  (query-arguments
+    '[:find (pull ?undercutters argument-pattern)
+      :in $ argument-pattern ?argument-id
+      :where [?undercutters :argument/conclusion ?argument-id]]
+    argument-id))
+
 (defn get-attackers-for-argument
   "Returns all arguments that attack `argument-id`."
   [argument-id]
-  (query-arguments
-    '[:find (pull ?undercuts argument-pattern)
-      (pull ?attacking-premises argument-pattern)
-      (pull ?attacking-conclusions argument-pattern)
-      :in $ argument-pattern ?argument-id
-      :where [?undercuts :argument/conclusion ?argument-id]
-      [?argument-id :argument/premises ?attacked-premises]
-      [?attacking-premises :argument/conclusion ?attacked-premises]
-      [?attacking-premises :argument/type :argument.type/attack]
-      [?argument-id :argument/conclusion ?attacked-conclusion]
-      [?attacking-conclusions :argument/conclusion ?attacked-conclusion]
-      [?attacking-conclusions :argument/type :argument.type/attack]]
-    argument-id))
+  (let [attacks-on-premises (arguments-attacking-premises argument-id)
+        attacks-on-conclusion (arguments-attacking-conclusion argument-id)
+        undercuts (undercuts-to-argument argument-id)]
+    (concat attacks-on-conclusion attacks-on-premises undercuts)))
 
 (comment
   (get-attackers-for-argument 17592186045447)
