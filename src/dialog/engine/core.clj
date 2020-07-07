@@ -1,7 +1,6 @@
 (ns dialog.engine.core
-  (:require [dialog.discussion.database :as database]))
-
-;; -----------------------------------------------------------------------------
+  (:require [dialog.discussion.database :as database]
+            [clojure.spec.alpha :as s]))
 
 ;; Das was der user angezeigt bekommt
 (defmulti ^:private step
@@ -152,18 +151,44 @@
   (react :reasons/new args))
 
 
+;; -----------------------------------------------------------------------------
+;; Comfort Functions
+
 (defn continue-discussion
   "Takes a last step (according to users choice) and calls the appropriate react
   function. Its result is called with step again."
   [current-step args]
   (let [[next-step new-args] (react current-step args)]
     (step next-step new-args)))
+(s/fdef continue-discussion
+        :args (s/cat :current-step keyword? :args map?)
+        :ret vector?)
 
 (defn start-discussion
+  "Start with all starting arguments from a discussion."
   [discussion-title]
   (let [[new-step new-args]
         (first (step :discussion/title {:discussion/title discussion-title}))]
     (continue-discussion new-step new-args)))
+(s/fdef start-discussion
+        :args (s/cat :discussion-title string?))
+
+(defn choose-argument [argument args]
+  (continue-discussion
+    :argument/chosen
+    (merge args
+           {:argument/chosen argument
+            :discussion/is-start? false
+            :present/arguments []})))
+
+(defn reaction-support [argument args]
+  (continue-discussion
+    :reaction/support
+    (merge args
+           {:argument/chosen argument})))
+
+
+;; -----------------------------------------------------------------------------
 
 (comment
   (start-discussion "Cat or Dog?")
