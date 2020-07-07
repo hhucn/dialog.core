@@ -191,23 +191,142 @@
 ;; -----------------------------------------------------------------------------
 
 (comment
+  (declare argument-attacking-for-support argument)
+
   (start-discussion "Cat or Dog?")
-  (continue-discussion :argument/chosen
-                       (merge {:discussion/title "Cat or Dog?",
-                               :discussion/is-start? false,
-                               :present/arguments []}
-                              {:chosen/argument {:argument/version "hullo"
-                                                 :ganz-toll :bar}}))
+  (choose-argument argument {:discussion/title "Cat or Dog?"})
+  (reaction-support argument-attacking-for-support {:discussion/title "Cat or Dog?"})
+
   (continue-discussion :reaction/undermine
                        {:discussion/title "Cat or Dog?",
                         :chosen/argument {:argument/version "hullo", :ganz-toll :bar},
                         :argument/attacking {:tolles :_argument}})
+
   (continue-discussion :reason/select
                        {:discussion/title "Cat or Dog?",
                         :chosen/argument {:noch-toller :wonderbar},
                         :argument/attacking {:tolles :_argument},
                         :present/reasons [],
-                        :user/attitude :attitude/pro}))
+                        :user/attitude :attitude/pro})
+
+  (def nach-start-discussion
+    [[:argument/chosen
+      {:discussion/title "Cat or Dog?",
+       :present/arguments [{:db/id 17592186045432,
+                            :argument/version 1,
+                            :argument/author #:author{:nickname "Wegi"},
+                            :argument/type :argument.type/support,
+                            :argument/premises [{:db/id 17592186045433,
+                                                 :statement/content "dogs can act as watchdogs",
+                                                 :statement/version 1,
+                                                 :statement/author #:author{:nickname "Wegi"}}],
+                            :argument/conclusion {:db/id 17592186045429,
+                                                  :statement/content "we should get a dog",
+                                                  :statement/version 1,
+                                                  :statement/author #:author{:nickname "Wegi"}}}
+                           {:db/id 17592186045434,
+                            :argument/version 1,
+                            :argument/author #:author{:nickname "Der Schredder"},
+                            :argument/type :argument.type/attack,
+                            :argument/premises [{:db/id 17592186045435,
+                                                 :statement/content "you have to take the dog for a walk every day, which is tedious",
+                                                 :statement/version 1,
+                                                 :statement/author #:author{:nickname "Der Schredder"}}],
+                            :argument/conclusion {:db/id 17592186045429,
+                                                  :statement/content "we should get a dog",
+                                                  :statement/version 1,
+                                                  :statement/author #:author{:nickname "Wegi"}}}
+                           {:db/id 17592186045440,
+                            :argument/version 1,
+                            :argument/author #:author{:nickname "Christian"},
+                            :argument/type :argument.type/support,
+                            :argument/premises [{:db/id 17592186045441,
+                                                 :statement/content "it would be no problem",
+                                                 :statement/version 1,
+                                                 :statement/author #:author{:nickname "Christian"}}],
+                            :argument/conclusion {:db/id 17592186045431,
+                                                  :statement/content "we could get both, a dog and a cat",
+                                                  :statement/version 1,
+                                                  :statement/author #:author{:nickname "Christian"}}}
+                           {:db/id 17592186045444,
+                            :argument/version 1,
+                            :argument/author #:author{:nickname "Der miese Peter"},
+                            :argument/type :argument.type/undercut,
+                            :argument/premises [{:db/id 17592186045445,
+                                                 :statement/content "won't be best friends",
+                                                 :statement/version 1,
+                                                 :statement/author #:author{:nickname "Der miese Peter"}}
+                                                {:db/id 17592186045446,
+                                                 :statement/content "a cat and a dog will generally not get along well",
+                                                 :statement/version 1,
+                                                 :statement/author #:author{:nickname "Der miese Peter"}}],
+                            :argument/conclusion #:db{:id 17592186045440}}
+                           {:db/id 17592186045447,
+                            :argument/version 1,
+                            :argument/author #:author{:nickname "Der Schredder"},
+                            :argument/type :argument.type/support,
+                            :argument/premises [{:db/id 17592186045448,
+                                                 :statement/content "cats are very independent",
+                                                 :statement/version 1,
+                                                 :statement/author #:author{:nickname "Der Schredder"}}],
+                            :argument/conclusion {:db/id 17592186045430,
+                                                  :statement/content "we should get a cat",
+                                                  :statement/version 1,
+                                                  :statement/author #:author{:nickname "Der Schredder"}}}
+                           {:db/id 17592186045459,
+                            :argument/version 1,
+                            :argument/author #:author{:nickname "Der Schredder"},
+                            :argument/type :argument.type/support,
+                            :argument/premises [{:db/id 17592186045460,
+                                                 :statement/content "a cat does not cost taxes like a dog does",
+                                                 :statement/version 1,
+                                                 :statement/author #:author{:nickname "Der Schredder"}}],
+                            :argument/conclusion {:db/id 17592186045430,
+                                                  :statement/content "we should get a cat",
+                                                  :statement/version 1,
+                                                  :statement/author #:author{:nickname "Der Schredder"}}}
+                           {:db/id 17592186045467,
+                            :argument/version 1,
+                            :argument/author #:author{:nickname "Wegi"},
+                            :argument/type :argument.type/attack,
+                            :argument/premises [{:db/id 17592186045468,
+                                                 :statement/content "cats are capricious",
+                                                 :statement/version 1,
+                                                 :statement/author #:author{:nickname "Wegi"}}],
+                            :argument/conclusion {:db/id 17592186045430,
+                                                  :statement/content "we should get a cat",
+                                                  :statement/version 1,
+                                                  :statement/author #:author{:nickname "Der Schredder"}}}]}]])
+
+  (def argument
+    {:db/id 17592186045432,
+     :argument/version 1,
+     :argument/author #:author{:nickname "Wegi"},
+     :argument/type :argument.type/support,
+     :argument/premises [{:db/id 17592186045433,
+                          :statement/content "dogs can act as watchdogs",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Wegi"}}],
+     :argument/conclusion {:db/id 17592186045429,
+                           :statement/content "we should get a dog",
+                           :statement/version 1,
+                           :statement/author #:author{:nickname "Wegi"}}})
+
+  (def argument-attacking-for-support
+    {:db/id 17592186045434,
+     :argument/version 1,
+     :argument/author #:author{:nickname "Der Schredder"},
+     :argument/type :argument.type/attack,
+     :argument/premises [{:db/id 17592186045435,
+                          :statement/content "you have to take the dog for a walk every day, which is tedious",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Der Schredder"}}],
+     :argument/conclusion {:db/id 17592186045429,
+                           :statement/content "we should get a dog",
+                           :statement/version 1,
+                           :statement/author #:author{:nickname "Wegi"}}})
+
+  :end)
 ;; 1. Startfunktion
 ;; 2. Step
 ;; 3. Zeige user Step möglichkeiten [a, b, c]
