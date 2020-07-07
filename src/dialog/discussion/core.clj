@@ -7,3 +7,7 @@
   (when-not (System/getenv "PRODUCTION")
     (spec-test/instrument))
   (db/init))
+
+(comment
+  (-main)
+  :end)
