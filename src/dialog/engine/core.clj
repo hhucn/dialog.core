@@ -52,7 +52,6 @@
   [_attitude argument]
   argument)
 
-;; TODO
 (defn find-defending-arguments
   "Choose a subset of arguments that defend the users original standpoint."
   [argument]
