@@ -44,7 +44,8 @@
    :argument/version
    {:argument/author [:author/nickname]}
    {:argument/type [:db/ident]}
-   {:argument/premises [:statement/content
+   {:argument/premises [:db/id
+                        :statement/content
                         :statement/version
                         {:statement/author [:author/nickname]}]}
    {:argument/conclusion [:statement/content
@@ -170,8 +171,35 @@
         undercuts (undercuts-to-argument argument-id)]
     (concat attacks-on-conclusion attacks-on-premises undercuts)))
 
+(defn- direct-argument-supporters
+  "Queries the arguments attacking the premises or conclusion of `argument-id`."
+  [argument-id qualified-attribute]
+  (query-arguments
+    '[:find (pull ?supporting-arguments argument-pattern)
+      :in $ argument-pattern ?argument-id ?qualified-attribute
+      :where [?argument-id ?qualified-attribute ?supported-statement]
+      [?supporting-arguments :argument/type :argument.type/support]
+      [?supporting-arguments :argument/conclusion ?supported-statement]]
+    argument-id qualified-attribute))
+
+(defn arguments-supporting-premises
+  "All arguments that support the premises of `argument-id`."
+  [argument-id]
+  (direct-argument-supporters argument-id :argument/premises))
+
+(defn arguments-supporting-conclusion
+  "All arguments that support the conclusion of `argument-id`."
+  [argument-id]
+  (direct-argument-supporters argument-id :argument/conclusion))
+
+(defn support-for-argument
+  "Returns all arguments supporting the premises or conclusion of `argument-id`."
+  [argument-id]
+  (concat (arguments-supporting-premises argument-id)
+          (arguments-supporting-conclusion argument-id)))
+
 (comment
-  (get-attackers-for-argument 17592186045447)
+  (support-for-argument 17592186045447)
   (count (starting-arguments-by-title "Cat or Dog?"))
   (count (all-arguments-for-discussion "Cat or Dog?"))
   :end)

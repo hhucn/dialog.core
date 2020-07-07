@@ -56,7 +56,7 @@
 (defn find-defending-arguments
   "Choose a subset of arguments that defend the users original standpoint."
   [argument]
-  [argument])
+  (database/support-for-argument (:db/id argument)))
 
 ;; react: Transitions the state based on what the user chose
 (defmulti ^:private react
