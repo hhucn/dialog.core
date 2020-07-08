@@ -142,14 +142,15 @@
 (defmethod react :reason/new
   ;; User can provide a new reason for their attack on the chosen argument.
   [_step {:keys [argument/new] :as args}]
-  (let [arguments (find-attacking-argument new)]
-    [:arguments/present (merge args {:present/arguments arguments
+  (let [arguments (find-attacking-argument new)
+        arguments' (if (empty? arguments) [] arguments)]
+    [:arguments/present (merge args {:present/arguments arguments'
                                      :user/attitude :attitude/pro})]))
 
 (defmethod react :reason/select
   ;; User finds a suitable reason and selects it.
   [_step args]
-  (react :reasons/new args))
+  (react :reason/new args))
 
 
 ;; -----------------------------------------------------------------------------
