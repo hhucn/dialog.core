@@ -208,11 +208,22 @@
 ;; -----------------------------------------------------------------------------
 
 (comment
-  (declare argument-attacking-for-support argument)
+  (declare argument-attacking-for-support argument
+           argument-undermine
+           argument-undercut
+           argument-rebut
+           selected-reason)
+
+  (def test-args {:discussion/title "Cat or Dog?"})
 
   (start-discussion "Cat or Dog?")
-  (choose-argument argument {:discussion/title "Cat or Dog?"})
-  (reaction-support argument-attacking-for-support {:discussion/title "Cat or Dog?"})
+  (choose-argument argument test-args)
+  (reaction-support argument-attacking-for-support test-args)
+  (reaction-undermine argument-undermine test-args)
+  (reaction-undercut argument-undercut test-args)
+  (reaction-rebut argument-rebut test-args)
+  (reason-select selected-reason test-args)
+  (reason-new my-reason argument-rebut test-args)
 
   (continue-discussion :reaction/undermine
                        {:discussion/title "Cat or Dog?",
@@ -342,6 +353,53 @@
                            :statement/content "we should get a dog",
                            :statement/version 1,
                            :statement/author #:author{:nickname "Wegi"}}})
+
+  (def argument-undermine
+    {:db/id 17592186045434,
+     :argument/version 1,
+     :argument/author #:author{:nickname "Der Schredder"},
+     :argument/type :argument.type/attack,
+     :argument/premises [{:db/id 17592186045435,
+                          :statement/content "you have to take the dog for a walk every day, which is tedious",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Der Schredder"}}],
+     :argument/conclusion {:db/id 17592186045429,
+                           :statement/content "we should get a dog",
+                           :statement/version 1,
+                           :statement/author #:author{:nickname "Wegi"}}})
+
+  (def argument-undercut
+    {:db/id 17592186045436,
+     :argument/version 1,
+     :argument/author #:author{:nickname "Der miese Peter"},
+     :argument/type :argument.type/undercut,
+     :argument/premises [{:db/id 17592186045437,
+                          :statement/content "we have no use for a watchdog",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Der miese Peter"}}],
+     :argument/conclusion #:db{:id 17592186045432}})
+
+  (def argument-rebut
+    {:db/id 17592186045436,
+     :argument/version 1,
+     :argument/author #:author{:nickname "Der miese Peter"},
+     :argument/type :argument.type/undercut,
+     :argument/premises [{:db/id 17592186045437,
+                          :statement/content "we have no use for a watchdog",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Der miese Peter"}}],
+     :argument/conclusion #:db{:id 17592186045432}})
+
+  (def selected-reason
+    {:db/id 17592186045436,
+     :argument/version 1,
+     :argument/author #:author{:nickname "Der miese Peter"},
+     :argument/type :argument.type/undercut,
+     :argument/premises [{:db/id 17592186045437,
+                          :statement/content "we have no use for a watchdog",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Der miese Peter"}}],
+     :argument/conclusion #:db{:id 17592186045432}})
 
   :end)
 ;; 1. Startfunktion
