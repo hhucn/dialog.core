@@ -178,17 +178,32 @@
 (defn choose-argument [argument args]
   (continue-discussion
     :argument/chosen
-    (merge args
-           {:argument/chosen argument
-            :discussion/is-start? false
-            :present/arguments []})))
+    (-> args
+        (dissoc :present/arguments)
+        (merge {:argument/chosen argument
+                :discussion/is-start? false}))))
+
+(defn- reaction-builder [next-step argument args]
+  (continue-discussion
+    next-step
+    (merge args {:argument/chosen argument})))
 
 (defn reaction-support [argument args]
-  (continue-discussion
-    :reaction/support
-    (merge args
-           {:argument/chosen argument})))
+  (reaction-builder :reaction/support argument args))
 
+(defn reaction-undermine [argument args]
+  (reaction-builder :reaction/undermine argument args))
+
+(defn reaction-undercut [argument args]
+  (reaction-builder :reaction/undercut argument args))
+
+(defn reaction-rebut [argument args]
+  (reaction-builder :reaction/rebut argument args))
+
+(defn reason-select [reason args]
+  (continue-discussion
+    :reason/select
+    (merge args {:argument/new reason})))
 
 ;; -----------------------------------------------------------------------------
 
