@@ -1,8 +1,8 @@
 #kaocha/v1
-    {:tests [{:type :kaocha.type/spec.test.check
-              :id :generative-fdef-checks
-              :clojure.spec.test.check/opts {:num-tests 100
-                                             :max-size 100}}
+    {:tests [#_{:type :kaocha.type/spec.test.check
+                :id :generative-fdef-checks
+                :clojure.spec.test.check/opts {:num-tests 100
+                                               :max-size 100}}
              {:id :unit
               :test-paths ["test"]}]}
 

@@ -19,6 +19,7 @@
    {:db/ident :author/nickname
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
+    :db/unique :db.unique/value
     :db/doc "The nickname of an author"}
    ;; Argument Types
    {:db/ident :argument.type/support}
