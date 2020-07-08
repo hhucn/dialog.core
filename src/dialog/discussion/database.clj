@@ -3,7 +3,8 @@
             [dialog.discussion.config :as config]
             [dialog.discussion.test-data :as test-data]
             [dialog.utils :as utils]
-            [datomic.client.api :as d]])
+            [datomic.client.api :as d]
+            [clojure.spec.alpha :as s]])
 
 ;; Setting the client to private breaks some async routine in datomic
 (defonce datomic-client
@@ -232,3 +233,34 @@
   [title]
   (transact [[:db/retract [:discussion/title title] :discussion/states :discussion.state/open]
              [:db/add [:discussion/title title] :discussion/states :discussion.state/closed]]))
+
+;; -----------------------------------------------------------------------------
+
+;; TODO experimental
+(defn new-argument!
+  "Creates a new argument and stores it in the database."
+  [discussion-title author-nickname conclusion & premises]
+  (let [query-author [:author/nickname author-nickname]]
+    {:argument/author query-author
+     :argument/premises (mapv (fn [premise] {:db/id premise
+                                             :statement/author query-author
+                                             :statement/content premise
+                                             :statement/version 1})
+                              premises)
+     :argument/conclusion {:db/id conclusion
+                           :statement/author query-author
+                           :statement/content conclusion
+                           :statement/version 1}
+     :argument/version 1
+     :argument/type :argument.type/support
+     :argument/discussions [[:discussion/title discussion-title]]}))
+(s/fdef new-argument!
+        :args (s/cat :discussion-title string?
+                     :author-nickname string?
+                     :conclusion string?
+                     :premises (s/coll-of string?)))
+
+(comment
+  (transact
+    [(new-argument! "Cat or Dog?" "Christian" "this is sparta" "foo" "bar" "baz")])
+  :end)
