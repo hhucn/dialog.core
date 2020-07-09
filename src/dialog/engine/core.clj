@@ -168,9 +168,9 @@
 
 (defn start-discussion
   "Start with all starting arguments from a discussion."
-  [discussion-title]
+  [{:keys [discussion/title]}]
   (let [[new-step new-args]
-        (first (step :discussion/title {:discussion/title discussion-title}))]
+        (first (step :discussion/title {:discussion/title title}))]
     (continue-discussion new-step new-args)))
 (s/fdef start-discussion
         :args (s/cat :discussion-title string?))
@@ -206,7 +206,8 @@
     (merge args {:argument/new reason})))
 
 ;; TODO
-(defn reason-new [my-reason argument test-args])
+(defn reason-new [my-reason argument args])
+
 
 
 ;; -----------------------------------------------------------------------------
@@ -218,16 +219,17 @@
            argument-rebut
            selected-reason)
 
-  (def test-args {:discussion/title "Cat or Dog?"})
+  (def test-args {:discussion/id 17592186045477
+                  :discussion/title "Cat or Dog?"})
 
-  (start-discussion "Cat or Dog?")
+  (start-discussion test-args)
   (choose-argument argument test-args)
   (reaction-support argument-attacking-for-support test-args)
   (reaction-undermine argument-undermine test-args)
   (reaction-undercut argument-undercut test-args)
   (reaction-rebut argument-rebut test-args)
   (reason-select selected-reason test-args)
-  (reason-new my-reason argument-rebut test-args)
+  (reason-new "new stuff" argument-rebut test-args)
 
   (continue-discussion :reaction/undermine
                        {:discussion/title "Cat or Dog?",
