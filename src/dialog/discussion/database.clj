@@ -247,7 +247,7 @@
                (d/db (new-connection)), title)))
 (s/fdef discussion-id-by-title
         :args (s/cat :title string?)
-        :ret number?)
+        :ret (s/? number?))
 
 
 ;; -----------------------------------------------------------------------------
@@ -275,8 +275,8 @@
         :args (s/cat :discussion-title string?
                      :author-nickname string?
                      :conclusion string?
-                     :premises (s/* string?)))
-
+                     :premises (s/* string?))
+        :ret map?)
 
 (comment
   (discussion-id-by-title "Cat or Dog?")
