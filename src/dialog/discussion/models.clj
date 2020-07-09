@@ -75,6 +75,7 @@
     :db/cardinality :db.cardinality/many
     :db/doc "The arguments at the source of the discussion-graph"}])
 
+;; -----------------------------------------------------------------------------
 ;; Specs. Please keep in sync with model above. Extend as needed.
 (s/def :discussion/title string?)
 (s/def :discussion/description string?)
@@ -85,3 +86,12 @@
 (s/def :discussion/starting-arguments (s/coll-of map?))     ;; TODO Specify more
 (s/def ::discussion (s/keys :req [:discussion/title :discussion/description
                                   :discussion/states :discussion/starting-arguments]))
+
+(s/def :author/nickname string?)
+(s/def ::author (s/keys :req [:author/nickname]))
+
+(s/def :statement/content string?)
+(s/def :statement/version number?)
+(s/def :statement/author ::author)
+(s/def ::statement
+  (s/keys :req [:statement/content :statement/version :statement/author]))
