@@ -245,8 +245,18 @@
                  :in $ ?title
                  :where [?e :discussion/title ?title]]
                (d/db (new-connection)), title)))
+
 (s/fdef discussion-id-by-title
         :args (s/cat :title string?)
+        :ret (s/? number?))
+
+(defn all-discussion-titles-and-ids []
+  (d/q '[:find ?e ?title
+         :in $
+         :where [?e :discussion/title ?title]]
+       (d/db (new-connection))))
+
+(s/fdef all-discussion-titles-and-ids
         :ret (s/? number?))
 
 
