@@ -234,33 +234,55 @@
   (transact [[:db/retract [:discussion/title title] :discussion/states :discussion.state/open]
              [:db/add [:discussion/title title] :discussion/states :discussion.state/closed]]))
 
-;; -----------------------------------------------------------------------------
 
-;; TODO experimental
+;; -----------------------------------------------------------------------------
+;; Query entities
+
+(defn discussion-id-by-title
+  "Look in the database and return the discussion id by its title."
+  [title]
+  (ffirst (d/q '[:find ?e
+                 :in $ ?title
+                 :where [?e :discussion/title ?title]]
+               (d/db (new-connection)), title)))
+(s/fdef discussion-id-by-title
+        :args (s/cat :title string?)
+        :ret number?)
+
+
+;; -----------------------------------------------------------------------------
+;; Write new discussion entities
+
 (defn new-argument!
   "Creates a new argument and stores it in the database."
   [discussion-title author-nickname conclusion & premises]
-  (let [query-author [:author/nickname author-nickname]]
-    {:argument/author query-author
-     :argument/premises (mapv (fn [premise] {:db/id premise
-                                             :statement/author query-author
-                                             :statement/content premise
-                                             :statement/version 1})
-                              premises)
-     :argument/conclusion {:db/id conclusion
-                           :statement/author query-author
-                           :statement/content conclusion
-                           :statement/version 1}
-     :argument/version 1
-     :argument/type :argument.type/support
-     :argument/discussions [[:discussion/title discussion-title]]}))
+  (transact
+    [(let [query-author [:author/nickname author-nickname]]
+       {:argument/author query-author
+        :argument/premises (mapv (fn [premise] {:db/id premise
+                                                :statement/author query-author
+                                                :statement/content premise
+                                                :statement/version 1})
+                                 premises)
+        :argument/conclusion {:db/id conclusion
+                              :statement/author query-author
+                              :statement/content conclusion
+                              :statement/version 1}
+        :argument/version 1
+        :argument/type :argument.type/support
+        :argument/discussions [(discussion-id-by-title discussion-title)]})]))
 (s/fdef new-argument!
         :args (s/cat :discussion-title string?
                      :author-nickname string?
                      :conclusion string?
-                     :premises (s/coll-of string?)))
+                     :premises (s/* string?)))
+
 
 (comment
-  (transact
-    [(new-argument! "Cat or Dog?" "Christian" "this is sparta" "foo" "bar" "baz")])
+  (discussion-id-by-title "Cat or Dog?")
+  (new-argument! "Cat or Dog?" "Christian" "this is sparta" "foo" "bar" "baz")
+  (d/q '[:find ?e
+         :in $ ?title
+         :where [?e :statement/content ?title]]
+       (d/db (new-connection)), "foo")
   :end)
