@@ -96,6 +96,14 @@
       [?discussion :discussion/starting-arguments ?starting-arguments]]
     discussion-title))
 
+(defn starting-conclusions-by-discussion-title
+  "Get all statements / conclusions (formerly positions) from the starting
+  arguments. Return only all non-undercuts."
+  [title]
+  (let [possible-statements (map :argument/conclusion
+                                 (starting-arguments-by-title title))]
+    (filter #(s/valid? ::models/statement %) possible-statements)))
+
 (defn- statements-attacking-part
   "Generic template query for statements either attacking a conclusion or the premises
   of an argument."
