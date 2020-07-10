@@ -60,7 +60,6 @@
    {:db/ident :discussion/title
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
-    :db/unique :db.unique/value
     :db/doc "The title / heading of a discussion. This should be system-widely unique."}
    {:db/ident :discussion/description
     :db/valueType :db.type/string
