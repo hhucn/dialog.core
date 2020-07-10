@@ -68,10 +68,10 @@
   ;; Chooses the arguments presented to the user. `discussion/is-start?`
   ;; marks whether those are starting arguments. If not, the arguments
   ;; presented attack `arguments/chosen` based on `user/attitude`.
-  [_step {:keys [discussion/title discussion/is-start? user/attitude argument/chosen]
+  [_step {:keys [discussion/id discussion/is-start? user/attitude argument/chosen]
           :as args}]
   (let [arguments (if is-start?
-                    (database/starting-arguments-by-title title)
+                    (database/starting-arguments-by-discussion id)
                     (find-argument-for-opinion attitude chosen))]
     [:arguments/present (merge (dissoc args :discussion/is-start?)
                                {:present/arguments arguments})]))
@@ -168,10 +168,11 @@
 
 (defn start-discussion
   "Start with all starting arguments from a discussion."
-  [{:keys [discussion/title]}]
+  [args]
   (let [[new-step new-args]
-        (first (step :discussion/title {:discussion/title title}))]
+        (first (step :discussion/title args))]
     (continue-discussion new-step new-args)))
+
 (s/fdef start-discussion
         :args (s/cat :discussion-title string?))
 
