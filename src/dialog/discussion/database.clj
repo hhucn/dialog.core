@@ -77,31 +77,29 @@
     (map #(ident-map->value (first %) :argument/type) arguments)))
 
 (defn all-arguments-for-discussion
-  "Returns all arguments belonging to a discussion, identified by title."
-  [discussion-title]
+  "Returns all arguments belonging to a discussion, identified by discussion id."
+  [discussion-id]
   (query-arguments
     '[:find (pull ?discussion-arguments argument-pattern)
-      :in $ argument-pattern ?discussion-title
-      :where [?discussion :discussion/title ?discussion-title]
-      [?discussion-arguments :argument/discussions ?discussion]]
-    discussion-title))
+      :in $ argument-pattern ?discussion-id
+      :where [?discussion-arguments :argument/discussions ?discussion-id]]
+    discussion-id))
 
-(defn starting-arguments-by-title
+(defn starting-arguments-by-discussion
   "Deep-Query all starting-arguments of a certain discussion."
-  [discussion-title]
+  [discussion-id]
   (query-arguments
     '[:find (pull ?starting-arguments argument-pattern)
-      :in $ argument-pattern ?discussion-title
-      :where [?discussion :discussion/title ?discussion-title]
-      [?discussion :discussion/starting-arguments ?starting-arguments]]
-    discussion-title))
+      :in $ argument-pattern ?discussion-id
+      :where [?discussion-id :discussion/starting-arguments ?starting-arguments]]
+    discussion-id))
 
-(defn starting-conclusions-by-discussion-title
+(defn starting-conclusions-by-discussion
   "Get all statements / conclusions (formerly positions) from the starting
   arguments. Return only all non-undercuts."
-  [title]
-  (let [possible-statements (map :argument/conclusion
-                                 (starting-arguments-by-title title))]
+  [discussion-id]
+  (let [starting-arguments (starting-arguments-by-discussion discussion-id)
+        possible-statements (map :argument/conclusion starting-arguments)]
     (filter #(s/valid? ::models/statement %) possible-statements)))
 
 (defn- statements-attacking-part
@@ -211,8 +209,8 @@
 
 (comment
   (support-for-argument 17592186045447)
-  (count (starting-arguments-by-title "Cat or Dog?"))
-  (count (all-arguments-for-discussion "Cat or Dog?"))
+  (count (starting-arguments-by-discussion 17592186045477))
+  (count (all-arguments-for-discussion 17592186045477))
   :end)
 
 
@@ -225,22 +223,22 @@
 
 
 (defn delete-discussion!
-  "Sets the discussion with the corresponding title to `deleted`."
-  [title]
-  (transact [{:db/id [:discussion/title title]
+  "Sets the discussion with the corresponding discussion to `deleted`."
+  [discussion-id]
+  (transact [{:db/id discussion-id
               :discussion/states #{:discussion.state/deleted}}]))
 
 (defn reopen-discussion!
   "Opens a closed discussion. Does not check whether the discussion is closed."
-  [title]
-  (transact [[:db/retract [:discussion/title title] :discussion/states :discussion.state/closed]
-             [:db/add [:discussion/title title] :discussion/states :discussion.state/open]]))
+  [discussion-id]
+  (transact [[:db/retract discussion-id :discussion/states :discussion.state/closed]
+             [:db/add discussion-id :discussion/states :discussion.state/open]]))
 
 (defn close-discussion!
   "Close a discussion."
-  [title]
-  (transact [[:db/retract [:discussion/title title] :discussion/states :discussion.state/open]
-             [:db/add [:discussion/title title] :discussion/states :discussion.state/closed]]))
+  [discussion-id]
+  (transact [[:db/retract discussion-id :discussion/states :discussion.state/open]
+             [:db/add discussion-id :discussion/states :discussion.state/closed]]))
 
 
 ;; -----------------------------------------------------------------------------
@@ -273,7 +271,7 @@
 
 (defn new-argument!
   "Creates a new argument and stores it in the database."
-  [discussion-title author-nickname conclusion & premises]
+  [discussion-id author-nickname conclusion & premises]
   (transact
     [(let [query-author [:author/nickname author-nickname]]
        {:argument/author query-author
@@ -288,9 +286,9 @@
                               :statement/version 1}
         :argument/version 1
         :argument/type :argument.type/support
-        :argument/discussions [(discussion-id-by-title discussion-title)]})]))
+        :argument/discussions [discussion-id]})]))
 (s/fdef new-argument!
-        :args (s/cat :discussion-title string?
+        :args (s/cat :discussion-title number?
                      :author-nickname string?
                      :conclusion string?
                      :premises (s/* string?))
@@ -298,7 +296,7 @@
 
 (comment
   (discussion-id-by-title "Cat or Dog?")
-  (new-argument! "Cat or Dog?" "Christian" "this is sparta" "foo" "bar" "baz")
+  (new-argument! 17592186045477 "Christian" "this is sparta" "foo" "bar" "baz")
   (d/q '[:find ?e
          :in $ ?title
          :where [?e :statement/content ?title]]
