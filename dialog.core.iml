@@ -15,7 +15,7 @@
     <orderEntry type="library" name="Deps: org.clojure/core.specs.alpha:0.2.44" level="project" />
     <orderEntry type="library" name="Deps: lambdaisland/kaocha:1.0-612" level="project" />
     <orderEntry type="library" name="Deps: com.datomic/client-api:0.8.38" level="project" />
-    <orderEntry type="library" name="Deps: expound:0.8.4" level="project" />
+    <orderEntry type="library" name="Deps: expound:0.8.5" level="project" />
     <orderEntry type="library" name="Deps: org.clojure/spec.alpha:0.2.187" level="project" />
     <orderEntry type="library" name="Deps: org.clojure/tools.cli:1.0.194" level="project" />
     <orderEntry type="library" name="Deps: mvxcvi/puget:1.1.2" level="project" />
