@@ -101,7 +101,7 @@
 
 ;; Argument
 (s/def :argument/type
-  (s/coll-of #{:argument.type/attack :argument.type/support :argument.type/undercut}))
+  #{:argument.type/attack :argument.type/support :argument.type/undercut})
 (s/def :argument/version number?)
 (s/def :argument/author ::author)
 (s/def :argument/conclusion ::statement)
@@ -109,4 +109,5 @@
 (s/def :argument/discussions (s/coll-of ::discussion))
 (s/def ::argument
   (s/keys :req [:argument/author :argument/premises :argument/conclusion
-                :argument/type :argument/version :argument/discussions]))
+                :argument/type :argument/version]
+          :opt [:argument/discussions]))
