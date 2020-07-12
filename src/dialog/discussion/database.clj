@@ -85,6 +85,18 @@
       :where [?discussion-arguments :argument/discussions ?discussion-id]]
     discussion-id))
 
+(defn all-arguments-for-conclusion
+  "Get all arguments for a given conclusion."
+  [conclusion]
+  (query-arguments
+    '[:find (pull ?arguments argument-pattern)
+      :in $ argument-pattern ?conclusion
+      :where [?arguments :argument/conclusion ?conclusion]]
+    conclusion))
+
+(s/fdef all-arguments-for-conclusion
+        :args (s/cat :conclusion number?))
+
 (defn starting-arguments-by-discussion
   "Deep-Query all starting-arguments of a certain discussion."
   [discussion-id]
