@@ -30,5 +30,5 @@
     (format "%s %s" picked nickname)))
 
 (s/fdef avatar-with-nickname
-        :args string?
+        :args (s/cat :nickname string?)
         :ret string?)
