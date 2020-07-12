@@ -174,7 +174,7 @@
     (continue-discussion new-step new-args)))
 
 (s/fdef start-discussion
-        :args (s/cat :discussion-title string?))
+        :args (s/cat :discussion-title (s/keys :req [:discussion/title])))
 
 (defn choose-argument [argument args]
   (continue-discussion
