@@ -7,7 +7,7 @@
 
 (deftest argument-with-author-test
   (testing "Function should always return a format string."
-    (is (string/includes? (texts/argument-with-author) "%s"))))
+    (is (string/includes? (texts/argument-with-author "kangaroo") "%s"))))
 
 (deftest concat-premises-test
   (testing "Generative tests when concatenating premises."
