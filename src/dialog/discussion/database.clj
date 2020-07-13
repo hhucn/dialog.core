@@ -193,7 +193,7 @@
     (concat attacks-on-conclusion attacks-on-premises undercuts)))
 
 (defn- direct-argument-supporters
-  "Queries the arguments attacking the premises or conclusion of `argument-id`."
+  "Queries the arguments supporting the premises or conclusion of `argument-id`."
   [argument-id qualified-attribute]
   (query-arguments
     '[:find (pull ?supporting-arguments argument-pattern)
@@ -203,21 +203,37 @@
       [?supporting-arguments :argument/conclusion ?supported-statement]]
     argument-id qualified-attribute))
 
+(s/fdef direct-argument-supporters
+        :args (s/cat :argument-id number? :qualified-attribute keyword?)
+        :ret (s/coll-of ::models/argument))
+
 (defn arguments-supporting-premises
   "All arguments that support the premises of `argument-id`."
   [argument-id]
   (direct-argument-supporters argument-id :argument/premises))
+
+(s/fdef arguments-supporting-premises
+        :args (s/cat :argument-id number?)
+        :ret (s/coll-of ::models/argument))
 
 (defn arguments-supporting-conclusion
   "All arguments that support the conclusion of `argument-id`."
   [argument-id]
   (direct-argument-supporters argument-id :argument/conclusion))
 
+(s/fdef arguments-supporting-conclusion
+        :args (s/cat :argument-id number?)
+        :ret (s/coll-of ::models/argument))
+
 (defn support-for-argument
   "Returns all arguments supporting the premises or conclusion of `argument-id`."
   [argument-id]
   (concat (arguments-supporting-premises argument-id)
           (arguments-supporting-conclusion argument-id)))
+
+(s/fdef support-for-argument
+        :args (s/cat :argument-id number?)
+        :ret (s/coll-of ::models/argument))
 
 (comment
   (support-for-argument 17592186045447)
@@ -281,30 +297,48 @@
 ;; -----------------------------------------------------------------------------
 ;; Write new discussion entities
 
+(defn- pack-premises
+  "Packs premises into a statement-structure."
+  [premises author-nickname]
+  (mapv (fn [premise] {:db/id premise
+                       :statement/author [:author/nickname author-nickname]
+                       :statement/content premise
+                       :statement/version 1})
+        premises))
+
+
 (defn new-argument!
   "Creates a new argument and stores it in the database."
   [discussion-id author-nickname conclusion & premises]
   (transact
-    [(let [query-author [:author/nickname author-nickname]]
-       {:argument/author query-author
-        :argument/premises (mapv (fn [premise] {:db/id premise
-                                                :statement/author query-author
-                                                :statement/content premise
-                                                :statement/version 1})
-                                 premises)
-        :argument/conclusion {:db/id conclusion
-                              :statement/author query-author
-                              :statement/content conclusion
-                              :statement/version 1}
-        :argument/version 1
-        :argument/type :argument.type/support
-        :argument/discussions [discussion-id]})]))
+    [{:argument/author [:author/nickname author-nickname]
+      :argument/premises (pack-premises premises author-nickname)
+      :argument/conclusion {:db/id conclusion
+                            :statement/author [:author/nickname author-nickname]
+                            :statement/content conclusion
+                            :statement/version 1}
+      :argument/version 1
+      :argument/type :argument.type/support
+      :argument/discussions [discussion-id]}]))
 (s/fdef new-argument!
         :args (s/cat :discussion-title number?
                      :author-nickname string?
                      :conclusion string?
                      :premises (s/* string?))
         :ret map?)
+
+(defn new-premises-for-argument!
+  "Creates a new argument based on the old argument, but adding new premises and
+  a new author."
+  [discussion-id author-nickname conclusion-id & premises]
+  (transact
+    [{:argument/author [:author/nickname author-nickname]
+      :argument/premises (pack-premises premises author-nickname)
+      :argument/conclusion conclusion-id
+      :argument/version 1
+      :argument/type :argument.type/support
+      :argument/discussions [discussion-id]}]))
+
 
 (comment
   (discussion-id-by-title "Cat or Dog?")
