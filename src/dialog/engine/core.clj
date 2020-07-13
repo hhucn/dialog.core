@@ -80,9 +80,10 @@
   ;; User has chosen an argument and the system is now attacking it. This step
   ;; chooses the attacking argument.
   [_step args]
-  (let [attacking-argument (find-attacking-argument (:argument/chosen args))]
-    [:reactions/present (merge (dissoc args :present/arguments)
-                               {:argument/attacking attacking-argument})]))
+  #_(let [attacking-argument (find-attacking-argument (:argument/chosen args))]
+      [:reactions/present (merge (dissoc args :present/arguments)
+                                 {:argument/attacking attacking-argument})])
+  [:reactions/present (merge (dissoc args :present/arguments))])
 
 (defmethod react :reaction/support
   ;; User has chosen that they support the presented argument. Now, the system
