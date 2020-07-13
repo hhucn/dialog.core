@@ -31,7 +31,8 @@
       (list-options (map second discussions)))
     (let [index (Integer/parseInt (read-line))
           [id title] (nth discussions index)]
-      {:discussion/id id
+      {:user/nickname "Christian"
+       :discussion/id id
        :discussion/title title})))
 
 (defn- prepare-starting-conclusions
@@ -45,16 +46,41 @@
 (defn- format-argument
   "Prepare String which can be presented to the user based on the provided
   argument."
-  [{:argument/keys [author premises conclusion]}]
+  [{:argument/keys [author premises conclusion] :as argument}]
   (let [avatar-nickname (texts/avatar-with-nickname (:author/nickname author))
         prepared-premises (texts/concat-premises premises)]
-    (format (texts/argument)
+    (format (texts/argument-with-author (:argument/type argument))
             avatar-nickname
             (:statement/content conclusion)
             prepared-premises)))
 
 (s/fdef format-argument
         :args (s/cat :argument ::models/argument)
+        :ret string?)
+
+(defn- format-statement
+  "Prepares a statement string, for text representation."
+  [{:statement/keys [content author]}]
+  (let [avatar-nickname (texts/avatar-with-nickname (:author/nickname author))]
+    (format (texts/statement-with-author)
+            avatar-nickname
+            content)))
+
+(s/fdef format-statement
+        :args (s/cat :statement (s/keys :req [:statement/author :statement/content]))
+        :ret string?)
+
+(defn- format-premises
+  "Prepares and concatenates premises for text representation."
+  [premises]
+  (let [authors (set (map #(get-in % [:statement/author :author/nickname]) premises))
+        avatar-nickname (texts/avatar-with-nickname (string/join ", " authors))]
+    (format (texts/statement-with-author)
+            avatar-nickname
+            (texts/concat-premises premises))))
+
+(s/fdef format-premises
+        :args (s/cat :premises (s/coll-of ::models/statement))
         :ret string?)
 
 (defn choose-argument [next-step arguments args]
