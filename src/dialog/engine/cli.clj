@@ -94,18 +94,179 @@
 (defn choose-starting-point [args]
   (let [{:keys [next-step conclusions]} (prepare-starting-conclusions args)]
     (println "Choose your starting point:")
-    (println (list-options (map :statement/content conclusions)))
+    (println (list-options (map format-statement conclusions)))
     (let [index (Integer/parseInt (read-line))
           conclusion (nth conclusions index)
           arguments (database/all-arguments-for-conclusion (:db/id conclusion))]
       (choose-argument next-step arguments args))))
 
+(defmulti react (fn [reaction args] reaction))
+(defmethod react :reaction/defend
+  [_reaction args]
+  args)
+
+(defn- ask-for-new-support [argument]
+  (println "Please define why you want to support the following statement:\n")
+  (println (format-premises (:argument/premises argument)) "\n")
+  (println "Now, how do you want to support this statement?")
+  (let [new-premise (read-line)]
+    (when (confirmed?)
+      (println "🎉 You entered" new-premise)
+      new-premise)))
+
+(s/fdef ask-for-new-support
+        :args (s/cat :argument ::models/argument))
+
+(defn present-existing-supports [premises]
+  (let [formatted-premises (list-options (map format-premises (map :argument/premises premises)))]
+    (println "There are already some supports. Choose an existing one or provide a new support.")
+    (println formatted-premises)))
+
+;; TODO
+(defmethod react :reaction/support
+  [_reaction {:keys [argument/chosen discussion/id user/nickname] :as args}]
+  (let [premise-supporters (database/arguments-supporting-premises (:db/id chosen))]
+    (if (empty? premise-supporters)
+      (let [new-premise (ask-for-new-support chosen)]
+        (when-not (empty? new-premise)
+          (run!
+            #(database/new-premises-for-argument! id nickname % new-premise)
+            (map :db/id (:argument/premises chosen)))))
+      (present-existing-supports premise-supporters))))
+
+(defmethod react :reaction/defend
+  ;; TODO Not ready yet!! Premise supporters must be different
+  [_reaction {:keys [argument/chosen discussion/id user/nickname] :as args}]
+  (let [premise-supporters (database/arguments-supporting-premises (:db/id chosen))]
+    (if (empty? premise-supporters)
+      (let [new-premise (ask-for-new-support chosen)]
+        (when-not (empty? new-premise)
+          (database/new-premises-for-argument! id nickname (get-in chosen [:argument/conclusion :db/id]) new-premise)))
+      (list-options (map format-argument premise-supporters)))))
+
+(defmethod react :reaction/undercut
+  [_reaction args]
+  args)
+
+(defmethod react :reaction/rebut
+  [_reaction args]
+  args)
+
+(defmethod react :reaction/undermine
+  [_reaction args]
+  args)
+
+(defn react-to-argument [args]
+  (let [attacking-argument (format-argument (-> args first second :argument/chosen))
+        reaction-options (map first args)
+        reaction-texts (list-options (map texts/reactions reaction-options))]
+    (println "So, you want to talk about this argument:\n")
+    (println attacking-argument "\n")
+    (println "What do you want to do?")
+    (println reaction-texts)
+    (let [option (Integer/parseInt (read-line))
+          [next-step new-args] (nth args option)]
+      (react next-step new-args))))
+
+(s/fdef react-to-argument
+        :args (s/cat :args ::args))
+
+(s/def ::args (s/coll-of (s/tuple keyword? map?)))
+
 (comment
-  (clojure.spec.test.alpha/instrument)
-  (def some-args {:discussion/id 17592186045477
-                  :discussion/title "Cat or Dog?"})
+  (require '[clojure.spec.test.alpha :as stest])
+  (stest/instrument)
 
   (-> (start)
-      choose-starting-point)
+      choose-starting-point
+      react-to-argument)
+
+  (declare reaction-args)
+  (react-to-argument reaction-args)
+
+  ;; ---------------------------------------------------------------------------
+
+  (def reaction-args
+    [[:reaction/support
+      {:argument/chosen {:db/id 17592186045434,
+                         :argument/version 1,
+                         :argument/author #:author{:nickname "Der Schredder"},
+                         :argument/type :argument.type/attack,
+                         :argument/premises [{:db/id 17592186045435,
+                                              :statement/content "you have to take the dog for a walk every day, which is tedious",
+                                              :statement/version 1,
+                                              :statement/author #:author{:nickname "Der Schredder"}}],
+                         :argument/conclusion {:db/id 17592186045429,
+                                               :statement/content "we should get a dog",
+                                               :statement/version 1,
+                                               :statement/author #:author{:nickname "Wegi"}}},
+       :discussion/id 17592186045477,
+       :user/nickname "Christian",
+       :discussion/title "Cat or Dog?"}]
+     [:reaction/defend
+      {:argument/chosen {:db/id 17592186045434,
+                         :argument/version 1,
+                         :argument/author #:author{:nickname "Der Schredder"},
+                         :argument/type :argument.type/attack,
+                         :argument/premises [{:db/id 17592186045435,
+                                              :statement/content "you have to take the dog for a walk every day, which is tedious",
+                                              :statement/version 1,
+                                              :statement/author #:author{:nickname "Der Schredder"}}],
+                         :argument/conclusion {:db/id 17592186045429,
+                                               :statement/content "we should get a dog",
+                                               :statement/version 1,
+                                               :statement/author #:author{:nickname "Wegi"}}},
+       :discussion/id 17592186045477,
+       :user/nickname "Christian",
+       :discussion/title "Cat or Dog?"}]
+     [:reaction/undermine
+      {:argument/chosen {:db/id 17592186045434,
+                         :argument/version 1,
+                         :argument/author #:author{:nickname "Der Schredder"},
+                         :argument/type :argument.type/attack,
+                         :argument/premises [{:db/id 17592186045435,
+                                              :statement/content "you have to take the dog for a walk every day, which is tedious",
+                                              :statement/version 1,
+                                              :statement/author #:author{:nickname "Der Schredder"}}],
+                         :argument/conclusion {:db/id 17592186045429,
+                                               :statement/content "we should get a dog",
+                                               :statement/version 1,
+                                               :statement/author #:author{:nickname "Wegi"}}},
+       :discussion/id 17592186045477,
+       :user/nickname "Christian",
+       :discussion/title "Cat or Dog?"}]
+     [:reaction/undercut
+      {:argument/chosen {:db/id 17592186045434,
+                         :argument/version 1,
+                         :argument/author #:author{:nickname "Der Schredder"},
+                         :argument/type :argument.type/attack,
+                         :argument/premises [{:db/id 17592186045435,
+                                              :statement/content "you have to take the dog for a walk every day, which is tedious",
+                                              :statement/version 1,
+                                              :statement/author #:author{:nickname "Der Schredder"}}],
+                         :argument/conclusion {:db/id 17592186045429,
+                                               :statement/content "we should get a dog",
+                                               :statement/version 1,
+                                               :statement/author #:author{:nickname "Wegi"}}},
+       :discussion/id 17592186045477,
+       :user/nickname "Christian",
+       :discussion/title "Cat or Dog?"}]
+     [:reaction/rebut
+      {:argument/chosen {:db/id 17592186045434,
+                         :argument/version 1,
+                         :argument/author #:author{:nickname "Der Schredder"},
+                         :argument/type :argument.type/attack,
+                         :argument/premises [{:db/id 17592186045435,
+                                              :statement/content "you have to take the dog for a walk every day, which is tedious",
+                                              :statement/version 1,
+                                              :statement/author #:author{:nickname "Der Schredder"}}],
+                         :argument/conclusion {:db/id 17592186045429,
+                                               :statement/content "we should get a dog",
+                                               :statement/version 1,
+                                               :statement/author #:author{:nickname "Wegi"}}},
+       :discussion/id 17592186045477,
+       :user/nickname "Christian",
+       :discussion/title "Cat or Dog?"}]])
+
 
   :end)
