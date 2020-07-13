@@ -17,6 +17,13 @@
         :args (s/cat :options (s/coll-of string?))
         :ret string?)
 
+(defn- confirmed? []
+  (println "Are you satisfied with your input? [y/n]")
+  (let [input (.toLowerCase (read-line))]
+    (= "y" input)))
+
+(s/fdef confirmed? :ret boolean?)
+
 (defn start []
   (let [discussions (database/all-discussion-titles-and-ids)]
     (println
