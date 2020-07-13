@@ -4,12 +4,19 @@
             [clojure.spec.alpha :as s]
             [dialog.discussion.models :as models]))
 
-(defn argument
+(defn argument-with-author
   "Format an argument. Example:
   \"Kangaroo
   We should get a dog, because: dogs can act as watchdogs.\""
   []
-  "%s\n%s, because: %s.")
+  "%s\n\t%s, because: %s.")
+
+(defn statement-with-author
+  "Format a statement. Example:
+  \"Kangaroo
+  We should get a dog\""
+  []
+  "%s\n\t%s")
 
 (defn concat-premises
   "Takes a collection of premises and concatenates them."
