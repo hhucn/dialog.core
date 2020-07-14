@@ -284,7 +284,9 @@
         :args (s/cat :title string?)
         :ret (s/? number?))
 
-(defn all-discussion-titles-and-ids []
+(defn all-discussion-titles-and-ids
+  "Query the database for some information about discussions."
+  []
   (d/q '[:find ?e ?title
          :in $
          :where [?e :discussion/title ?title]]
@@ -292,6 +294,21 @@
 
 (s/fdef all-discussion-titles-and-ids
         :ret (s/? number?))
+
+(defn all-arguments-by-content
+  "Query database for exact content matches of a statement and return the
+  corresponding arguments."
+  [content]
+  (vec (set
+         (query-arguments
+           '[:find (pull ?statements-in-premise argument-pattern) (pull ?statements-in-conclusion argument-pattern)
+             :in $ argument-pattern ?content
+             :where [?statements :statement/content ?content]
+             [?statements-in-premise :argument/premises ?statements]
+             [?statements-in-conclusion :argument/conclusion ?statements]]
+           content))))
+
+(all-arguments-by-content "dogs can act as watchdogs")
 
 
 ;; -----------------------------------------------------------------------------
@@ -344,9 +361,4 @@
 (comment
   (discussion-id-by-title "Cat or Dog?")
   (new-argument! 17592186045477 "Christian" "this is sparta" "foo" "bar" "baz")
-  (new-premises-for-argument! 17592186045477 "Christian" argx "tsting stuff" "and more stuff")
-  (d/q '[:find ?e
-         :in $ ?title
-         :where [?e :statement/content ?title]]
-       (d/db (new-connection)), "and more stuff")
   :end)
