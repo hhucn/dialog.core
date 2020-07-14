@@ -308,8 +308,6 @@
              [?statements-in-conclusion :argument/conclusion ?statements]]
            content))))
 
-(all-arguments-by-content "dogs can act as watchdogs")
-
 
 ;; -----------------------------------------------------------------------------
 ;; Write new discussion entities
