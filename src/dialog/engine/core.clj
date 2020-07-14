@@ -30,10 +30,18 @@
    [:reaction/rebut args]])
 
 (defmethod step :reasons/present
-  ;; A user chose a reaction. The user can now give a reason for their choice.
+  ;; A user chose a reaction. The user can now give a reason for their choice
+  ;; or select a pre-defined one.
   [_step args]
   [[:reason/select args]
    [:reason/new (dissoc args :present/reasons)]])
+
+(defmethod step :supports/present
+  ;; A user chose a reaction. The user can now give a reason for their choice
+  ;; or select a pre-defined one.
+  [_step args]
+  [[:support/select args]
+   [:support/new (dissoc args :supports/present)]])
 
 
 ;; -----------------------------------------------------------------------------
@@ -77,21 +85,32 @@
                                {:present/arguments arguments})]))
 
 (defmethod react :argument/chosen
-  ;; User has chosen an argument and the system is now attacking it. This step
-  ;; chooses the attacking argument.
   [_step args]
-  #_(let [attacking-argument (find-attacking-argument (:argument/chosen args))]
-      [:reactions/present (merge (dissoc args :present/arguments)
-                                 {:argument/attacking attacking-argument})])
-  [:reactions/present (merge (dissoc args :present/arguments))])
+  ;; User has chosen an argument and the system is now asking for reactions.
+  [:reactions/present (dissoc args :present/arguments)])
 
 (defmethod react :reaction/support
-  ;; User has chosen that they support the presented argument. Now, the system
-  ;; looks for a new attacking argument.
+  ;; User has chosen that they support the presented argument. Now, the user can
+  ;; choose of existing premises or bring own ones.
+  [_step args]
+  (let [supporting-arguments (database/arguments-supporting-premises
+                               (get-in args [:argument/chosen :db/id]))]
+    [:supports/present (merge args {:present/supports supporting-arguments})]))
+
+(defmethod react :support/new
+  ;; User provided a new support. This needs to be stored and presented a new
+  ;; argument to the user.
+  [_step {:keys [discussion/id user/nickname new/support argument/chosen] :as args}]
+  (database/new-premises-for-argument! id nickname chosen support)
+  (let [attacking-argument (find-attacking-argument chosen)]
+    [:reactions/present (merge (dissoc args :new/support)
+                               {:argument/chosen attacking-argument})]))
+
+(defmethod react :support/select
   [_step args]
   (let [attacking-argument (find-attacking-argument (:argument/chosen args))]
-    [:reactions/present (merge args {:argument/attacking attacking-argument
-                                     :user/attitude :attitude/pro})]))
+    [:reactions/present (merge (dissoc args :new/support)
+                               {:argument/chosen attacking-argument})]))
 
 (defmethod react :reaction/defend
   ;; User accepts the presented argument, BUT still wants to defend their own
@@ -233,7 +252,7 @@
   (reason-select selected-reason test-args)
   (reason-new "new stuff" argument-rebut test-args)
 
-  (continue-discussion :reaction/undermine
+  (continue-discussion :argument/chosen
                        {:discussion/title "Cat or Dog?",
                         :chosen/argument {:argument/version "hullo", :ganz-toll :bar},
                         :argument/attacking {:tolles :_argument}})
