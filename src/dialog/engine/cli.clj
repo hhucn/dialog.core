@@ -18,7 +18,8 @@
                          options')))))
 
 (s/fdef list-options
-        :args (s/cat :options (s/coll-of string?))
+        :args (s/cat :options (s/coll-of string?)
+                     :add-new? (s/? boolean?))
         :ret string?)
 
 (defn- confirmed? []

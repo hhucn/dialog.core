@@ -308,6 +308,10 @@
              [?statements-in-conclusion :argument/conclusion ?statements]]
            content))))
 
+(s/fdef all-arguments-by-content
+        :args (s/cat :content :statement/content)
+        :ret (s/coll-of ::models/argument))
+
 
 ;; -----------------------------------------------------------------------------
 ;; Write new discussion entities
@@ -355,6 +359,11 @@
                          :argument/type :argument.type/support
                          :argument/discussions [discussion-id]})]
     (transact new-arguments)))
+
+(s/fdef new-premises-for-argument!
+        :args (s/cat :discussion-id number? :author-nickname :author/nickname
+                     :argument ::models/argument :premises (s/* string?)))
+
 
 (comment
   (discussion-id-by-title "Cat or Dog?")
