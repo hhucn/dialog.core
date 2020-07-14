@@ -107,8 +107,12 @@
                                {:argument/chosen attacking-argument})]))
 
 (defmethod react :support/select
+  ;; User selected an existing support from a different user. This could be
+  ;; stored or noticed somewhere. Next the system searches an attacking
+  ;; argument.
   [_step args]
-  (let [attacking-argument (find-attacking-argument (:argument/chosen args))]
+  (let [attacking-argument (find-attacking-argument (:argument/chosen args))
+        _selected-support (:support/selected args)]
     [:reactions/present (merge (dissoc args :new/support)
                                {:argument/chosen attacking-argument})]))
 
