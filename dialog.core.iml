@@ -21,12 +21,15 @@
     <orderEntry type="library" name="Deps: mvxcvi/puget:1.1.2" level="project" />
     <orderEntry type="library" name="Deps: org.eclipse.jetty/jetty-http:9.4.15.v20190215" level="project" />
     <orderEntry type="library" name="Deps: org.eclipse.jetty/jetty-util:9.4.15.v20190215" level="project" />
+    <orderEntry type="library" name="Deps: com.taoensso/encore:2.91.0" level="project" />
+    <orderEntry type="library" name="Deps: org.clojure/tools.trace:0.7.10" level="project" />
     <orderEntry type="library" name="Deps: org.clojure/tools.analyzer.jvm:0.7.2" level="project" />
     <orderEntry type="library" name="Deps: net.incongru.watchservice/barbary-watchservice:1.0" level="project" />
     <orderEntry type="library" name="Deps: com.cognitect/hmac-authn:0.1.195" level="project" />
     <orderEntry type="library" name="Deps: lambdaisland/deep-diff:0.0-47" level="project" />
     <orderEntry type="library" name="Deps: com.cognitect/anomalies:0.1.12" level="project" />
     <orderEntry type="library" name="Deps: com.googlecode.json-simple/json-simple:1.1.1" level="project" />
+    <orderEntry type="library" name="Deps: io.aviso/pretty:0.1.33" level="project" />
     <orderEntry type="library" name="Deps: slingshot:0.12.2" level="project" />
     <orderEntry type="library" name="Deps: fipp:0.6.17" level="project" />
     <orderEntry type="library" name="Deps: com.fasterxml.jackson.core/jackson-core:2.8.7" level="project" />
@@ -34,6 +37,7 @@
     <orderEntry type="library" name="Deps: lambdaisland/tools.namespace:0.0-237" level="project" />
     <orderEntry type="library" name="Deps: mvxcvi/arrangement:1.2.0" level="project" />
     <orderEntry type="library" name="Deps: com.datomic/client-pro:0.9.41" level="project" />
+    <orderEntry type="library" name="Deps: com.taoensso/truss:1.5.0" level="project" />
     <orderEntry type="library" name="Deps: com.datomic/client:0.8.87" level="project" />
     <orderEntry type="library" name="Deps: progrock:0.1.2" level="project" />
     <orderEntry type="library" name="Deps: com.cognitect/http-client:0.1.99" level="project" />
@@ -42,6 +46,7 @@
     <orderEntry type="library" name="Deps: org.msgpack/msgpack:0.6.12" level="project" />
     <orderEntry type="library" name="Deps: com.datomic/client-impl-shared:0.8.69" level="project" />
     <orderEntry type="library" name="Deps: orchestra:2019.02.06-1" level="project" />
+    <orderEntry type="library" name="Deps: com.taoensso/timbre:4.10.0" level="project" />
     <orderEntry type="library" name="Deps: com.cognitect/transit-clj:0.8.313" level="project" />
     <orderEntry type="library" name="Deps: com.datomic/query-support:0.8.16" level="project" />
     <orderEntry type="library" name="Deps: org.clojure/core.rrb-vector:0.0.14" level="project" />
