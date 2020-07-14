@@ -329,22 +329,24 @@
 
 (defn new-premises-for-argument!
   "Creates a new argument based on the old argument, but adding new premises and
-  a new author."
-  [discussion-id author-nickname conclusion-id & premises]
-  (transact
-    [{:argument/author [:author/nickname author-nickname]
-      :argument/premises (pack-premises premises author-nickname)
-      :argument/conclusion conclusion-id
-      :argument/version 1
-      :argument/type :argument.type/support
-      :argument/discussions [discussion-id]}]))
-
+  a new author. The old premise(s) now become(s) the new conclusion(s)."
+  [discussion-id author-nickname argument & premises]
+  (let [premise-ids (map :db/id (:argument/premises argument))
+        new-arguments (for [premise-id premise-ids]
+                        {:argument/author [:author/nickname author-nickname]
+                         :argument/premises (pack-premises premises author-nickname)
+                         :argument/conclusion premise-id
+                         :argument/version 1
+                         :argument/type :argument.type/support
+                         :argument/discussions [discussion-id]})]
+    (transact new-arguments)))
 
 (comment
   (discussion-id-by-title "Cat or Dog?")
   (new-argument! 17592186045477 "Christian" "this is sparta" "foo" "bar" "baz")
+  (new-premises-for-argument! 17592186045477 "Christian" argx "tsting stuff" "and more stuff")
   (d/q '[:find ?e
          :in $ ?title
          :where [?e :statement/content ?title]]
-       (d/db (new-connection)), "foo")
+       (d/db (new-connection)), "and more stuff")
   :end)
