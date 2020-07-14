@@ -7,11 +7,15 @@
             [clojure.spec.alpha :as s]))
 
 (defn- list-options
-  "Creates a list of interactive options."
-  [options]
-  (string/join "\n" (map-indexed
-                      (fn [idx content] (format "[%s] %s" idx content))
-                      options)))
+  "Creates a list of interactive options. Optionally adds an extra option, which
+  asks for user input."
+  ([options]
+   (list-options options false))
+  ([options add-new?]
+   (let [options' (if add-new? (concat options ["🤟 Add my own statement"]) options)]
+     (string/join "\n" (map-indexed
+                         (fn [idx content] (format "[%s] %s" idx content))
+                         options')))))
 
 (s/fdef list-options
         :args (s/cat :options (s/coll-of string?))
@@ -112,23 +116,32 @@
         :args (s/cat :argument ::models/argument))
 
 
-(defmulti convert-options (fn [reaction args] reaction))
+(defmulti convert-options (fn [reaction _args] reaction))
 
 (defmethod convert-options :support/select
-  [_step {:keys [present/supports] :as args}]
+  [step {:keys [present/supports] :as args}]
   (if (empty? supports)
     (convert-options :support/new args)
     (let [formatted-premises (map format-premises (map :argument/premises supports))]
       (println "There are already some supports. Choose an existing one or provide a new support:")
-      (println (list-options formatted-premises))
-      (throw (new UnsupportedOperationException "TODO")))))
+      (println (list-options formatted-premises true))
+      (let [option (Integer/parseInt (read-line))]
+        (if (= (count supports) option)
+          (convert-options :support/new args)               ;; last option selected, which is "add a new support"
+          (engine/continue-discussion step (merge args {:support/selected (nth supports option)})))))))
 
 (defmethod convert-options :support/new
+  ;; Provide own premise for selected argument.
   [step {:keys [argument/chosen] :as args}]
   (let [new-premise (ask-for-new-support chosen)]
-    (engine/continue-discussion step (merge args {:new/support new-premise}))))
+    (if (empty? new-premise)
+      (convert-options :support/select args)
+      (engine/continue-discussion step (merge args {:new/support new-premise})))))
 
-(defn react-to-argument [args]
+(defn react-to-argument
+  "Extract the information from the engine to formulate argument reaction
+  options."
+  [args]
   (let [attacking-argument (format-argument (-> args first second :argument/chosen))
         reaction-options (map first args)
         reaction-texts (list-options (map texts/reactions reaction-options))]
@@ -171,7 +184,8 @@
 
   (-> (start)
       choose-starting-point
-      #_react-to-argument)
+      react-to-argument
+      dispatch-next-step)
 
   (declare reaction-args)
   (react-to-argument reaction-args)
