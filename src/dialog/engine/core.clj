@@ -103,7 +103,7 @@
   [_step {:keys [discussion/id user/nickname new/support argument/chosen] :as args}]
   (database/new-premises-for-argument! id nickname chosen support)
   (let [attacking-argument (find-attacking-argument chosen)]
-    [:reactions/present (merge (dissoc args :new/support)
+    [:reactions/present (merge (dissoc args :new/support :present/supports)
                                {:argument/chosen attacking-argument})]))
 
 (defmethod react :support/select
@@ -113,7 +113,7 @@
   [_step args]
   (let [attacking-argument (find-attacking-argument (:argument/chosen args))
         _selected-support (:support/selected args)]
-    [:reactions/present (merge (dissoc args :new/support)
+    [:reactions/present (merge (dissoc args :new/support :present/supports)
                                {:argument/chosen attacking-argument})]))
 
 (defmethod react :reaction/defend

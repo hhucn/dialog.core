@@ -128,7 +128,9 @@
       (let [option (Integer/parseInt (read-line))]
         (if (= (count supports) option)
           (convert-options :support/new args)               ;; last option selected, which is "add a new support"
-          (engine/continue-discussion step (merge args {:support/selected (nth supports option)})))))))
+          (engine/continue-discussion
+            step
+            (merge args {:support/selected (nth supports option)})))))))
 
 (defmethod convert-options :support/new
   ;; Provide own premise for selected argument.
