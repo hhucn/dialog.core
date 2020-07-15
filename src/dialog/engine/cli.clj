@@ -105,18 +105,46 @@
           arguments (database/all-arguments-for-conclusion (:db/id conclusion))]
       (choose-argument next-step arguments args))))
 
-(defn- ask-for-new-support [argument]
-  (println "Please define why you want to support the following statement:\n")
-  (println (format-premises (:argument/premises argument)) "\n")
-  (println "Now, how do you want to support this statement?")
-  (let [new-premise (read-line)]
+(defn- ask-for-new-input
+  "Generic function to ask for user input."
+  [formatted-statements introduction input-request]
+  (println introduction "\n")
+  (println formatted-statements "\n")
+  (println input-request)
+  (let [new-statement (read-line)]
     (when (confirmed?)
-      (println "🎉 You entered" new-premise)
-      new-premise)))
-(s/fdef ask-for-new-support
-        :args (s/cat :argument ::models/argument))
+      (println "🎉 You entered" new-statement)
+      new-statement)))
 
-(defmulti convert-options (fn [reaction _args] reaction))
+(s/fdef ask-for-new-input
+        :args (s/cat :formatted-statements string? :introduction string?
+                     :input-request string?)
+        :ret string?)
+
+(defn- ask-for-new-support [argument]
+  (ask-for-new-input
+    (format-premises (:argument/premises argument))
+    "Please define why you want to support the following statement:"
+    "Now, how do you want to support this statement?"))
+
+(s/fdef ask-for-new-support
+        :args (s/cat :argument (s/keys :req [:argument/premises])))
+
+(defn- ask-for-new-attack [formatted-statement]
+  (ask-for-new-input
+    formatted-statement
+    "Please define why you want to attack the following statement:"
+    "Now, how to you want to attack this statement?"))
+
+
+
+;; -----------------------------------------------------------------------------
+;; Reactions to options from the discussion engine
+
+(defmulti convert-options
+          "Accepts the values from engine's react function, prints some text to
+          the user and calls the next step in the discussion engine."
+          (fn [reaction _args] reaction))
 
 (defn- generic-collect-input
   "Generic function to present existing statements, which can be selected.
@@ -157,6 +185,54 @@
     "There are already some attacks on the premise. Choose an existing one or provide a new attack:"
     args))
 
+(defmethod convert-options :undermine/new
+  [step {:keys [argument/chosen] :as args}]
+  (let [new-undermine (ask-for-new-attack (format-premises (:argument/premises chosen)))]
+    (if (empty? new-undermine)
+      (convert-options :undermine/select args)
+      (engine/continue-discussion step (merge args {:new/undermine new-undermine})))))
+
+(defmethod convert-options :rebut/select
+  [step {:keys [present/undermines] :as args}]
+  (generic-collect-input
+    step :rebut/new :rebut/selected undermines
+    "There are already some attacks on the conclusion. Choose an existing one or provide a new attack:"
+    args))
+
+(defmethod convert-options :rebut/new
+  [step {:keys [argument/chosen] :as args}]
+  (let [new-rebut (ask-for-new-attack (format-statement (:argument/conclusion chosen)))]
+    (if (empty? new-rebut)
+      (convert-options :rebut/select args)
+      (engine/continue-discussion step (merge args {:new/rebut new-rebut})))))
+
+(defmethod convert-options :undercut/select
+  [step {:keys [present/undermines] :as args}]
+  (generic-collect-input
+    step :undercut/new :undercut/selected undermines
+    "There are already some attacks on the argument's relation. Choose an
+    existing one or provide a new attack:"
+    args))
+
+(defmethod convert-options :undercut/new
+  [step {:keys [argument/chosen] :as args}]
+  (let [new-undercut (ask-for-new-attack (format-statement (:argument/conclusion chosen)))]
+    (if (empty? new-undercut)
+      (convert-options :undercut/select args)
+      (engine/continue-discussion step (merge args {:new/undercut new-undercut})))))
+
+(defmethod convert-options :default
+  [_step args]
+  (throw
+    (new UnsupportedOperationException
+         (format "Unfortunately, you reached this point 😔 Therefore, you
+         received a step in the discussion engine, which is currently not
+         implemented by this interface. Here are the provided arguments:
+         %s" args))))
+
+
+;; -----------------------------------------------------------------------------
+
 (defn react-to-argument
   "Extract the information from the engine to formulate argument reaction
   options."
@@ -185,6 +261,8 @@
       (contains? possible-steps :support/select) (convert-options :support/select (:support/select response-lookupable))
       (contains? possible-steps :reaction/support) (react-to-argument response)
       (contains? possible-steps :undermine/select) (convert-options :undermine/select (:undermine/select response-lookupable))
+      (contains? possible-steps :rebut/select) (convert-options :rebut/select (:rebut/select response-lookupable))
+      (contains? possible-steps :undercut/select) (convert-options :undercut/select (:undercut/select response-lookupable))
       :else (throw (new UnsupportedOperationException "Not implemented")))))
 
 (s/def ::args (s/coll-of (s/tuple keyword? map?)))
