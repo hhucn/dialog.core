@@ -41,7 +41,14 @@
   ;; or select a pre-defined one.
   [_step args]
   [[:support/select args]
-   [:support/new (dissoc args :supports/present)]])
+   [:support/new (dissoc args :present/supports)]])
+
+(defmethod step :undermines/present
+  ;; User wants to undermine an argument. Present existing ones and add option
+  ;; to create new attack.
+  [_step args]
+  [[:undermine/select args]
+   [:undermine/new (dissoc args :present/undermines)]])
 
 
 ;; -----------------------------------------------------------------------------
@@ -89,6 +96,10 @@
   ;; User has chosen an argument and the system is now asking for reactions.
   [:reactions/present (dissoc args :present/arguments)])
 
+
+;; -----------------------------------------------------------------------------
+;; Supports
+
 (defmethod react :reaction/support
   ;; User has chosen that they support the presented argument. Now, the user can
   ;; choose of existing premises or bring own ones.
@@ -115,6 +126,39 @@
         _selected-support (:support/selected args)]
     [:reactions/present (merge (dissoc args :new/support :present/supports)
                                {:argument/chosen attacking-argument})]))
+
+
+;; -----------------------------------------------------------------------------
+;; Undermines
+
+(defmethod react :reaction/undermine
+  ;; User wants to attack the premises of the shown `argument/chosen`.
+  [_step {:keys [argument/chosen] :as args}]
+  (let [statements (database/statements-attacking-premise (:db/id chosen))]
+    [:undermines/present (merge args {:present/undermines statements})]))
+
+(defmethod react :undermine/select
+  ;; User selected an existing undermine from a user. This could be
+  ;; stored or noticed somewhere. Next the system searches an attacking
+  ;; argument.
+  [_step args]
+  (let [attacking-argument (find-attacking-argument (:argument/chosen args))
+        _selected-undermine (:undermine/selected args)]
+    [:reactions/present (merge (dissoc args :new/undermine :present/undermines)
+                               {:argument/chosen attacking-argument})]))
+
+(defmethod react :undermine/new
+  ;; User provided a new undermine. This needs to be stored and a new argument
+  ;; is chosen for the user
+  [_step {:keys [discussion/id user/nickname new/undermine argument/chosen] :as args}]
+  #_(database/new-premises-for-argument! id nickname chosen support)
+  (let [attacking-argument (find-attacking-argument chosen)]
+    [:reactions/present (merge (dissoc args :new/undermine :present/undermines)
+                               {:argument/chosen attacking-argument})]))
+
+
+;; -----------------------------------------------------------------------------
+;; Defend own position
 
 (defmethod react :reaction/defend
   ;; User accepts the presented argument, BUT still wants to defend their own
@@ -148,11 +192,6 @@
   [argument]
   (database/statements-undercutting-argument (:db/id argument)))
 
-(defmethod react :reaction/undermine
-  ;; User wants to attack the premises of the shown `argument/chosen`.
-  [_step {:keys [argument/chosen] :as args}]
-  (generic-attack-reaction statements-attacking-a-premise chosen args))
-
 (defmethod react :reaction/rebut
   ;; User wants to attack the premises of the shown `argument/chosen`.
   [_step {:keys [argument/chosen] :as args}]
@@ -179,6 +218,22 @@
 
 ;; -----------------------------------------------------------------------------
 ;; Comfort Functions
+
+(react :reaction/undermine {:argument/chosen {:db/id 17592186045432,
+                                              :argument/version 1,
+                                              :argument/author #:author{:nickname "Wegi"},
+                                              :argument/type :argument.type/support,
+                                              :argument/premises [{:db/id 17592186045433,
+                                                                   :statement/content "dogs can act as watchdogs",
+                                                                   :statement/version 1,
+                                                                   :statement/author #:author{:nickname "Wegi"}}],
+                                              :argument/conclusion {:db/id 17592186045429,
+                                                                    :statement/content "we should get a dog",
+                                                                    :statement/version 1,
+                                                                    :statement/author #:author{:nickname "Wegi"}}},
+                            :user/nickname "Christian",
+                            :discussion/id 17592186045477,
+                            :discussion/title "Cat or Dog?"})
 
 (defn continue-discussion
   "Takes a last step (according to users choice) and calls the appropriate react
