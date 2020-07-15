@@ -50,6 +50,15 @@
   [[:undermine/select args]
    [:undermine/new (dissoc args :present/undermines)]])
 
+(defmethod step :rebuts/present
+  [_step args]
+  [[:rebut/select args]
+   [:rebut/new (dissoc args :present/rebuts)]])
+
+(defmethod step :undercuts/present
+  [_step args]
+  [[:undercut/select args]
+   [:undercut/new (dissoc args :present/undercuts)]])
 
 ;; -----------------------------------------------------------------------------
 
@@ -150,12 +159,67 @@
 (defmethod react :undermine/new
   ;; User provided a new undermine. This needs to be stored and a new argument
   ;; is chosen for the user
-  [_step {:keys [discussion/id user/nickname new/undermine argument/chosen] :as args}]
-  #_(database/new-premises-for-argument! id nickname chosen support)
+  ;; TODO: Store new undermine to database
+  [_step {:keys [new/undermine argument/chosen] :as args}]
   (let [attacking-argument (find-attacking-argument chosen)]
     [:reactions/present (merge (dissoc args :new/undermine :present/undermines)
                                {:argument/chosen attacking-argument})]))
 
+
+;; -----------------------------------------------------------------------------
+;; Rebuts
+
+(defmethod react :reaction/rebut
+  [_step {:keys [argument/chosen] :as args}]
+  (let [rebuts (database/statements-attacking-conclusion (:db/id chosen))]
+    [:rebuts/present (merge args {:present/rebuts rebuts})]))
+
+(defmethod react :rebut/select
+  ;; User selected an existing rebut from a user. This could be
+  ;; stored or noticed somewhere. Next the system searches an attacking
+  ;; argument.
+  [_step args]
+  (let [attacking-argument (find-attacking-argument (:argument/chosen args))
+        _selected-rebut (:rebut/selected args)]
+    [:reactions/present (merge (dissoc args :new/rebut :present/rebuts)
+                               {:argument/chosen attacking-argument})]))
+
+(defmethod react :rebut/new
+  ;; User provided a new rebut. This needs to be stored and a new argument
+  ;; is chosen for the user.
+  ;; TODO: Store new rebut to database
+  [_step {:keys [new/rebut argument/chosen] :as args}]
+  (let [attacking-argument (find-attacking-argument chosen)]
+    [:reactions/present (merge (dissoc args :new/rebut :present/rebuts)
+                               {:argument/chosen attacking-argument})]))
+
+
+;; -----------------------------------------------------------------------------
+;; Undercuts
+
+(defmethod react :reaction/undercut
+  [_step {:keys [argument/chosen] :as args}]
+  (let [undercuts (database/statements-undercutting-argument (:db/id chosen))]
+    [:undercuts/present (merge args {:present/undercuts undercuts})]))
+
+(defmethod react :undercut/select
+  ;; User selected an existing undercut from a user. This could be
+  ;; stored or noticed somewhere. Next the system searches an attacking
+  ;; argument.
+  [_step args]
+  (let [attacking-argument (find-attacking-argument (:argument/chosen args))
+        _selected-undercut (:undercut/selected args)]
+    [:reactions/present (merge (dissoc args :new/undercut :present/undercuts)
+                               {:argument/chosen attacking-argument})]))
+
+(defmethod react :undercut/new
+  ;; User provided a new rebut. This needs to be stored and a new argument
+  ;; is chosen for the user.
+  ;; TODO: Store new undercut to database
+  [_step {:keys [new/undercut argument/chosen] :as args}]
+  (let [attacking-argument (find-attacking-argument chosen)]
+    [:reactions/present (merge (dissoc args :new/undercut :present/undercuts)
+                               {:argument/chosen attacking-argument})]))
 
 ;; -----------------------------------------------------------------------------
 ;; Defend own position
