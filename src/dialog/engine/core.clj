@@ -233,71 +233,9 @@
     [:arguments/present (merge args {:present/arguments arguments-supporting-user
                                      :user/attitude :attitude/pro})]))
 
-(defn- generic-attack-reaction
-  "Query statements using `f` and return attack relation result needed by
-   `next`."
-  [f chosen args]
-  (let [statements (f chosen)]
-    [:reasons/present (merge args {:present/reasons statements
-                                   :user/attitude :attitude/pro})]))
-
-(defn statements-attacking-a-premise
-  "Returns all statements that attack the premise of `argument`."
-  [argument]
-  (database/statements-attacking-premise (:db/id argument)))
-
-(defn statements-attacking-a-conclusion
-  "Returns all statements that attack the conclusion of `argument`."
-  [argument]
-  (database/statements-attacking-conclusion (:db/id argument)))
-
-(defn statements-undercutting-argument
-  "Returns all statements that are used to undercut `argument`."
-  [argument]
-  (database/statements-undercutting-argument (:db/id argument)))
-
-(defmethod react :reaction/rebut
-  ;; User wants to attack the premises of the shown `argument/chosen`.
-  [_step {:keys [argument/chosen] :as args}]
-  (generic-attack-reaction statements-attacking-a-conclusion chosen args))
-
-(defmethod react :reaction/undercut
-  ;; User wants to attack the premises of the shown `argument/chosen`.
-  [_step {:keys [argument/chosen] :as args}]
-  (generic-attack-reaction statements-undercutting-argument chosen args))
-
-(defmethod react :reason/new
-  ;; User can provide a new reason for their attack on the chosen argument.
-  [_step {:keys [argument/new] :as args}]
-  (let [arguments (find-attacking-argument new)
-        arguments' (if (empty? arguments) [] arguments)]
-    [:arguments/present (merge args {:present/arguments arguments'
-                                     :user/attitude :attitude/pro})]))
-
-(defmethod react :reason/select
-  ;; User finds a suitable reason and selects it.
-  [_step args]
-  (react :reason/new args))
-
 
 ;; -----------------------------------------------------------------------------
 ;; Comfort Functions
-
-(react :reaction/undermine {:argument/chosen {:db/id 17592186045432,
-                                              :argument/version 1,
-                                              :argument/author #:author{:nickname "Wegi"},
-                                              :argument/type :argument.type/support,
-                                              :argument/premises [{:db/id 17592186045433,
-                                                                   :statement/content "dogs can act as watchdogs",
-                                                                   :statement/version 1,
-                                                                   :statement/author #:author{:nickname "Wegi"}}],
-                                              :argument/conclusion {:db/id 17592186045429,
-                                                                    :statement/content "we should get a dog",
-                                                                    :statement/version 1,
-                                                                    :statement/author #:author{:nickname "Wegi"}}},
-                            :user/nickname "Christian",
-                            :discussion/id 17592186045477,
-                            :discussion/title "Cat or Dog?"})
 
 (defn continue-discussion
   "Takes a last step (according to users choice) and calls the appropriate react
@@ -327,32 +265,6 @@
         (merge {:argument/chosen argument
                 :discussion/is-start? false}))))
 
-(defn- reaction-builder [next-step argument args]
-  (continue-discussion
-    next-step
-    (merge args {:argument/chosen argument})))
-
-(defn reaction-support [argument args]
-  (reaction-builder :reaction/support argument args))
-
-(defn reaction-undermine [argument args]
-  (reaction-builder :reaction/undermine argument args))
-
-(defn reaction-undercut [argument args]
-  (reaction-builder :reaction/undercut argument args))
-
-(defn reaction-rebut [argument args]
-  (reaction-builder :reaction/rebut argument args))
-
-(defn reason-select [reason args]
-  (continue-discussion
-    :reason/select
-    (merge args {:argument/new reason})))
-
-;; TODO
-(defn reason-new [my-reason argument args])
-
-
 
 ;; -----------------------------------------------------------------------------
 
@@ -367,13 +279,6 @@
                   :discussion/title "Cat or Dog?"})
 
   (start-discussion test-args)
-  (choose-argument argument test-args)
-  (reaction-support argument-attacking-for-support test-args)
-  (reaction-undermine argument-undermine test-args)
-  (reaction-undercut argument-undercut test-args)
-  (reaction-rebut argument-rebut test-args)
-  (reason-select selected-reason test-args)
-  (reason-new "new stuff" argument-rebut test-args)
 
   (continue-discussion :argument/chosen
                        {:discussion/title "Cat or Dog?",
@@ -386,171 +291,6 @@
                         :argument/attacking {:tolles :_argument},
                         :present/reasons [],
                         :user/attitude :attitude/pro})
-
-  (def nach-start-discussion
-    [[:argument/chosen
-      {:discussion/title "Cat or Dog?",
-       :present/arguments [{:db/id 17592186045432,
-                            :argument/version 1,
-                            :argument/author #:author{:nickname "Wegi"},
-                            :argument/type :argument.type/support,
-                            :argument/premises [{:db/id 17592186045433,
-                                                 :statement/content "dogs can act as watchdogs",
-                                                 :statement/version 1,
-                                                 :statement/author #:author{:nickname "Wegi"}}],
-                            :argument/conclusion {:db/id 17592186045429,
-                                                  :statement/content "we should get a dog",
-                                                  :statement/version 1,
-                                                  :statement/author #:author{:nickname "Wegi"}}}
-                           {:db/id 17592186045434,
-                            :argument/version 1,
-                            :argument/author #:author{:nickname "Der Schredder"},
-                            :argument/type :argument.type/attack,
-                            :argument/premises [{:db/id 17592186045435,
-                                                 :statement/content "you have to take the dog for a walk every day, which is tedious",
-                                                 :statement/version 1,
-                                                 :statement/author #:author{:nickname "Der Schredder"}}],
-                            :argument/conclusion {:db/id 17592186045429,
-                                                  :statement/content "we should get a dog",
-                                                  :statement/version 1,
-                                                  :statement/author #:author{:nickname "Wegi"}}}
-                           {:db/id 17592186045440,
-                            :argument/version 1,
-                            :argument/author #:author{:nickname "Christian"},
-                            :argument/type :argument.type/support,
-                            :argument/premises [{:db/id 17592186045441,
-                                                 :statement/content "it would be no problem",
-                                                 :statement/version 1,
-                                                 :statement/author #:author{:nickname "Christian"}}],
-                            :argument/conclusion {:db/id 17592186045431,
-                                                  :statement/content "we could get both, a dog and a cat",
-                                                  :statement/version 1,
-                                                  :statement/author #:author{:nickname "Christian"}}}
-                           {:db/id 17592186045444,
-                            :argument/version 1,
-                            :argument/author #:author{:nickname "Der miese Peter"},
-                            :argument/type :argument.type/undercut,
-                            :argument/premises [{:db/id 17592186045445,
-                                                 :statement/content "won't be best friends",
-                                                 :statement/version 1,
-                                                 :statement/author #:author{:nickname "Der miese Peter"}}
-                                                {:db/id 17592186045446,
-                                                 :statement/content "a cat and a dog will generally not get along well",
-                                                 :statement/version 1,
-                                                 :statement/author #:author{:nickname "Der miese Peter"}}],
-                            :argument/conclusion #:db{:id 17592186045440}}
-                           {:db/id 17592186045447,
-                            :argument/version 1,
-                            :argument/author #:author{:nickname "Der Schredder"},
-                            :argument/type :argument.type/support,
-                            :argument/premises [{:db/id 17592186045448,
-                                                 :statement/content "cats are very independent",
-                                                 :statement/version 1,
-                                                 :statement/author #:author{:nickname "Der Schredder"}}],
-                            :argument/conclusion {:db/id 17592186045430,
-                                                  :statement/content "we should get a cat",
-                                                  :statement/version 1,
-                                                  :statement/author #:author{:nickname "Der Schredder"}}}
-                           {:db/id 17592186045459,
-                            :argument/version 1,
-                            :argument/author #:author{:nickname "Der Schredder"},
-                            :argument/type :argument.type/support,
-                            :argument/premises [{:db/id 17592186045460,
-                                                 :statement/content "a cat does not cost taxes like a dog does",
-                                                 :statement/version 1,
-                                                 :statement/author #:author{:nickname "Der Schredder"}}],
-                            :argument/conclusion {:db/id 17592186045430,
-                                                  :statement/content "we should get a cat",
-                                                  :statement/version 1,
-                                                  :statement/author #:author{:nickname "Der Schredder"}}}
-                           {:db/id 17592186045467,
-                            :argument/version 1,
-                            :argument/author #:author{:nickname "Wegi"},
-                            :argument/type :argument.type/attack,
-                            :argument/premises [{:db/id 17592186045468,
-                                                 :statement/content "cats are capricious",
-                                                 :statement/version 1,
-                                                 :statement/author #:author{:nickname "Wegi"}}],
-                            :argument/conclusion {:db/id 17592186045430,
-                                                  :statement/content "we should get a cat",
-                                                  :statement/version 1,
-                                                  :statement/author #:author{:nickname "Der Schredder"}}}]}]])
-
-  (def argument
-    {:db/id 17592186045432,
-     :argument/version 1,
-     :argument/author #:author{:nickname "Wegi"},
-     :argument/type :argument.type/support,
-     :argument/premises [{:db/id 17592186045433,
-                          :statement/content "dogs can act as watchdogs",
-                          :statement/version 1,
-                          :statement/author #:author{:nickname "Wegi"}}],
-     :argument/conclusion {:db/id 17592186045429,
-                           :statement/content "we should get a dog",
-                           :statement/version 1,
-                           :statement/author #:author{:nickname "Wegi"}}})
-
-  (def argument-attacking-for-support
-    {:db/id 17592186045434,
-     :argument/version 1,
-     :argument/author #:author{:nickname "Der Schredder"},
-     :argument/type :argument.type/attack,
-     :argument/premises [{:db/id 17592186045435,
-                          :statement/content "you have to take the dog for a walk every day, which is tedious",
-                          :statement/version 1,
-                          :statement/author #:author{:nickname "Der Schredder"}}],
-     :argument/conclusion {:db/id 17592186045429,
-                           :statement/content "we should get a dog",
-                           :statement/version 1,
-                           :statement/author #:author{:nickname "Wegi"}}})
-
-  (def argument-undermine
-    {:db/id 17592186045434,
-     :argument/version 1,
-     :argument/author #:author{:nickname "Der Schredder"},
-     :argument/type :argument.type/attack,
-     :argument/premises [{:db/id 17592186045435,
-                          :statement/content "you have to take the dog for a walk every day, which is tedious",
-                          :statement/version 1,
-                          :statement/author #:author{:nickname "Der Schredder"}}],
-     :argument/conclusion {:db/id 17592186045429,
-                           :statement/content "we should get a dog",
-                           :statement/version 1,
-                           :statement/author #:author{:nickname "Wegi"}}})
-
-  (def argument-undercut
-    {:db/id 17592186045436,
-     :argument/version 1,
-     :argument/author #:author{:nickname "Der miese Peter"},
-     :argument/type :argument.type/undercut,
-     :argument/premises [{:db/id 17592186045437,
-                          :statement/content "we have no use for a watchdog",
-                          :statement/version 1,
-                          :statement/author #:author{:nickname "Der miese Peter"}}],
-     :argument/conclusion #:db{:id 17592186045432}})
-
-  (def argument-rebut
-    {:db/id 17592186045436,
-     :argument/version 1,
-     :argument/author #:author{:nickname "Der miese Peter"},
-     :argument/type :argument.type/undercut,
-     :argument/premises [{:db/id 17592186045437,
-                          :statement/content "we have no use for a watchdog",
-                          :statement/version 1,
-                          :statement/author #:author{:nickname "Der miese Peter"}}],
-     :argument/conclusion #:db{:id 17592186045432}})
-
-  (def selected-reason
-    {:db/id 17592186045436,
-     :argument/version 1,
-     :argument/author #:author{:nickname "Der miese Peter"},
-     :argument/type :argument.type/undercut,
-     :argument/premises [{:db/id 17592186045437,
-                          :statement/content "we have no use for a watchdog",
-                          :statement/version 1,
-                          :statement/author #:author{:nickname "Der miese Peter"}}],
-     :argument/conclusion #:db{:id 17592186045432}})
-
   :end)
 ;; 1. Startfunktion
 ;; 2. Step
