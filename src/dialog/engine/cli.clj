@@ -116,22 +116,31 @@
 (s/fdef ask-for-new-support
         :args (s/cat :argument ::models/argument))
 
-
 (defmulti convert-options (fn [reaction _args] reaction))
+
+(defn- generic-collect-input
+  "Generic function to present existing statements, which can be selected.
+  Redirects to the specific create-new-entities functions and calls the
+  execution engine in the end."
+  [step create-new-step store-selected statements instruction args]
+  (if (empty? statements)
+    (convert-options create-new-step args)
+    (let [formatted-premises (map format-premises statements)]
+      (println instruction)
+      (println (list-options formatted-premises true))
+      (let [option (Integer/parseInt (read-line))]
+        (if (= (count statements) option)
+          (convert-options create-new-step args)            ;; last option selected, which is "add a new support"
+          (engine/continue-discussion
+            step
+            (merge args {store-selected (nth statements option)})))))))
 
 (defmethod convert-options :support/select
   [step {:keys [present/supports] :as args}]
-  (if (empty? supports)
-    (convert-options :support/new args)
-    (let [formatted-premises (map format-premises (map :argument/premises supports))]
-      (println "There are already some supports. Choose an existing one or provide a new support:")
-      (println (list-options formatted-premises true))
-      (let [option (Integer/parseInt (read-line))]
-        (if (= (count supports) option)
-          (convert-options :support/new args)               ;; last option selected, which is "add a new support"
-          (engine/continue-discussion
-            step
-            (merge args {:support/selected (nth supports option)})))))))
+  (generic-collect-input
+    step :support/new :support/selected (map :argument/premises supports)
+    "There are already some supports. Choose an existing one or provide a new support:"
+    args))
 
 (defmethod convert-options :support/new
   ;; Provide own premise for selected argument.
@@ -140,6 +149,13 @@
     (if (empty? new-premise)
       (convert-options :support/select args)
       (engine/continue-discussion step (merge args {:new/support new-premise})))))
+
+(defmethod convert-options :undermine/select
+  [step {:keys [present/undermines] :as args}]
+  (generic-collect-input
+    step :undermine/new :undermine/selected undermines
+    "There are already some attacks on the premise. Choose an existing one or provide a new attack:"
+    args))
 
 (defn react-to-argument
   "Extract the information from the engine to formulate argument reaction
@@ -168,7 +184,8 @@
     (cond
       (contains? possible-steps :support/select) (convert-options :support/select (:support/select response-lookupable))
       (contains? possible-steps :reaction/support) (react-to-argument response)
-      :else (println response))))
+      (contains? possible-steps :undermine/select) (convert-options :undermine/select (:undermine/select response-lookupable))
+      :else (throw (new UnsupportedOperationException "Not implemented")))))
 
 (s/def ::args (s/coll-of (s/tuple keyword? map?)))
 
