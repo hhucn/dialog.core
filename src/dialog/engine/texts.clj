@@ -14,12 +14,19 @@
     :argument.type/undercut "TODO Undercuts are not yet implemented"
     "%s\n\t%s, because: %s."))
 
+(s/fdef argument-with-author
+        :args (s/cat :argument/type :argument/type)
+        :ret string?)
+
 (defn statement-with-author
   "Format a statement. Example:
   \"Kangaroo
   We should get a dog\""
   []
   "%s\n\t%s")
+
+(s/fdef statement-with-author
+        :ret string?)
 
 (defn reactions
   "Get texts for possible reactions."
@@ -31,6 +38,10 @@
      :reaction/support "Support the conclusion with own premises (use argument's premises as conclusion and add own premises)"
      :reaction/defend "Defend my own point of view (add own premises to conclusion)"}
     reaction))
+
+(s/fdef reactions
+        :args (s/cat :reaction keyword?)
+        :ret string?)
 
 (defn concat-premises
   "Takes a collection of premises and concatenates them."
