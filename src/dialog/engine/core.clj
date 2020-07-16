@@ -255,15 +255,7 @@
     (continue-discussion new-step new-args)))
 
 (s/fdef start-discussion
-        :args (s/cat :discussion-title (s/keys :req [:discussion/title])))
-
-(defn choose-argument [argument args]
-  (continue-discussion
-    :argument/chosen
-    (-> args
-        (dissoc :present/arguments)
-        (merge {:argument/chosen argument
-                :discussion/is-start? false}))))
+        :args (s/cat :args (s/keys :req [:discussion/id :user/nickname])))
 
 
 ;; -----------------------------------------------------------------------------
@@ -275,30 +267,9 @@
            argument-rebut
            selected-reason)
 
-  (def test-args {:discussion/id 17592186045477
-                  :discussion/title "Cat or Dog?"})
+  (def test-args {:user/nickname "Christian"
+                  :discussion/id 17592186045477})
 
   (start-discussion test-args)
 
-  (continue-discussion :argument/chosen
-                       {:discussion/title "Cat or Dog?",
-                        :chosen/argument {:argument/version "hullo", :ganz-toll :bar},
-                        :argument/attacking {:tolles :_argument}})
-
-  (continue-discussion :reason/select
-                       {:discussion/title "Cat or Dog?",
-                        :chosen/argument {:noch-toller :wonderbar},
-                        :argument/attacking {:tolles :_argument},
-                        :present/reasons [],
-                        :user/attitude :attitude/pro})
   :end)
-;; 1. Startfunktion
-;; 2. Step
-;; 3. Zeige user Step möglichkeiten [a, b, c]
-;; 4. User wählt aus: a
-;; 5. Führe reaction mit a aus.
-;; 6. Zeige resultierenden step an.
-;; 7. Repeat ab 3
-;; TODO * Fehlend: Ein Finish state, oder geschicktes weitermachen
-;; TODO * Helferfunktionen schreiben bzw. ausrüsten wie es weiter geht, wenn diese keine
-;; TODO funktion zurück liefern
