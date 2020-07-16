@@ -3,7 +3,8 @@
             [dialog.discussion.config :as config]
             [dialog.discussion.test-data :as test-data]
             [dialog.utils :as utils]
-            [datomic.client.api :as d]])
+            [datomic.client.api :as d]
+            [clojure.spec.alpha :as s]])
 
 ;; Setting the client to private breaks some async routine in datomic
 (defonce datomic-client
@@ -76,24 +77,42 @@
     (map #(ident-map->value (first %) :argument/type) arguments)))
 
 (defn all-arguments-for-discussion
-  "Returns all arguments belonging to a discussion, identified by title."
-  [discussion-title]
+  "Returns all arguments belonging to a discussion, identified by discussion id."
+  [discussion-id]
   (query-arguments
     '[:find (pull ?discussion-arguments argument-pattern)
-      :in $ argument-pattern ?discussion-title
-      :where [?discussion :discussion/title ?discussion-title]
-      [?discussion-arguments :argument/discussions ?discussion]]
-    discussion-title))
+      :in $ argument-pattern ?discussion-id
+      :where [?discussion-arguments :argument/discussions ?discussion-id]]
+    discussion-id))
 
-(defn starting-arguments-by-title
+(defn all-arguments-for-conclusion
+  "Get all arguments for a given conclusion."
+  [conclusion]
+  (query-arguments
+    '[:find (pull ?arguments argument-pattern)
+      :in $ argument-pattern ?conclusion
+      :where [?arguments :argument/conclusion ?conclusion]]
+    conclusion))
+
+(s/fdef all-arguments-for-conclusion
+        :args (s/cat :conclusion number?))
+
+(defn starting-arguments-by-discussion
   "Deep-Query all starting-arguments of a certain discussion."
-  [discussion-title]
+  [discussion-id]
   (query-arguments
     '[:find (pull ?starting-arguments argument-pattern)
-      :in $ argument-pattern ?discussion-title
-      :where [?discussion :discussion/title ?discussion-title]
-      [?discussion :discussion/starting-arguments ?starting-arguments]]
-    discussion-title))
+      :in $ argument-pattern ?discussion-id
+      :where [?discussion-id :discussion/starting-arguments ?starting-arguments]]
+    discussion-id))
+
+(defn starting-conclusions-by-discussion
+  "Get all statements / conclusions (formerly positions) from the starting
+  arguments. Return only all non-undercuts."
+  [discussion-id]
+  (let [starting-arguments (starting-arguments-by-discussion discussion-id)
+        possible-statements (map :argument/conclusion starting-arguments)]
+    (filter #(s/valid? ::models/statement %) possible-statements)))
 
 (defn- statements-attacking-part
   "Generic template query for statements either attacking a conclusion or the premises
@@ -174,7 +193,7 @@
     (concat attacks-on-conclusion attacks-on-premises undercuts)))
 
 (defn- direct-argument-supporters
-  "Queries the arguments attacking the premises or conclusion of `argument-id`."
+  "Queries the arguments supporting the premises or conclusion of `argument-id`."
   [argument-id qualified-attribute]
   (query-arguments
     '[:find (pull ?supporting-arguments argument-pattern)
@@ -184,15 +203,27 @@
       [?supporting-arguments :argument/conclusion ?supported-statement]]
     argument-id qualified-attribute))
 
+(s/fdef direct-argument-supporters
+        :args (s/cat :argument-id number? :qualified-attribute keyword?)
+        :ret (s/coll-of ::models/argument))
+
 (defn arguments-supporting-premises
   "All arguments that support the premises of `argument-id`."
   [argument-id]
   (direct-argument-supporters argument-id :argument/premises))
 
+(s/fdef arguments-supporting-premises
+        :args (s/cat :argument-id number?)
+        :ret (s/coll-of ::models/argument))
+
 (defn arguments-supporting-conclusion
   "All arguments that support the conclusion of `argument-id`."
   [argument-id]
   (direct-argument-supporters argument-id :argument/conclusion))
+
+(s/fdef arguments-supporting-conclusion
+        :args (s/cat :argument-id number?)
+        :ret (s/coll-of ::models/argument))
 
 (defn support-for-argument
   "Returns all arguments supporting the premises or conclusion of `argument-id`."
@@ -200,10 +231,14 @@
   (concat (arguments-supporting-premises argument-id)
           (arguments-supporting-conclusion argument-id)))
 
+(s/fdef support-for-argument
+        :args (s/cat :argument-id number?)
+        :ret (s/coll-of ::models/argument))
+
 (comment
   (support-for-argument 17592186045447)
-  (count (starting-arguments-by-title "Cat or Dog?"))
-  (count (all-arguments-for-discussion "Cat or Dog?"))
+  (count (starting-arguments-by-discussion 17592186045477))
+  (count (all-arguments-for-discussion 17592186045477))
   :end)
 
 
@@ -216,19 +251,108 @@
 
 
 (defn delete-discussion!
-  "Sets the discussion with the corresponding title to `deleted`."
-  [title]
-  (transact [{:db/id [:discussion/title title]
+  "Sets the discussion with the corresponding discussion to `deleted`."
+  [discussion-id]
+  (transact [{:db/id discussion-id
               :discussion/states #{:discussion.state/deleted}}]))
 
 (defn reopen-discussion!
   "Opens a closed discussion. Does not check whether the discussion is closed."
-  [title]
-  (transact [[:db/retract [:discussion/title title] :discussion/states :discussion.state/closed]
-             [:db/add [:discussion/title title] :discussion/states :discussion.state/open]]))
+  [discussion-id]
+  (transact [[:db/retract discussion-id :discussion/states :discussion.state/closed]
+             [:db/add discussion-id :discussion/states :discussion.state/open]]))
 
 (defn close-discussion!
   "Close a discussion."
-  [title]
-  (transact [[:db/retract [:discussion/title title] :discussion/states :discussion.state/open]
-             [:db/add [:discussion/title title] :discussion/states :discussion.state/closed]]))
+  [discussion-id]
+  (transact [[:db/retract discussion-id :discussion/states :discussion.state/open]
+             [:db/add discussion-id :discussion/states :discussion.state/closed]]))
+
+
+;; -----------------------------------------------------------------------------
+;; Query entities
+
+(defn all-discussion-titles-and-ids
+  "Query the database for some information about discussions."
+  []
+  (d/q '[:find ?e ?title
+         :in $
+         :where [?e :discussion/title ?title]]
+       (d/db (new-connection))))
+
+(s/fdef all-discussion-titles-and-ids
+        :ret (s/? number?))
+
+(defn all-arguments-by-content
+  "Query database for exact content matches of a statement and return the
+  corresponding arguments."
+  [content]
+  (vec (set
+         (query-arguments
+           '[:find (pull ?statements-in-premise argument-pattern) (pull ?statements-in-conclusion argument-pattern)
+             :in $ argument-pattern ?content
+             :where [?statements :statement/content ?content]
+             [?statements-in-premise :argument/premises ?statements]
+             [?statements-in-conclusion :argument/conclusion ?statements]]
+           content))))
+
+(s/fdef all-arguments-by-content
+        :args (s/cat :content :statement/content)
+        :ret (s/coll-of ::models/argument))
+
+
+;; -----------------------------------------------------------------------------
+;; Write new discussion entities
+
+(defn- pack-premises
+  "Packs premises into a statement-structure."
+  [premises author-nickname]
+  (mapv (fn [premise] {:db/id premise
+                       :statement/author [:author/nickname author-nickname]
+                       :statement/content premise
+                       :statement/version 1})
+        premises))
+
+
+(defn new-argument!
+  "Creates a new argument and stores it in the database."
+  [discussion-id author-nickname conclusion & premises]
+  (transact
+    [{:argument/author [:author/nickname author-nickname]
+      :argument/premises (pack-premises premises author-nickname)
+      :argument/conclusion {:db/id conclusion
+                            :statement/author [:author/nickname author-nickname]
+                            :statement/content conclusion
+                            :statement/version 1}
+      :argument/version 1
+      :argument/type :argument.type/support
+      :argument/discussions [discussion-id]}]))
+(s/fdef new-argument!
+        :args (s/cat :discussion-title number?
+                     :author-nickname string?
+                     :conclusion string?
+                     :premises (s/* string?))
+        :ret map?)
+
+(defn new-premises-for-argument!
+  "Creates a new argument based on the old argument, but adding new premises and
+  a new author. The old premise(s) now become(s) the new conclusion(s)."
+  [discussion-id author-nickname argument & premises]
+  (let [premise-ids (map :db/id (:argument/premises argument))
+        new-arguments (for [premise-id premise-ids]
+                        {:argument/author [:author/nickname author-nickname]
+                         :argument/premises (pack-premises premises author-nickname)
+                         :argument/conclusion premise-id
+                         :argument/version 1
+                         :argument/type :argument.type/support
+                         :argument/discussions [discussion-id]})]
+    (transact new-arguments)))
+
+(s/fdef new-premises-for-argument!
+        :args (s/cat :discussion-id number? :author-nickname :author/nickname
+                     :argument ::models/argument :premises (s/* string?)))
+
+
+(comment
+  (new-argument! 17592186045477 "Christian" "this is sparta" "foo" "bar" "baz")
+  :end)
