@@ -84,7 +84,7 @@
   (s/coll-of #{:discussion.state/open :discussion.state/closed
                :discussion.state/private :discussion.state/deleted}
              :distinct true))
-(s/def :discussion/starting-arguments (s/coll-of map?))     ;; TODO Specify more
+(s/def :discussion/starting-arguments (s/coll-of ::argument))
 (s/def ::discussion (s/keys :req [:discussion/title :discussion/description
                                   :discussion/states :discussion/starting-arguments]))
 
