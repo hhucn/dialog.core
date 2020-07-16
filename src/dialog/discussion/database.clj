@@ -272,18 +272,6 @@
 ;; -----------------------------------------------------------------------------
 ;; Query entities
 
-(defn discussion-id-by-title
-  "Look in the database and return the discussion id by its title."
-  [title]
-  (ffirst (d/q '[:find ?e
-                 :in $ ?title
-                 :where [?e :discussion/title ?title]]
-               (d/db (new-connection)), title)))
-
-(s/fdef discussion-id-by-title
-        :args (s/cat :title string?)
-        :ret (s/? number?))
-
 (defn all-discussion-titles-and-ids
   "Query the database for some information about discussions."
   []
@@ -366,6 +354,5 @@
 
 
 (comment
-  (discussion-id-by-title "Cat or Dog?")
   (new-argument! 17592186045477 "Christian" "this is sparta" "foo" "bar" "baz")
   :end)
