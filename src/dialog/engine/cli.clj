@@ -29,7 +29,7 @@
 
 (s/fdef confirmed? :ret boolean?)
 
-(defn start []
+(defn- start []
   (let [discussions (database/all-discussion-titles-and-ids)]
     (println
       "Welcome 🥳! Choose a discussion:\n"
@@ -39,14 +39,6 @@
       {:user/nickname "Christian"
        :discussion/id id
        :discussion/title title})))
-
-(defn- prepare-starting-conclusions
-  "Do a step in the discussion engine and query the starting conclusions."
-  [args]
-  (let [[next-step response] (first (engine/start-discussion args)) ;; todo
-        conclusions (map :argument/conclusion (:present/arguments response))]
-    {:next-step next-step
-     :conclusions (filter #(s/valid? ::models/statement %) (set conclusions))}))
 
 (defn- choose-argument
   "After the presentation of the positions, the first arguments are presented,
@@ -59,12 +51,15 @@
         argument (nth arguments index)]
     (engine/continue-discussion next-step (merge args {:argument/chosen argument}))))
 
-(defn choose-starting-point [args]
-  (let [{:keys [next-step conclusions]} (prepare-starting-conclusions args)]
+(defn- choose-starting-point
+  "Present the conclusions from the starting arguments to enter the discussion."
+  [next-step args]
+  (let [conclusions (map :argument/conclusion (:present/arguments args))
+        unique-starting-points (filter #(s/valid? ::models/statement %) (set conclusions))]
     (println "Choose your starting point:")
-    (println (list-options (map texts/format-statement conclusions)))
+    (println (list-options (map texts/format-statement unique-starting-points)))
     (let [index (Integer/parseInt (read-line))
-          conclusion (nth conclusions index)
+          conclusion (nth unique-starting-points index)
           arguments (database/all-arguments-for-conclusion (:db/id conclusion))]
       (choose-argument next-step arguments args))))
 
@@ -91,13 +86,18 @@
     "Now, how do you want to support this statement?"))
 
 (s/fdef ask-for-new-support
-        :args (s/cat :argument (s/keys :req [:argument/premises])))
+        :args (s/cat :argument (s/keys :req [:argument/premises]))
+        :ret string?)
 
 (defn- ask-for-new-attack [formatted-statement]
   (ask-for-new-input
     formatted-statement
     "Please define why you want to attack the following statement:"
     "Now, how to you want to attack this statement?"))
+
+(s/fdef ask-for-new-attack
+        :args (s/cat :formatted-statement string?)
+        :ret string?)
 
 
 ;; -----------------------------------------------------------------------------
@@ -107,6 +107,9 @@
           "Accepts the values from engine's react function, prints some text to
           the user and calls the next step in the discussion engine."
           (fn [reaction _args] reaction))
+
+(s/fdef convert-options
+        :args (s/cat :reaction keyword? :args ::args))
 
 (defn- generic-collect-input
   "Generic function to present existing statements, which can be selected.
@@ -230,20 +233,25 @@
   (let [possible-steps (set (map first response))
         response-lookupable (into {} response)]
     (cond
+      (contains? possible-steps :argument/chosen) (choose-starting-point :argument/chosen (:argument/chosen response-lookupable))
       (contains? possible-steps :support/select) (convert-options :support/select (:support/select response-lookupable))
       (contains? possible-steps :reaction/support) (react-to-argument response)
       (contains? possible-steps :undermine/select) (convert-options :undermine/select (:undermine/select response-lookupable))
       (contains? possible-steps :rebut/select) (convert-options :rebut/select (:rebut/select response-lookupable))
       (contains? possible-steps :undercut/select) (convert-options :undercut/select (:undercut/select response-lookupable))
-      :else (throw (new UnsupportedOperationException "Not implemented")))))
+      :else (throw (new UnsupportedOperationException
+                        (format "Not implemented. Received: \n%s" response))))))
 
 (s/def ::args (s/coll-of (s/tuple keyword? map?)))
 
 (defn run
   "Endless loop running the CLI."
   []
-  (loop [args (choose-starting-point (start))]
+  (loop [args (engine/start-discussion (start))]
     (recur (dispatch-next-step args))))
+
+
+;; -----------------------------------------------------------------------------
 
 (comment
   (require '[clojure.spec.test.alpha :as stest])
@@ -256,8 +264,4 @@
       choose-starting-point
       react-to-argument
       dispatch-next-step)
-
-  (declare reaction-args)
-  (react-to-argument reaction-args)
-
   :end)
