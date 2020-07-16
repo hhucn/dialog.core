@@ -8,7 +8,7 @@
           which require user interaction."
           (fn [step _] step))
 
-(defmethod step :discussion/title
+(defmethod step :discussion/id
   ;; Show all starting arguments of a discussion.
   [_step args]
   [[:arguments/subset (merge args {:discussion/is-start? true})]])
@@ -150,6 +150,7 @@
   ;; User selected an existing undermine from a user. This could be
   ;; stored or noticed somewhere. Next the system searches an attacking
   ;; argument.
+  ;; Currently, we do nothing with the selected undermine.
   [_step args]
   (let [attacking-argument (find-attacking-argument (:argument/chosen args))
         _selected-undermine (:undermine/selected args)]
@@ -251,7 +252,7 @@
   "Start with all starting arguments from a discussion."
   [args]
   (let [[new-step new-args]
-        (first (step :discussion/title args))]
+        (first (step :discussion/id args))]
     (continue-discussion new-step new-args)))
 
 (s/fdef start-discussion
@@ -261,15 +262,6 @@
 ;; -----------------------------------------------------------------------------
 
 (comment
-  (declare argument-attacking-for-support argument
-           argument-undermine
-           argument-undercut
-           argument-rebut
-           selected-reason)
-
-  (def test-args {:user/nickname "Christian"
-                  :discussion/id 17592186045477})
-
-  (start-discussion test-args)
-
+  (start-discussion {:user/nickname "Christian"
+                     :discussion/id 17592186045477})
   :end)
