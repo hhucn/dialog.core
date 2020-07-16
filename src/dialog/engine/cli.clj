@@ -100,7 +100,6 @@
     "Now, how to you want to attack this statement?"))
 
 
-
 ;; -----------------------------------------------------------------------------
 ;; Reactions to options from the discussion engine
 
@@ -126,6 +125,16 @@
             step
             (merge args {store-selected (nth statements option)})))))))
 
+(defn- generic-create-new-statements
+  "Ask for new input from the user and calls the next step in the discussion."
+  [step select-key store-new ask-fn formatted-statement args]
+  (let [new-statement (ask-fn formatted-statement)]
+    (if (empty? new-statement)
+      (convert-options select-key args)
+      (engine/continue-discussion
+        step
+        (merge args {store-new new-statement})))))
+
 (defmethod convert-options :support/select
   [step {:keys [present/supports] :as args}]
   (generic-collect-input
@@ -136,10 +145,9 @@
 (defmethod convert-options :support/new
   ;; Provide own premise for selected argument.
   [step {:keys [argument/chosen] :as args}]
-  (let [new-premise (ask-for-new-support chosen)]
-    (if (empty? new-premise)
-      (convert-options :support/select args)
-      (engine/continue-discussion step (merge args {:new/support new-premise})))))
+  (generic-create-new-statements
+    step :support/select :new/support
+    ask-for-new-support chosen args))
 
 (defmethod convert-options :undermine/select
   [step {:keys [present/undermines] :as args}]
@@ -150,10 +158,10 @@
 
 (defmethod convert-options :undermine/new
   [step {:keys [argument/chosen] :as args}]
-  (let [new-undermine (ask-for-new-attack (texts/format-premises (:argument/premises chosen)))]
-    (if (empty? new-undermine)
-      (convert-options :undermine/select args)
-      (engine/continue-discussion step (merge args {:new/undermine new-undermine})))))
+  (let [formatted-premises (texts/format-premises (:argument/premises chosen))]
+    (generic-create-new-statements
+      step :undermine/select :new/undermine
+      ask-for-new-attack formatted-premises args)))
 
 (defmethod convert-options :rebut/select
   [step {:keys [present/undermines] :as args}]
@@ -164,10 +172,10 @@
 
 (defmethod convert-options :rebut/new
   [step {:keys [argument/chosen] :as args}]
-  (let [new-rebut (ask-for-new-attack (texts/format-statement (:argument/conclusion chosen)))]
-    (if (empty? new-rebut)
-      (convert-options :rebut/select args)
-      (engine/continue-discussion step (merge args {:new/rebut new-rebut})))))
+  (let [formatted-statement (texts/format-statement (:argument/conclusion chosen))]
+    (generic-create-new-statements
+      step :rebut/select :new/rebut
+      ask-for-new-attack formatted-statement args)))
 
 (defmethod convert-options :undercut/select
   [step {:keys [present/undermines] :as args}]
@@ -176,13 +184,13 @@
     "There are already some attacks on the argument's relation. Choose an
     existing one or provide a new attack:"
     args))
-;; TODO generic new function
+
 (defmethod convert-options :undercut/new
   [step {:keys [argument/chosen] :as args}]
-  (let [new-undercut (ask-for-new-attack (texts/format-statement (:argument/conclusion chosen)))]
-    (if (empty? new-undercut)
-      (convert-options :undercut/select args)
-      (engine/continue-discussion step (merge args {:new/undercut new-undercut})))))
+  (let [formatted-statement (texts/format-statement (:argument/conclusion chosen))]
+    (generic-create-new-statements
+      step :undercut/select :new/undercut
+      ask-for-new-attack formatted-statement args)))
 
 (defmethod convert-options :default
   [_step args]
@@ -190,7 +198,8 @@
     (new UnsupportedOperationException
          (format "Unfortunately, you reached this point 😔 Therefore, you
          received a step in the discussion engine, which is currently not
-         implemented by this interface. Here are the provided arguments:
+         implemented by this interface or you just have a typo. Here are the
+         provided arguments:
          %s" args))))
 
 
