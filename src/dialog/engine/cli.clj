@@ -43,63 +43,26 @@
 (defn- prepare-starting-conclusions
   "Do a step in the discussion engine and query the starting conclusions."
   [args]
-  (let [[next-step response] (first (engine/start-discussion args))
+  (let [[next-step response] (first (engine/start-discussion args)) ;; todo
         conclusions (map :argument/conclusion (:present/arguments response))]
     {:next-step next-step
      :conclusions (filter #(s/valid? ::models/statement %) (set conclusions))}))
 
-(defn- format-argument
-  "Prepare String which can be presented to the user based on the provided
-  argument."
-  [{:argument/keys [author premises conclusion] :as argument}]
-  (let [avatar-nickname (texts/avatar-with-nickname (:author/nickname author))
-        prepared-premises (texts/concat-premises premises)]
-    (format (texts/argument-with-author (:argument/type argument))
-            avatar-nickname
-            (:statement/content conclusion)
-            prepared-premises)))
-
-(s/fdef format-argument
-        :args (s/cat :argument ::models/argument)
-        :ret string?)
-
-(defn- format-statement
-  "Prepares a statement string, for text representation."
-  [{:statement/keys [content author]}]
-  (let [avatar-nickname (texts/avatar-with-nickname (:author/nickname author))]
-    (format (texts/statement-with-author)
-            avatar-nickname
-            content)))
-
-(s/fdef format-statement
-        :args (s/cat :statement (s/keys :req [:statement/author :statement/content]))
-        :ret string?)
-
-(defn- format-premises
-  "Prepares and concatenates premises for text representation."
-  [premises]
-  (let [authors (set (map #(get-in % [:statement/author :author/nickname]) premises))
-        avatar-nickname (texts/avatar-with-nickname (string/join ", " authors))]
-    (format (texts/statement-with-author)
-            avatar-nickname
-            (texts/concat-premises premises))))
-
-(s/fdef format-premises
-        :args (s/cat :premises (s/coll-of ::models/statement))
-        :ret string?)
-
-(defn choose-argument [next-step arguments args]
-  (let [argument-strings (list-options (map format-argument arguments))]
+(defn- choose-argument
+  "After the presentation of the positions, the first arguments are presented,
+  from which the user can choose from."
+  [next-step arguments args]
+  (let [argument-strings (list-options (map texts/format-argument arguments))]
     (println "Here are some arguments for your position. Select one to react to it:")
     (println argument-strings))
   (let [index (Integer/parseInt (read-line))
         argument (nth arguments index)]
-    (engine/continue-discussion next-step (merge {:argument/chosen argument} args))))
+    (engine/continue-discussion next-step (merge args {:argument/chosen argument}))))
 
 (defn choose-starting-point [args]
   (let [{:keys [next-step conclusions]} (prepare-starting-conclusions args)]
     (println "Choose your starting point:")
-    (println (list-options (map format-statement conclusions)))
+    (println (list-options (map texts/format-statement conclusions)))
     (let [index (Integer/parseInt (read-line))
           conclusion (nth conclusions index)
           arguments (database/all-arguments-for-conclusion (:db/id conclusion))]
@@ -123,7 +86,7 @@
 
 (defn- ask-for-new-support [argument]
   (ask-for-new-input
-    (format-premises (:argument/premises argument))
+    (texts/format-premises (:argument/premises argument))
     "Please define why you want to support the following statement:"
     "Now, how do you want to support this statement?"))
 
@@ -153,7 +116,7 @@
   [step create-new-step store-selected statements instruction args]
   (if (empty? statements)
     (convert-options create-new-step args)
-    (let [formatted-premises (map format-premises statements)]
+    (let [formatted-premises (map texts/format-premises statements)]
       (println instruction)
       (println (list-options formatted-premises true))
       (let [option (Integer/parseInt (read-line))]
@@ -187,7 +150,7 @@
 
 (defmethod convert-options :undermine/new
   [step {:keys [argument/chosen] :as args}]
-  (let [new-undermine (ask-for-new-attack (format-premises (:argument/premises chosen)))]
+  (let [new-undermine (ask-for-new-attack (texts/format-premises (:argument/premises chosen)))]
     (if (empty? new-undermine)
       (convert-options :undermine/select args)
       (engine/continue-discussion step (merge args {:new/undermine new-undermine})))))
@@ -201,7 +164,7 @@
 
 (defmethod convert-options :rebut/new
   [step {:keys [argument/chosen] :as args}]
-  (let [new-rebut (ask-for-new-attack (format-statement (:argument/conclusion chosen)))]
+  (let [new-rebut (ask-for-new-attack (texts/format-statement (:argument/conclusion chosen)))]
     (if (empty? new-rebut)
       (convert-options :rebut/select args)
       (engine/continue-discussion step (merge args {:new/rebut new-rebut})))))
@@ -213,10 +176,10 @@
     "There are already some attacks on the argument's relation. Choose an
     existing one or provide a new attack:"
     args))
-
+;; TODO generic new function
 (defmethod convert-options :undercut/new
   [step {:keys [argument/chosen] :as args}]
-  (let [new-undercut (ask-for-new-attack (format-statement (:argument/conclusion chosen)))]
+  (let [new-undercut (ask-for-new-attack (texts/format-statement (:argument/conclusion chosen)))]
     (if (empty? new-undercut)
       (convert-options :undercut/select args)
       (engine/continue-discussion step (merge args {:new/undercut new-undercut})))))
@@ -237,7 +200,7 @@
   "Extract the information from the engine to formulate argument reaction
   options."
   [args]
-  (let [attacking-argument (format-argument (-> args first second :argument/chosen))
+  (let [attacking-argument (texts/format-argument (-> args first second :argument/chosen))
         reaction-options (map first args)
         reaction-texts (list-options (map texts/reactions reaction-options))]
     (println "So, you want to talk about this argument:\n")
