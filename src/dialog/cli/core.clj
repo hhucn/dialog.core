@@ -1,10 +1,11 @@
 (ns dialog.cli.core
-  (:require
-    [clojure.spec.alpha :as s]
-    [dialog.cli.interactions :as interactions]
-    [dialog.cli.texts :as texts]
-    [dialog.discussion.models :as models]
-    [dialog.engine.core :as engine]))
+  "Small CLI to navigate in the discussion and collect user's input. Useful for
+  development purposes."
+  (:require [clojure.spec.alpha :as s]
+            [dialog.cli.interactions :as interactions]
+            [dialog.cli.texts :as texts]
+            [dialog.discussion.models :as models]
+            [dialog.engine.core :as engine]))
 
 
 ;; -----------------------------------------------------------------------------
