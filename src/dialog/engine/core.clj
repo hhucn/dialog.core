@@ -118,8 +118,8 @@
 (defmethod react :starting-argument/select
   ;; User enters the discussion and now gets all starting arguments to the
   ;; current discussion
-  [_step {:keys [discussion/id] :as args}]
-  (let [arguments (database/starting-arguments-by-discussion id)]
+  [_step {:keys [argument/chosen] :as args}]
+  (let [arguments (database/all-arguments-for-conclusion (get-in chosen [:argument/conclusion :db/id]))]
     [:arguments/present (merge args {:present/arguments arguments})]))
 
 (defmethod react :starting-argument/new
