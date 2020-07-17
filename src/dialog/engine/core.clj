@@ -11,7 +11,8 @@
 (defmethod step :discussion/id
   ;; Show all starting arguments of a discussion.
   [_step args]
-  [[:arguments/subset (merge args {:discussion/is-start? true})]])
+  [[:starting-argument/select args]
+   [:starting-argument/new args]])
 
 (defmethod step :arguments/present
   ;; A list of arguments is presented to the user. The user can as a next step
@@ -81,6 +82,9 @@
   [argument]
   (database/support-for-argument (:db/id argument)))
 
+
+;; -----------------------------------------------------------------------------
+
 ;; react: Transitions the state based on what the user chose
 (defmulti ^:private react
           "Transitions from one state to the other. The payload for the
@@ -105,6 +109,12 @@
   ;; User has chosen an argument and the system is now asking for reactions.
   [:reactions/present (dissoc args :present/arguments)])
 
+(defmethod react :starting-argument/select
+  ;; User enters the discussion and now gets all starting arguments to the
+  ;; current discussion
+  [_step {:keys [discussion/id] :as args}]
+  (let [arguments (database/starting-arguments-by-discussion id)]
+    [:arguments/present (merge args {:present/arguments arguments})]))
 
 ;; -----------------------------------------------------------------------------
 ;; Supports
