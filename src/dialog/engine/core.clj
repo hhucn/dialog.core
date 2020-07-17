@@ -62,6 +62,11 @@
   [[:undercut/select args]
    [:undercut/new (dissoc args :present/undercuts)]])
 
+(defmethod step :defends/present
+  [_step args]
+  [[:defend/select args]
+   [:defend/new (dissoc args :present/defends)]])
+
 ;; -----------------------------------------------------------------------------
 
 (defn find-attacking-argument
@@ -253,8 +258,26 @@
   ;; opinion.
   [_step {:keys [argument/chosen] :as args}]
   (let [arguments-supporting-user (find-defending-arguments chosen)]
-    [:arguments/present (merge args {:present/arguments arguments-supporting-user
-                                     :user/attitude :attitude/pro})]))
+    [:defends/present (merge args {:present/defends arguments-supporting-user})]))
+
+(defmethod react :reaction/select
+  ;; User selected an existing reaction from a user. This could be
+  ;; stored or noticed somewhere. Next, the system searches an attacking
+  ;; argument.
+  [_step args]
+  (let [attacking-argument (find-attacking-argument (:argument/chosen args))
+        _selected-reaction (:reaction/selected args)]
+    [:reactions/present (merge (dissoc args :new/reaction :present/reactions)
+                               {:argument/chosen attacking-argument})]))
+
+(defmethod react :reaction/new
+  ;; User provided a new rebut. This needs to be stored and a new argument
+  ;; is chosen for the user.
+  ;; TODO: Store new reaction to database
+  [_step {:keys [new/reaction argument/chosen] :as args}]
+  (let [attacking-argument (find-attacking-argument chosen)]
+    [:reactions/present (merge (dissoc args :new/reaction :present/reactions)
+                               {:argument/chosen attacking-argument})]))
 
 
 ;; -----------------------------------------------------------------------------
@@ -284,4 +307,12 @@
 (comment
   (start-discussion {:user/nickname "Christian"
                      :discussion/id 17592186045477})
+
+  (continue-discussion :starting-argument/select
+                       {:user/nickname "Christian", :discussion/id 17592186045477
+                        :new/starting-argument-conclusion "foo" :new/starting-argument-premises ["bar"]})
+
+  (react :starting-argument/select
+         {:user/nickname "Christian", :discussion/id 17592186045477})
+
   :end)
