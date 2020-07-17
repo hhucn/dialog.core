@@ -313,7 +313,7 @@
                        :statement/version 1})
         premises))
 
-(defn prepare-new-argument
+(defn- prepare-new-argument
   "Prepares a new argument for transaction. Optionally sets a temporary id."
   ([discussion-id author-nickname conclusion premises temporary-id]
    (merge
@@ -338,23 +338,46 @@
                      :temporary-id (s/? string?))
         :ret map?)
 
-(defn new-premises-for-argument!
+(defn- new-premises-for-argument!
   "Creates a new argument based on the old argument, but adding new premises and
-  a new author. The old premise(s) now become(s) the new conclusion(s)."
-  [discussion-id author-nickname argument premises]
+  a new author. The old premise(s) now become(s) the new conclusion(s). Takes an
+  argument type to represent a generic argument construction function."
+  [discussion-id author-nickname argument premises argument-type]
   (let [premise-ids (map :db/id (:argument/premises argument))
         new-arguments (for [premise-id premise-ids]
                         {:argument/author [:author/nickname author-nickname]
                          :argument/premises (pack-premises premises author-nickname)
                          :argument/conclusion premise-id
                          :argument/version 1
-                         :argument/type :argument.type/support
+                         :argument/type argument-type
                          :argument/discussions [discussion-id]})]
     (transact new-arguments)))
 
 (s/fdef new-premises-for-argument!
         :args (s/cat :discussion-id number? :author-nickname :author/nickname
-                     :argument ::models/argument :premises (s/coll-of string?)))
+                     :argument ::models/argument :premises (s/coll-of string?)
+                     :argument-type :argument/type))
+
+(defn support-argument!
+  "Adds new statements to support an argument's conclusion."
+  [discussion-id author-nickname argument premises]
+  (new-premises-for-argument! discussion-id author-nickname argument premises :argument.type/support))
+
+(defn undermine-argument!
+  "Attack the argument's premises with own statements."
+  [discussion-id author-nickname argument premises]
+  (new-premises-for-argument! discussion-id author-nickname argument premises :argument.type/attack))
+
+(defn rebut-argument!
+  "Attack the argument's conclusion with own statements."
+  [discussion-id author-nickname argument premises]
+  (let [conclusion-id-which-should-be-attacked (get-in argument [:argument/conclusion :db/id])]
+    (transact [{:argument/author [:author/nickname author-nickname]
+                :argument/premises (pack-premises premises author-nickname)
+                :argument/conclusion conclusion-id-which-should-be-attacked
+                :argument/version 1
+                :argument/type :argument.type/attack
+                :argument/discussions [discussion-id]}])))
 
 (defn add-new-starting-argument!
   "Creates a new starting argument in a discussion."
@@ -365,5 +388,26 @@
                [:db/add discussion-id :discussion/starting-arguments temporary-id]])))
 
 (comment
+  (all-arguments-by-content "we should get a dog")
   (add-new-starting-argument! 17592186045477 "Christian" "this is sparta" ["foo" "bar" "baz"])
+  (all-arguments-for-discussion 17592186045477)
+
+  (declare testargument)
+  (undermine-argument! 17592186045477 "Christian" testargument ["irgendwas zum underminen"])
+  (rebut-argument! 17592186045477 "Christian" testargument ["das ist eine doofe idee" "weil isso"])
+
+  (def testargument
+    {:db/id 17592186045475,
+     :argument/version 1,
+     :argument/author #:author{:nickname "Christian"},
+     :argument/type :argument.type/support,
+     :argument/premises [{:db/id 17592186045476,
+                          :statement/content "several cats of my friends are real assholes",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Christian"}}],
+     :argument/conclusion {:db/id 17592186045468,
+                           :statement/content "cats are capricious",
+                           :statement/version 1,
+                           :statement/author #:author{:nickname "Wegi"}}})
+
   :end)
