@@ -187,8 +187,8 @@
 (defmethod react :undermine/new
   ;; User provided a new undermine. This needs to be stored and a new argument
   ;; is chosen for the user
-  ;; TODO: Store new undermine to database
-  [_step {:keys [new/undermine argument/chosen] :as args}]
+  ;; TODO: Store new undermine to database from new/undermine
+  [_step {:keys [argument/chosen] :as args}]
   (let [attacking-argument (find-attacking-argument chosen)]
     [:reactions/present (merge (dissoc args :new/undermine :present/undermines)
                                {:argument/chosen attacking-argument})]))
@@ -215,8 +215,8 @@
 (defmethod react :rebut/new
   ;; User provided a new rebut. This needs to be stored and a new argument
   ;; is chosen for the user.
-  ;; TODO: Store new rebut to database
-  [_step {:keys [new/rebut argument/chosen] :as args}]
+  ;; TODO: Store new rebut to database from new/rebut
+  [_step {:keys [argument/chosen] :as args}]
   (let [attacking-argument (find-attacking-argument chosen)]
     [:reactions/present (merge (dissoc args :new/rebut :present/rebuts)
                                {:argument/chosen attacking-argument})]))
@@ -243,8 +243,8 @@
 (defmethod react :undercut/new
   ;; User provided a new rebut. This needs to be stored and a new argument
   ;; is chosen for the user.
-  ;; TODO: Store new undercut to database
-  [_step {:keys [new/undercut argument/chosen] :as args}]
+  ;; TODO: Store new undercut to database from new/undercut
+  [_step {:keys [argument/chosen] :as args}]
   (let [attacking-argument (find-attacking-argument chosen)]
     [:reactions/present (merge (dissoc args :new/undercut :present/undercuts)
                                {:argument/chosen attacking-argument})]))
@@ -273,8 +273,8 @@
 (defmethod react :defend/new
   ;; User provided a new rebut. This needs to be stored and a new argument
   ;; is chosen for the user.
-  ;; TODO: Store new defend to database
-  [_step {:keys [new/defend argument/chosen] :as args}]
+  ;; TODO: Store new defend to database from new defend
+  [_step {:keys [argument/chosen] :as args}]
   (let [attacking-argument (find-attacking-argument chosen)]
     [:defends/present (merge (dissoc args :new/defend :present/defends)
                              {:argument/chosen attacking-argument})]))
