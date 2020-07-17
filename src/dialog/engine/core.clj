@@ -118,14 +118,15 @@
 (defmethod react :starting-argument/select
   ;; User enters the discussion and now gets all starting arguments to the
   ;; current discussion
-  [_step {:keys [argument/chosen] :as args}]
-  (let [arguments (database/all-arguments-for-conclusion (get-in chosen [:argument/conclusion :db/id]))]
+  [_step {:keys [discussion/id] :as args}]
+  (let [arguments (database/starting-arguments-by-discussion id)]
     [:arguments/present (merge args {:present/arguments arguments})]))
 
 (defmethod react :starting-argument/new
   ;; User adds own starting argument. This is stored to the database and a new
   ;; argument is chosen to
-  [_step {:keys [discussion/id user/nickname new/starting-argument-conclusion new/starting-argument-premises] :as args}]
+  [_step {:keys [discussion/id user/nickname new/starting-argument-conclusion new/starting-argument-premises]
+          :as args}]
   (database/add-new-starting-argument! id nickname starting-argument-conclusion starting-argument-premises)
   (react :starting-argument/select
          (dissoc args
@@ -147,7 +148,8 @@
 (defmethod react :support/new
   ;; User provided a new support. This needs to be stored and presented a new
   ;; argument to the user.
-  [_step {:keys [discussion/id user/nickname new/support argument/chosen] :as args}]
+  [_step {:keys [discussion/id user/nickname new/support argument/chosen]
+          :as args}]
   (database/support-argument id nickname chosen [support])
   (let [attacking-argument (find-attacking-argument chosen)]
     [:reactions/present (merge (dissoc args :new/support :present/supports)
