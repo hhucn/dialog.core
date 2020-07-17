@@ -44,7 +44,7 @@
       (convert-options select-key args)
       (engine/continue-discussion
         step
-        (merge args {store-new new-statement})))))
+        (merge args {store-new [new-statement]})))))
 
 (defmethod convert-options :starting-argument/select
   ;; Present the conclusions from the starting arguments to enter the
