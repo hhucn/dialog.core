@@ -40,29 +40,6 @@
        :discussion/id id
        :discussion/title title})))
 
-(defn- choose-argument
-  "After the presentation of the positions, the first arguments are presented,
-  from which the user can choose from."
-  [next-step arguments args]
-  (let [argument-strings (list-options (map texts/format-argument arguments))]
-    (println "Here are some arguments for your position. Select one to react to it:")
-    (println argument-strings))
-  (let [index (Integer/parseInt (read-line))
-        argument (nth arguments index)]
-    (engine/continue-discussion next-step (merge args {:argument/chosen argument}))))
-
-(defn- choose-starting-point
-  "Present the conclusions from the starting arguments to enter the discussion."
-  [next-step args]
-  (let [conclusions (map :argument/conclusion (:present/arguments args))
-        unique-starting-points (filter #(s/valid? ::models/statement %) (set conclusions))]
-    (println "Choose your starting point:")
-    (println (list-options (map texts/format-statement unique-starting-points)))
-    (let [index (Integer/parseInt (read-line))
-          conclusion (nth unique-starting-points index)
-          arguments (database/all-arguments-for-conclusion (:db/id conclusion))]
-      (choose-argument next-step arguments args))))
-
 (defn- ask-for-new-input
   "Generic function to ask for user input."
   [formatted-statements introduction input-request]
@@ -137,6 +114,30 @@
       (engine/continue-discussion
         step
         (merge args {store-new new-statement})))))
+
+(defmethod convert-options :starting-argument/select
+  ;; Present the conclusions from the starting arguments to enter the
+  ;; discussion.
+  [step {:keys [present/arguments] :as args}]
+  (let [filtered-arguments (distinct (filter #(not= "argument.type/undercut" (:argument/type %)) arguments))
+        conclusions (map :argument/conclusion filtered-arguments)
+        unique-starting-points (filter #(s/valid? ::models/statement %) conclusions)]
+    (println "Choose your starting point:")
+    (println (list-options (map texts/format-statement unique-starting-points)))
+    (let [index (Integer/parseInt (read-line))
+          chosen-argument (nth filtered-arguments index)]
+      (engine/continue-discussion step (merge args {:argument/chosen chosen-argument})))))
+
+(defmethod convert-options :argument/chosen
+  ;; After the presentation of the positions, the first arguments are presented,
+  ;; from which the user can choose from.
+  [step {:keys [present/arguments] :as args}]
+  (let [argument-strings (list-options (map texts/format-argument arguments))]
+    (println "Here are some arguments for your position. Select one to react to it:")
+    (println argument-strings)
+    (let [index (Integer/parseInt (read-line))
+          argument (nth arguments index)]
+      (engine/continue-discussion step (merge args {:argument/chosen argument})))))
 
 (defmethod convert-options :support/select
   [step {:keys [present/supports] :as args}]
@@ -233,7 +234,8 @@
   (let [possible-steps (set (map first response))
         response-lookupable (into {} response)]
     (cond
-      (contains? possible-steps :argument/chosen) (choose-starting-point :argument/chosen (:argument/chosen response-lookupable))
+      (contains? possible-steps :argument/chosen) (convert-options :argument/chosen (:argument/chosen response-lookupable))
+      (contains? possible-steps :starting-argument/select) (convert-options :starting-argument/select (:starting-argument/select response-lookupable))
       (contains? possible-steps :support/select) (convert-options :support/select (:support/select response-lookupable))
       (contains? possible-steps :reaction/support) (react-to-argument response)
       (contains? possible-steps :undermine/select) (convert-options :undermine/select (:undermine/select response-lookupable))
@@ -242,13 +244,13 @@
       :else (throw (new UnsupportedOperationException
                         (format "Not implemented. Received: \n%s" response))))))
 
-(s/def ::args (s/coll-of (s/tuple keyword? map?)))
-
 (defn run
   "Endless loop running the CLI."
   []
   (loop [args (engine/start-discussion (start))]
     (recur (dispatch-next-step args))))
+
+(s/def ::args (s/coll-of (s/tuple keyword? map?)))
 
 
 ;; -----------------------------------------------------------------------------
@@ -260,8 +262,4 @@
   (require '[clojure.tools.trace :as trace])
   (trace/trace-ns 'dialog.engine.core)
 
-  (-> (start)
-      choose-starting-point
-      react-to-argument
-      dispatch-next-step)
   :end)
