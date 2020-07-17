@@ -109,12 +109,27 @@
   ;; User has chosen an argument and the system is now asking for reactions.
   [:reactions/present (dissoc args :present/arguments)])
 
+
+;; -----------------------------------------------------------------------------
+;; Starting Arguments
+
 (defmethod react :starting-argument/select
   ;; User enters the discussion and now gets all starting arguments to the
   ;; current discussion
   [_step {:keys [discussion/id] :as args}]
   (let [arguments (database/starting-arguments-by-discussion id)]
     [:arguments/present (merge args {:present/arguments arguments})]))
+
+(defmethod react :starting-argument/new
+  ;; User adds own starting argument. This is stored to the database and a new
+  ;; argument is chosen to
+  [_step {:keys [discussion/id new/starting-argument.conclusion new/starting-argument.premises] :as args}]
+  ;; TODO store conclusion and premises as new starting argument
+  (react :starting-argument/select
+         (dissoc args
+                 :new/starting-argument.conclusion
+                 :new/starting-argument.premises)))
+
 
 ;; -----------------------------------------------------------------------------
 ;; Supports
