@@ -1,8 +1,8 @@
-(ns dialog.engine.texts-test
+(ns dialog.cli.texts-test
   (:require
     [clojure.string :as string]
-    [clojure.test :refer [deftest is are testing]]
-    [dialog.engine.texts :as texts]
+    [clojure.test :refer [deftest is testing]]
+    [dialog.cli.texts :as texts]
     [dialog.test.utilities :as tutils]))
 
 (deftest argument-with-author-test
