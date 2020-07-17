@@ -11,8 +11,9 @@
 (defmethod step :discussion/id
   ;; Show all starting arguments of a discussion.
   [_step args]
-  [[:starting-argument/select args]
-   [:starting-argument/new args]])
+  (let [arguments (database/starting-arguments-by-discussion (:discussion/id args))]
+    [[:starting-argument/select (merge args {:present/arguments arguments})]
+     [:starting-argument/new (dissoc args :present/arguments)]]))
 
 (defmethod step :arguments/present
   ;; A list of arguments is presented to the user. The user can as a next step
@@ -112,8 +113,8 @@
 (defmethod react :starting-argument/select
   ;; User enters the discussion and now gets all starting arguments to the
   ;; current discussion
-  [_step {:keys [discussion/id] :as args}]
-  (let [arguments (database/starting-arguments-by-discussion id)]
+  [_step {:keys [argument/chosen] :as args}]
+  (let [arguments (database/all-arguments-for-conclusion (get-in chosen [:argument/conclusion :db/id]))]
     [:arguments/present (merge args {:present/arguments arguments})]))
 
 (defmethod react :starting-argument/new
