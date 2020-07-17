@@ -272,9 +272,7 @@
 (defn start-discussion
   "Start with all starting arguments from a discussion."
   [args]
-  (let [[new-step new-args]
-        (first (step :discussion/id args))]
-    (continue-discussion new-step new-args)))
+  (step :discussion/id args))
 
 (s/fdef start-discussion
         :args (s/cat :args (s/keys :req [:discussion/id :user/nickname])))
