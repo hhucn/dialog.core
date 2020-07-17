@@ -3,6 +3,7 @@
             [dialog.engine.core :as engine]
             [dialog.discussion.models :as models]
             [dialog.engine.texts :as texts]
+            [dialog.engine.interactions :as interactions]
             [clojure.string :as string]
             [clojure.spec.alpha :as s]))
 
@@ -22,13 +23,6 @@
                      :add-new? (s/? boolean?))
         :ret string?)
 
-(defn- confirmed? []
-  (println "Are you satisfied with your input? [y/n]")
-  (let [input (.toLowerCase (read-line))]
-    (= "y" input)))
-
-(s/fdef confirmed? :ret boolean?)
-
 (defn- start []
   (let [discussions (database/all-discussion-titles-and-ids)]
     (println
@@ -39,52 +33,6 @@
       {:user/nickname "Christian"
        :discussion/id id
        :discussion/title title})))
-
-(defn- ask-for-new-input
-  "Generic function to ask for user input."
-  [formatted-statements introduction input-request]
-  (println introduction "\n")
-  (println formatted-statements "\n")
-  (println input-request)
-  (let [new-statement (read-line)]
-    (when (confirmed?)
-      (println "🎉 You entered" new-statement)
-      new-statement)))
-
-(s/fdef ask-for-new-input
-        :args (s/cat :formatted-statements string? :introduction string?
-                     :input-request string?)
-        :ret string?)
-
-(defn- ask-for-new-support [argument]
-  (ask-for-new-input
-    (texts/format-premises (:argument/premises argument))
-    "Please define why you want to support the following statement:"
-    "Now, how do you want to support this statement?"))
-
-(s/fdef ask-for-new-support
-        :args (s/cat :argument (s/keys :req [:argument/premises]))
-        :ret string?)
-
-(defn- ask-for-new-defend [argument]
-  (ask-for-new-input
-    (texts/format-statement (:argument/conclusion argument))
-    "Please define why you want to support the following statement:"
-    "Now, how do you want to support this statement?"))
-
-(s/fdef ask-for-new-support
-        :args (s/cat :argument (s/keys :req [:argument/premises]))
-        :ret string?)
-
-(defn- ask-for-new-attack [formatted-statement]
-  (ask-for-new-input
-    formatted-statement
-    "Please define why you want to attack the following statement:"
-    "Now, how to you want to attack this statement?"))
-
-(s/fdef ask-for-new-attack
-        :args (s/cat :formatted-statement string?)
-        :ret string?)
 
 
 ;; -----------------------------------------------------------------------------
@@ -161,7 +109,7 @@
   [step {:keys [argument/chosen] :as args}]
   (generic-create-new-statements
     step :support/select :new/support
-    ask-for-new-support chosen args))
+    interactions/ask-for-new-support chosen args))
 
 (defmethod convert-options :defend/select
   [step {:keys [present/defends] :as args}]
@@ -175,7 +123,7 @@
   [step {:keys [argument/chosen] :as args}]
   (generic-create-new-statements
     step :defend/select :new/defend
-    ask-for-new-defend chosen args))
+    interactions/ask-for-new-defend chosen args))
 
 (defmethod convert-options :undermine/select
   [step {:keys [present/undermines] :as args}]
@@ -189,7 +137,7 @@
   (let [formatted-premises (texts/format-premises (:argument/premises chosen))]
     (generic-create-new-statements
       step :undermine/select :new/undermine
-      ask-for-new-attack formatted-premises args)))
+      interactions/ask-for-new-attack formatted-premises args)))
 
 (defmethod convert-options :rebut/select
   [step {:keys [present/undermines] :as args}]
@@ -203,7 +151,7 @@
   (let [formatted-statement (texts/format-statement (:argument/conclusion chosen))]
     (generic-create-new-statements
       step :rebut/select :new/rebut
-      ask-for-new-attack formatted-statement args)))
+      interactions/ask-for-new-attack formatted-statement args)))
 
 (defmethod convert-options :undercut/select
   [step {:keys [present/undermines] :as args}]
@@ -218,7 +166,21 @@
   (let [formatted-statement (texts/format-statement (:argument/conclusion chosen))]
     (generic-create-new-statements
       step :undercut/select :new/undercut
-      ask-for-new-attack formatted-statement args)))
+      interactions/ask-for-new-attack formatted-statement args)))
+
+(defmethod convert-options :reaction/support
+  ;; Collects _all_ possible reactions and prints fitting options to it.
+  [_step args]
+  (let [attacking-argument (texts/format-argument (-> args first second :argument/chosen))
+        reaction-options (map first args)
+        reaction-texts (list-options (map texts/reactions reaction-options))]
+    (println "So, you want to talk about this argument:\n")
+    (println attacking-argument "\n")
+    (println "What do you want to do?")
+    (println reaction-texts)
+    (let [option (Integer/parseInt (read-line))
+          [next-step new-args] (nth args option)]
+      (engine/continue-discussion next-step new-args))))
 
 (defmethod convert-options :default
   [_step args]
@@ -233,24 +195,6 @@
 
 ;; -----------------------------------------------------------------------------
 
-(defn react-to-argument
-  "Extract the information from the engine to formulate argument reaction
-  options."
-  [args]
-  (let [attacking-argument (texts/format-argument (-> args first second :argument/chosen))
-        reaction-options (map first args)
-        reaction-texts (list-options (map texts/reactions reaction-options))]
-    (println "So, you want to talk about this argument:\n")
-    (println attacking-argument "\n")
-    (println "What do you want to do?")
-    (println reaction-texts)
-    (let [option (Integer/parseInt (read-line))
-          [next-step new-args] (nth args option)]
-      (engine/continue-discussion next-step new-args))))
-
-(s/fdef react-to-argument
-        :args (s/cat :args ::args))
-
 (defn dispatch-next-step
   "Takes a response from the dialog-engine and selects the most preferable
   option if there are multiple choices."
@@ -262,7 +206,7 @@
       (contains? possible-steps :argument/chosen) (convert-options :argument/chosen (:argument/chosen response-lookupable))
       (contains? possible-steps :starting-argument/select) (convert-options :starting-argument/select (:starting-argument/select response-lookupable))
       (contains? possible-steps :support/select) (convert-options :support/select (:support/select response-lookupable))
-      (contains? possible-steps :reaction/support) (react-to-argument response)
+      (contains? possible-steps :reaction/support) (convert-options :reaction/support response)
       (contains? possible-steps :undermine/select) (convert-options :undermine/select (:undermine/select response-lookupable))
       (contains? possible-steps :rebut/select) (convert-options :rebut/select (:rebut/select response-lookupable))
       (contains? possible-steps :undercut/select) (convert-options :undercut/select (:undercut/select response-lookupable))
