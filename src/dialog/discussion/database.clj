@@ -359,7 +359,7 @@
                      :argument-type :argument/type))
 
 (defn support-argument!
-  "Adds new statements support an argument's conclusion."
+  "Adds new statements to support an argument's conclusion."
   [discussion-id author-nickname argument premises]
   (new-premises-for-argument! discussion-id author-nickname argument premises :argument.type/support))
 
