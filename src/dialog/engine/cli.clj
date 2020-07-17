@@ -66,6 +66,16 @@
         :args (s/cat :argument (s/keys :req [:argument/premises]))
         :ret string?)
 
+(defn- ask-for-new-defend [argument]
+  (ask-for-new-input
+    (texts/format-statement (:argument/conclusion argument))
+    "Please define why you want to support the following statement:"
+    "Now, how do you want to support this statement?"))
+
+(s/fdef ask-for-new-support
+        :args (s/cat :argument (s/keys :req [:argument/premises]))
+        :ret string?)
+
 (defn- ask-for-new-attack [formatted-statement]
   (ask-for-new-input
     formatted-statement
@@ -153,6 +163,20 @@
     step :support/select :new/support
     ask-for-new-support chosen args))
 
+(defmethod convert-options :defend/select
+  [step {:keys [present/defends] :as args}]
+  (generic-collect-input
+    step :defend/new :defend/selected (:argument/conclusion defends)
+    "Here are the supports for the selected conclusion:"
+    args))
+
+(defmethod convert-options :defend/new
+  ;; Provide own premise for selected argument.
+  [step {:keys [argument/chosen] :as args}]
+  (generic-create-new-statements
+    step :defend/select :new/defend
+    ask-for-new-defend chosen args))
+
 (defmethod convert-options :undermine/select
   [step {:keys [present/undermines] :as args}]
   (generic-collect-input
@@ -201,7 +225,7 @@
   (throw
     (new UnsupportedOperationException
          (format "Unfortunately, you reached this point 😔 Therefore, you
-         received a step in the discussion engine, which is currently not
+         received a step from the discussion engine, which is currently not
          implemented by this interface or you just have a typo. Here are the
          provided arguments:
          %s" args))))
@@ -234,6 +258,7 @@
   (let [possible-steps (set (map first response))
         response-lookupable (into {} response)]
     (cond
+      (contains? possible-steps :defend/select) (convert-options :defend/select (:defend/select response-lookupable))
       (contains? possible-steps :argument/chosen) (convert-options :argument/chosen (:argument/chosen response-lookupable))
       (contains? possible-steps :starting-argument/select) (convert-options :starting-argument/select (:starting-argument/select response-lookupable))
       (contains? possible-steps :support/select) (convert-options :support/select (:support/select response-lookupable))

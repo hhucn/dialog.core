@@ -260,24 +260,24 @@
   (let [arguments-supporting-user (find-defending-arguments chosen)]
     [:defends/present (merge args {:present/defends arguments-supporting-user})]))
 
-(defmethod react :reaction/select
-  ;; User selected an existing reaction from a user. This could be
+(defmethod react :defend/select
+  ;; User selected an existing defend from a user. This could be
   ;; stored or noticed somewhere. Next, the system searches an attacking
   ;; argument.
   [_step args]
   (let [attacking-argument (find-attacking-argument (:argument/chosen args))
-        _selected-reaction (:reaction/selected args)]
-    [:reactions/present (merge (dissoc args :new/reaction :present/reactions)
-                               {:argument/chosen attacking-argument})]))
+        _selected-defend (:defend/selected args)]
+    [:defends/present (merge (dissoc args :new/defend :present/defends)
+                             {:argument/chosen attacking-argument})]))
 
-(defmethod react :reaction/new
+(defmethod react :defend/new
   ;; User provided a new rebut. This needs to be stored and a new argument
   ;; is chosen for the user.
-  ;; TODO: Store new reaction to database
-  [_step {:keys [new/reaction argument/chosen] :as args}]
+  ;; TODO: Store new defend to database
+  [_step {:keys [new/defend argument/chosen] :as args}]
   (let [attacking-argument (find-attacking-argument chosen)]
-    [:reactions/present (merge (dissoc args :new/reaction :present/reactions)
-                               {:argument/chosen attacking-argument})]))
+    [:defends/present (merge (dissoc args :new/defend :present/defends)
+                             {:argument/chosen attacking-argument})]))
 
 
 ;; -----------------------------------------------------------------------------
