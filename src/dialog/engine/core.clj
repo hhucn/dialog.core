@@ -93,20 +93,16 @@
           (fn [current-step _args] current-step))
 
 (defmethod react :arguments/subset
-  ;; Chooses the arguments presented to the user. `discussion/is-start?`
-  ;; marks whether those are starting arguments. If not, the arguments
-  ;; presented attack `arguments/chosen` based on `user/attitude`.
-  [_step {:keys [discussion/id discussion/is-start? user/attitude argument/chosen]
-          :as args}]
-  (let [arguments (if is-start?
-                    (database/starting-arguments-by-discussion id)
-                    (find-argument-for-opinion attitude chosen))]
-    [:arguments/present (merge (dissoc args :discussion/is-start?)
+  ;; Chooses the arguments presented to the user. The arguments
+  ;; presented attack `argument/chosen` based on `user/attitude`.
+  [_step {:keys [user/attitude argument/chosen] :as args}]
+  (let [arguments (find-argument-for-opinion attitude chosen)]
+    [:arguments/present (merge args
                                {:present/arguments arguments})]))
 
 (defmethod react :argument/chosen
-  [_step args]
   ;; User has chosen an argument and the system is now asking for reactions.
+  [_step args]
   [:reactions/present (dissoc args :present/arguments)])
 
 
@@ -123,12 +119,12 @@
 (defmethod react :starting-argument/new
   ;; User adds own starting argument. This is stored to the database and a new
   ;; argument is chosen to
-  [_step {:keys [discussion/id new/starting-argument.conclusion new/starting-argument.premises] :as args}]
-  ;; TODO store conclusion and premises as new starting argument
+  [_step {:keys [discussion/id user/nickname new/starting-argument-conclusion new/starting-argument-premises] :as args}]
+  (database/add-new-starting-argument! id nickname starting-argument-conclusion starting-argument-premises)
   (react :starting-argument/select
          (dissoc args
-                 :new/starting-argument.conclusion
-                 :new/starting-argument.premises)))
+                 :new/starting-argument-conclusion
+                 :new/starting-argument-premises)))
 
 
 ;; -----------------------------------------------------------------------------
@@ -146,7 +142,7 @@
   ;; User provided a new support. This needs to be stored and presented a new
   ;; argument to the user.
   [_step {:keys [discussion/id user/nickname new/support argument/chosen] :as args}]
-  (database/new-premises-for-argument! id nickname chosen support)
+  (database/new-premises-for-argument! id nickname chosen [support])
   (let [attacking-argument (find-attacking-argument chosen)]
     [:reactions/present (merge (dissoc args :new/support :present/supports)
                                {:argument/chosen attacking-argument})]))
