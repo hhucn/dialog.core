@@ -148,7 +148,7 @@
   ;; User provided a new support. This needs to be stored and presented a new
   ;; argument to the user.
   [_step {:keys [discussion/id user/nickname new/support argument/chosen] :as args}]
-  (database/new-premises-for-argument! id nickname chosen [support])
+  (database/support-argument id nickname chosen [support])
   (let [attacking-argument (find-attacking-argument chosen)]
     [:reactions/present (merge (dissoc args :new/support :present/supports)
                                {:argument/chosen attacking-argument})]))
@@ -187,8 +187,9 @@
 (defmethod react :undermine/new
   ;; User provided a new undermine. This needs to be stored and a new argument
   ;; is chosen for the user
-  ;; TODO: Store new undermine to database from new/undermine
-  [_step {:keys [argument/chosen] :as args}]
+  [_step {:keys [argument/chosen discussion/id user/nickname new/undermine]
+          :as args}]
+  (database/undermine-argument id nickname chosen undermine)
   (let [attacking-argument (find-attacking-argument chosen)]
     [:reactions/present (merge (dissoc args :new/undermine :present/undermines)
                                {:argument/chosen attacking-argument})]))
