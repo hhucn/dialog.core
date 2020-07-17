@@ -1,4 +1,4 @@
-(ns dialog.engine.texts
+(ns dialog.cli.texts
   "Defines strings, which can be used for text-representation."
   (:require [clojure.string :as string]
             [clojure.spec.alpha :as s]
@@ -103,4 +103,20 @@
 
 (s/fdef format-premises
         :args (s/cat :premises (s/coll-of ::models/statement))
+        :ret string?)
+
+(defn list-options
+  "Creates a list of interactive options. Optionally adds an extra option, which
+  asks for user input."
+  ([options]
+   (list-options options false))
+  ([options add-new?]
+   (let [options' (if add-new? (concat options ["🤟 Add my own statement"]) options)]
+     (string/join "\n" (map-indexed
+                         (fn [idx content] (format "[%s] %s" idx content))
+                         options')))))
+
+(s/fdef list-options
+        :args (s/cat :options (s/coll-of string?)
+                     :add-new? (s/? boolean?))
         :ret string?)

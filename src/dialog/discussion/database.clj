@@ -313,31 +313,35 @@
                        :statement/version 1})
         premises))
 
+(defn prepare-new-argument
+  "Prepares a new argument for transaction. Optionally sets a temporary id."
+  ([discussion-id author-nickname conclusion premises temporary-id]
+   (merge
+     (prepare-new-argument discussion-id author-nickname conclusion premises)
+     {:db/id temporary-id}))
+  ([discussion-id author-nickname conclusion premises]
+   {:argument/author [:author/nickname author-nickname]
+    :argument/premises (pack-premises premises author-nickname)
+    :argument/conclusion {:db/id conclusion
+                          :statement/author [:author/nickname author-nickname]
+                          :statement/content conclusion
+                          :statement/version 1}
+    :argument/version 1
+    :argument/type :argument.type/support
+    :argument/discussions [discussion-id]}))
 
-(defn new-argument!
-  "Creates a new argument and stores it in the database."
-  [discussion-id author-nickname conclusion & premises]
-  (transact
-    [{:argument/author [:author/nickname author-nickname]
-      :argument/premises (pack-premises premises author-nickname)
-      :argument/conclusion {:db/id conclusion
-                            :statement/author [:author/nickname author-nickname]
-                            :statement/content conclusion
-                            :statement/version 1}
-      :argument/version 1
-      :argument/type :argument.type/support
-      :argument/discussions [discussion-id]}]))
-(s/fdef new-argument!
+(s/fdef prepare-new-argument
         :args (s/cat :discussion-title number?
                      :author-nickname string?
                      :conclusion string?
-                     :premises (s/* string?))
+                     :premises (s/coll-of string?)
+                     :temporary-id (s/? string?))
         :ret map?)
 
 (defn new-premises-for-argument!
   "Creates a new argument based on the old argument, but adding new premises and
   a new author. The old premise(s) now become(s) the new conclusion(s)."
-  [discussion-id author-nickname argument & premises]
+  [discussion-id author-nickname argument premises]
   (let [premise-ids (map :db/id (:argument/premises argument))
         new-arguments (for [premise-id premise-ids]
                         {:argument/author [:author/nickname author-nickname]
@@ -350,9 +354,16 @@
 
 (s/fdef new-premises-for-argument!
         :args (s/cat :discussion-id number? :author-nickname :author/nickname
-                     :argument ::models/argument :premises (s/* string?)))
+                     :argument ::models/argument :premises (s/coll-of string?)))
 
+(defn add-new-starting-argument!
+  "Creates a new starting argument in a discussion."
+  [discussion-id author-nickname conclusion premises]
+  (let [new-argument (prepare-new-argument discussion-id author-nickname conclusion premises "add/starting-argument")
+        temporary-id (:db/id new-argument)]
+    (transact [new-argument
+               [:db/add discussion-id :discussion/starting-arguments temporary-id]])))
 
 (comment
-  (new-argument! 17592186045477 "Christian" "this is sparta" "foo" "bar" "baz")
+  (add-new-starting-argument! 17592186045477 "Christian" "this is sparta" ["foo" "bar" "baz"])
   :end)
