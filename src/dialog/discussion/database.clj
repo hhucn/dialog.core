@@ -313,7 +313,7 @@
                        :statement/version 1})
         premises))
 
-(defn prepare-new-argument
+(defn- prepare-new-argument
   "Prepares a new argument for transaction. Optionally sets a temporary id."
   ([discussion-id author-nickname conclusion premises temporary-id]
    (merge
@@ -338,23 +338,35 @@
                      :temporary-id (s/? string?))
         :ret map?)
 
-(defn new-premises-for-argument!
+(defn- new-premises-for-argument!
   "Creates a new argument based on the old argument, but adding new premises and
-  a new author. The old premise(s) now become(s) the new conclusion(s)."
-  [discussion-id author-nickname argument premises]
+  a new author. The old premise(s) now become(s) the new conclusion(s). Takes an
+  argument type to represent a generic argument construction function."
+  [discussion-id author-nickname argument premises argument-type]
   (let [premise-ids (map :db/id (:argument/premises argument))
         new-arguments (for [premise-id premise-ids]
                         {:argument/author [:author/nickname author-nickname]
                          :argument/premises (pack-premises premises author-nickname)
                          :argument/conclusion premise-id
                          :argument/version 1
-                         :argument/type :argument.type/support
+                         :argument/type argument-type
                          :argument/discussions [discussion-id]})]
     (transact new-arguments)))
 
 (s/fdef new-premises-for-argument!
         :args (s/cat :discussion-id number? :author-nickname :author/nickname
-                     :argument ::models/argument :premises (s/coll-of string?)))
+                     :argument ::models/argument :premises (s/coll-of string?)
+                     :argument-type :argument/type))
+
+(defn support-argument
+  "Adds new statements support an argument's conclusion."
+  [discussion-id author-nickname argument premises]
+  (new-premises-for-argument! discussion-id author-nickname argument premises :argument.type/support))
+
+(defn undermine-argument
+  "Attack the argument's conclusion with own statements."
+  [discussion-id author-nickname argument premises]
+  (new-premises-for-argument! discussion-id author-nickname argument premises :argument.type/attack))
 
 (defn add-new-starting-argument!
   "Creates a new starting argument in a discussion."
