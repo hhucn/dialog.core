@@ -1,38 +1,10 @@
-(ns dialog.engine.cli
-  (:require [dialog.discussion.database :as database]
-            [dialog.engine.core :as engine]
-            [dialog.discussion.models :as models]
-            [dialog.engine.texts :as texts]
-            [dialog.engine.interactions :as interactions]
-            [clojure.string :as string]
-            [clojure.spec.alpha :as s]))
-
-(defn- list-options
-  "Creates a list of interactive options. Optionally adds an extra option, which
-  asks for user input."
-  ([options]
-   (list-options options false))
-  ([options add-new?]
-   (let [options' (if add-new? (concat options ["🤟 Add my own statement"]) options)]
-     (string/join "\n" (map-indexed
-                         (fn [idx content] (format "[%s] %s" idx content))
-                         options')))))
-
-(s/fdef list-options
-        :args (s/cat :options (s/coll-of string?)
-                     :add-new? (s/? boolean?))
-        :ret string?)
-
-(defn- start []
-  (let [discussions (database/all-discussion-titles-and-ids)]
-    (println
-      "Welcome 🥳! Choose a discussion:\n"
-      (list-options (map second discussions)))
-    (let [index (Integer/parseInt (read-line))
-          [id title] (nth discussions index)]
-      {:user/nickname "Christian"
-       :discussion/id id
-       :discussion/title title})))
+(ns dialog.cli.core
+  (:require
+    [clojure.spec.alpha :as s]
+    [dialog.cli.interactions :as interactions]
+    [dialog.cli.texts :as texts]
+    [dialog.discussion.models :as models]
+    [dialog.engine.core :as engine]))
 
 
 ;; -----------------------------------------------------------------------------
@@ -55,7 +27,7 @@
     (convert-options create-new-step args)
     (let [formatted-premises (map texts/format-premises statements)]
       (println instruction)
-      (println (list-options formatted-premises true))
+      (println (texts/list-options formatted-premises true))
       (let [option (Integer/parseInt (read-line))]
         (if (= (count statements) option)
           (convert-options create-new-step args)            ;; last option selected, which is "add a new support"
@@ -81,7 +53,7 @@
         conclusions (map :argument/conclusion filtered-arguments)
         unique-starting-points (filter #(s/valid? ::models/statement %) conclusions)]
     (println "Choose your starting point:")
-    (println (list-options (map texts/format-statement unique-starting-points)))
+    (println (texts/list-options (map texts/format-statement unique-starting-points)))
     (let [index (Integer/parseInt (read-line))
           chosen-argument (nth filtered-arguments index)]
       (engine/continue-discussion step (merge args {:argument/chosen chosen-argument})))))
@@ -90,7 +62,7 @@
   ;; After the presentation of the positions, the first arguments are presented,
   ;; from which the user can choose from.
   [step {:keys [present/arguments] :as args}]
-  (let [argument-strings (list-options (map texts/format-argument arguments))]
+  (let [argument-strings (texts/list-options (map texts/format-argument arguments))]
     (println "Here are some arguments for your position. Select one to react to it:")
     (println argument-strings)
     (let [index (Integer/parseInt (read-line))
@@ -173,7 +145,7 @@
   [_step args]
   (let [attacking-argument (texts/format-argument (-> args first second :argument/chosen))
         reaction-options (map first args)
-        reaction-texts (list-options (map texts/reactions reaction-options))]
+        reaction-texts (texts/list-options (map texts/reactions reaction-options))]
     (println "So, you want to talk about this argument:\n")
     (println attacking-argument "\n")
     (println "What do you want to do?")
@@ -213,10 +185,10 @@
       :else (throw (new UnsupportedOperationException
                         (format "Not implemented. Received: \n%s" response))))))
 
-(defn run
+(defn -main
   "Endless loop running the CLI."
   []
-  (loop [args (engine/start-discussion (start))]
+  (loop [args (engine/start-discussion (interactions/start))]
     (recur (dispatch-next-step args))))
 
 (s/def ::args (s/coll-of (s/tuple keyword? map?)))

@@ -1,6 +1,7 @@
-(ns dialog.engine.interactions
+(ns dialog.cli.interactions
   (:require [clojure.spec.alpha :as s]
-            [dialog.engine.texts :as texts]))
+            [dialog.cli.texts :as texts]
+            [dialog.discussion.database :as database]))
 
 (defn- confirmed? []
   (println "Are you satisfied with your input? [y/n]")
@@ -54,3 +55,14 @@
 (s/fdef ask-for-new-attack
         :args (s/cat :formatted-statement string?)
         :ret string?)
+
+(defn start []
+  (let [discussions (database/all-discussion-titles-and-ids)]
+    (println
+      "Welcome 🥳! Choose a discussion:\n"
+      (texts/list-options (map second discussions)))
+    (let [index (Integer/parseInt (read-line))
+          [id title] (nth discussions index)]
+      {:user/nickname "Christian"
+       :discussion/id id
+       :discussion/title title})))
