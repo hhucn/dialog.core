@@ -40,6 +40,13 @@
 ;; -----------------------------------------------------------------------------
 ;; Patterns
 
+(def ^:private statement-pattern
+  "Representation of a statement. Oftentimes used in a Datalog pull pattern."
+  [:db/id
+   :statement/content
+   :statement/version
+   {:statement/author [:author/nickname]}])
+
 (def ^:private argument-pattern
   "Defines the default pattern for arguments. Oftentimes used in pull-patterns
   in a Datalog query bind the data to this structure."
@@ -47,21 +54,17 @@
    :argument/version
    {:argument/author [:author/nickname]}
    {:argument/type [:db/ident]}
-   {:argument/premises [:db/id
-                        :statement/content
-                        :statement/version
-                        {:statement/author [:author/nickname]}]}
-   {:argument/conclusion [:statement/content
-                          :statement/version
-                          {:statement/author [:author/nickname]}
-                          :db/id]}])
-
-(def ^:private statement-pattern
-  "Representation of a statement. Oftentimes used in a Datalog pull pattern."
-  [:db/id
-   :statement/content
-   :statement/version
-   {:statement/author [:author/nickname]}])
+   {:argument/premises statement-pattern}
+   {:argument/conclusion
+    (conj statement-pattern
+          :argument/version
+          {:argument/author [:author/nickname]}
+          {:argument/type [:db/ident]}                      ;; TODO gibt `:argument/type #:db{:ident :argument.type/attack}` zurück
+          {:argument/premises [:db/id
+                               :statement/content
+                               :statement/version
+                               {:statement/author [:author/nickname]}]}
+          {:argument/conclusion statement-pattern})}])
 
 
 ;; -----------------------------------------------------------------------------
