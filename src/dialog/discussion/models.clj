@@ -104,7 +104,8 @@
   #{:argument.type/attack :argument.type/support :argument.type/undercut})
 (s/def :argument/version number?)
 (s/def :argument/author ::author)
-(s/def :argument/conclusion ::statement)
+(s/def :argument/conclusion (s/or :statement ::statement
+                                  :argument ::argument))
 (s/def :argument/premises (s/coll-of ::statement))
 (s/def :argument/discussions (s/coll-of ::discussion))
 (s/def ::argument
