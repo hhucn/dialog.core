@@ -10,9 +10,9 @@
   We should get a dog, because: dogs can act as watchdogs.\""
   [argument-type]
   (case argument-type
-    :argument.type/attack "%s\n\t%s is not a good idea, because: %s."
-    :argument.type/undercut "TODO Undercuts are not yet implemented"
-    "%s\n\t%s, because: %s."))
+    :argument.type/attack "%s\n\t\"%s\" is not a good idea, because: \"%s\"."
+    :argument.type/undercut "%s\n\t\"%s\" does not make sense in the context of \"%s\".\n\tBecause: \"%s\""
+    "%s\n\t\"%s\", because: \"%s\"."))
 
 (s/fdef argument-with-author
         :args (s/cat :argument/type :argument/type)
@@ -65,16 +65,37 @@
         :args (s/cat :nickname string?)
         :ret string?)
 
+(defn- format-undercut
+  "Undercuts need to prepare the contents of the attacked argument. Therefore,
+  it must be treated differently than a \"regular\" argument."
+  [avatar-nickname format-string {:keys [argument/conclusion] :as argument}]
+  (let [foreign-conclusion (get-in conclusion [:argument/conclusion :statement/content])
+        foreign-premises (concat-premises (:argument/premises conclusion))
+        authors-premises (concat-premises (:argument/premises argument))]
+    (format format-string
+            avatar-nickname
+            foreign-conclusion
+            foreign-premises
+            authors-premises)))
+
+(s/fdef format-undercut
+        :args (s/cat :nickname string? :format-string string? :argument ::models/argument)
+        :ret string?)
+
 (defn format-argument
   "Prepare String which can be presented to the user based on the provided
   argument."
   [{:argument/keys [author premises conclusion] :as argument}]
   (let [avatar-nickname (avatar-with-nickname (:author/nickname author))
-        prepared-premises (concat-premises premises)]
-    (format (argument-with-author (:argument/type argument))
-            avatar-nickname
-            (:statement/content conclusion)
-            prepared-premises)))
+        prepared-premises (concat-premises premises)
+        argument-type (:argument/type argument)
+        format-string (argument-with-author argument-type)]
+    (if (= :argument.type/undercut argument-type)
+      (format-undercut avatar-nickname format-string argument)
+      (format format-string
+              avatar-nickname
+              (:statement/content conclusion)
+              prepared-premises))))
 
 (s/fdef format-argument
         :args (s/cat :argument ::models/argument)
