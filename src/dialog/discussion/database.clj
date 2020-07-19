@@ -4,11 +4,13 @@
             [dialog.discussion.test-data :as test-data]
             [dialog.utils :as utils]
             [datomic.client.api :as d]
-            [clojure.spec.alpha :as s]])
+            [clojure.spec.alpha :as s]
+            [clojure.walk :as walk]]
+  (:import (clojure.lang MapEntry)))
 
 ;; Setting the client to private breaks some async routine in datomic
 (defonce datomic-client
-  (d/client config/datomic))
+         (d/client config/datomic))
 
 (defn new-connection
   "Connects to the database and returns a connection."
@@ -32,10 +34,20 @@
   (transact test-data/testdata-cat-or-dog))
 
 (defn- ident-map->value
-  "Change an ident-map to a single value."
-  [data key]
-  (update data key #(:db/ident %)))
+  "Finds any occurrence of a member of `keys` in `coll`. Then replaced the corresponding
+   value with the value of its :db/ident entry.
+   E.g.
+   (ident-map->value {:foo {:db/ident :bar}, :baz {:db/ident :oof}} [:foo :baz])
+   => {:foo :bar, :baz :oof}
 
+   (ident-map->value {:foo {:db/ident :bar}} [:not-found])
+   => {:foo {:db/ident :bar}}"
+  [coll keys]
+  (walk/postwalk
+    #(if (and (= MapEntry (type %)) (contains? (set keys) (first %)))
+       [(first %) (:db/ident (second %))]
+       %)
+    coll))
 
 ;; -----------------------------------------------------------------------------
 ;; Patterns
@@ -59,7 +71,7 @@
     (conj statement-pattern
           :argument/version
           {:argument/author [:author/nickname]}
-          {:argument/type [:db/ident]}                      ;; TODO gibt `:argument/type #:db{:ident :argument.type/attack}` zurück
+          {:argument/type [:db/ident]}
           {:argument/premises [:db/id
                                :statement/content
                                :statement/version
@@ -77,7 +89,7 @@
   [query & args]
   (let [db (d/db (new-connection))
         arguments (apply d/q query db argument-pattern args)]
-    (map #(ident-map->value (first %) :argument/type) arguments)))
+    (map #(ident-map->value (first %) [:argument/type]) arguments)))
 
 (defn all-arguments-for-discussion
   "Returns all arguments belonging to a discussion, identified by discussion id."
@@ -412,5 +424,4 @@
                            :statement/content "cats are capricious",
                            :statement/version 1,
                            :statement/author #:author{:nickname "Wegi"}}})
-
   :end)
