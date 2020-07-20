@@ -276,8 +276,9 @@
 (defmethod react :defend/new
   ;; User provided a new rebut. This needs to be stored and a new argument
   ;; is chosen for the user.
-  ;; TODO: Store new defend to database from new defend
-  [_step {:keys [argument/chosen] :as args}]
+  [_step {:keys [argument/chosen new/defend discussion/id user/nickname]
+          :as args}]
+  (database/defend-argument! id nickname chosen defend)
   (let [attacking-argument (find-attacking-argument chosen)]
     [:defends/present (merge (dissoc args :new/defend :present/defends)
                              {:argument/chosen attacking-argument})]))
