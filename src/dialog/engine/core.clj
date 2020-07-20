@@ -1,8 +1,7 @@
 (ns dialog.engine.core
   (:require [dialog.discussion.database :as database]
             [dialog.discussion.models :as models]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.test.alpha :as stest]))
+            [clojure.spec.alpha :as s]))
 
 ;; Das was der user angezeigt bekommt
 (defmulti ^:private step
