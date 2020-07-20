@@ -10,7 +10,7 @@
 
 ;; Setting the client to private breaks some async routine in datomic
 (defonce datomic-client
-         (d/client config/datomic))
+  (d/client config/datomic))
 
 (defn new-connection
   "Connects to the database and returns a connection."
@@ -374,7 +374,7 @@
                      :argument-type :argument/type))
 
 (defn support-argument!
-  "Adds new statements support an argument's conclusion."
+  "Adds new statements support the argument's premises."
   [discussion-id author-nickname argument premises]
   (new-premises-for-argument! discussion-id author-nickname argument premises :argument.type/support))
 
