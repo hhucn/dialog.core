@@ -1,6 +1,5 @@
 (ns dialog.discussion.database
   [:require [dialog.discussion.models :as models]
-            [dialog.discussion.config :as config]
             [dialog.discussion.test-data :as test-data]
             [dialog.utils :as utils]
             [datomic.client.api :as d]
@@ -8,14 +7,12 @@
             [clojure.walk :as walk]]
   (:import (clojure.lang MapEntry)))
 
-;; Setting the client to private breaks some async routine in datomic
-(defonce datomic-client
-  (d/client config/datomic))
+(def db-config (atom {}))
 
 (defn new-connection
   "Connects to the database and returns a connection."
   []
-  (d/connect datomic-client {:db-name config/db-name}))
+  (d/connect (d/client (:datomic @db-config)) {:db-name (:name @db-config)}))
 
 (defn transact
   "Shorthand for transaction."
@@ -27,10 +24,22 @@
   [connection]
   (d/transact connection {:tx-data models/datomic-schema}))
 
-(defn init
-  "Initialization function, which does everything needed at a fresh app-install."
+(defn init!
+  "Initialization function, which does everything needed at a fresh start.
+  `config` must be a map which at lease contains `:datomic` with the datomic
+  config as a value and `:db-name` with the database name as a value."
+  [config]
+  (reset! db-config config)
+  (create-discussion-schema (new-connection)))
+
+(defn change-config!
+  "Swap out the config for the database."
+  [new-config]
+  (reset! db-config new-config))
+
+(defn load-testdata
+  "Load the toy example 'Cat or Dog?' discussion if needed."
   []
-  (create-discussion-schema (new-connection))
   (transact test-data/testdata-cat-or-dog))
 
 (defn- ident-map->value

@@ -198,6 +198,7 @@
 ;; -----------------------------------------------------------------------------
 
 (comment
+  (-main)
   (require '[clojure.spec.test.alpha :as stest])
   (stest/instrument)
 
