@@ -130,8 +130,8 @@
   [step {:keys [present/undermines] :as args}]
   (generic-collect-input
     step :undercut/new :undercut/selected undermines
-    "There are already some attacks on the argument's relation. Choose an
-    existing one or provide a new attack:"
+    "There are already some attacks on the relation / coherence of this
+    argument. Choose an existing one or provide a new attack:"
     args))
 
 (defmethod convert-options :undercut/new

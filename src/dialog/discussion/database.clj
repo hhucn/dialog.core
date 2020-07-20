@@ -4,7 +4,9 @@
             [dialog.discussion.test-data :as test-data]
             [dialog.utils :as utils]
             [datomic.client.api :as d]
-            [clojure.spec.alpha :as s]])
+            [clojure.spec.alpha :as s]
+            [clojure.walk :as walk]]
+  (:import (clojure.lang MapEntry)))
 
 ;; Setting the client to private breaks some async routine in datomic
 (defonce datomic-client
@@ -32,13 +34,30 @@
   (transact test-data/testdata-cat-or-dog))
 
 (defn- ident-map->value
-  "Change an ident-map to a single value."
-  [data key]
-  (update data key #(:db/ident %)))
+  "Finds any occurrence of a member of `keys` in `coll`. Then replaced the corresponding
+   value with the value of its :db/ident entry.
+   E.g.
+   (ident-map->value {:foo {:db/ident :bar}, :baz {:db/ident :oof}} [:foo :baz])
+   => {:foo :bar, :baz :oof}
 
+   (ident-map->value {:foo {:db/ident :bar}} [:not-found])
+   => {:foo {:db/ident :bar}}"
+  [coll keys]
+  (walk/postwalk
+    #(if (and (= MapEntry (type %)) (contains? (set keys) (first %)))
+       [(first %) (:db/ident (second %))]
+       %)
+    coll))
 
 ;; -----------------------------------------------------------------------------
 ;; Patterns
+
+(def ^:private statement-pattern
+  "Representation of a statement. Oftentimes used in a Datalog pull pattern."
+  [:db/id
+   :statement/content
+   :statement/version
+   {:statement/author [:author/nickname]}])
 
 (def ^:private argument-pattern
   "Defines the default pattern for arguments. Oftentimes used in pull-patterns
@@ -47,21 +66,17 @@
    :argument/version
    {:argument/author [:author/nickname]}
    {:argument/type [:db/ident]}
-   {:argument/premises [:db/id
-                        :statement/content
-                        :statement/version
-                        {:statement/author [:author/nickname]}]}
-   {:argument/conclusion [:statement/content
-                          :statement/version
-                          {:statement/author [:author/nickname]}
-                          :db/id]}])
-
-(def ^:private statement-pattern
-  "Representation of a statement. Oftentimes used in a Datalog pull pattern."
-  [:db/id
-   :statement/content
-   :statement/version
-   {:statement/author [:author/nickname]}])
+   {:argument/premises statement-pattern}
+   {:argument/conclusion
+    (conj statement-pattern
+          :argument/version
+          {:argument/author [:author/nickname]}
+          {:argument/type [:db/ident]}
+          {:argument/premises [:db/id
+                               :statement/content
+                               :statement/version
+                               {:statement/author [:author/nickname]}]}
+          {:argument/conclusion statement-pattern})}])
 
 
 ;; -----------------------------------------------------------------------------
@@ -74,7 +89,7 @@
   [query & args]
   (let [db (d/db (new-connection))
         arguments (apply d/q query db argument-pattern args)]
-    (map #(ident-map->value (first %) :argument/type) arguments)))
+    (map #(ident-map->value (first %) [:argument/type]) arguments)))
 
 (defn all-arguments-for-discussion
   "Returns all arguments belonging to a discussion, identified by discussion id."
@@ -359,7 +374,7 @@
                      :argument-type :argument/type))
 
 (defn support-argument!
-  "Adds new statements to support an argument's conclusion."
+  "Adds new statements support the argument's premises."
   [discussion-id author-nickname argument premises]
   (new-premises-for-argument! discussion-id author-nickname argument premises :argument.type/support))
 
@@ -409,5 +424,4 @@
                            :statement/content "cats are capricious",
                            :statement/version 1,
                            :statement/author #:author{:nickname "Wegi"}}})
-
   :end)
