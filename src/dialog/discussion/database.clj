@@ -373,17 +373,7 @@
                      :argument ::models/argument :premises (s/coll-of string?)
                      :argument-type :argument/type))
 
-(defn support-argument!
-  "Adds new statements support the argument's premises."
-  [discussion-id author-nickname argument premises]
-  (new-premises-for-argument! discussion-id author-nickname argument premises :argument.type/support))
-
-(defn undermine-argument!
-  "Attack the argument's premises with own statements."
-  [discussion-id author-nickname argument premises]
-  (new-premises-for-argument! discussion-id author-nickname argument premises :argument.type/attack))
-
-(defn prepare-argument-with-conclusion-reference
+(defn- prepare-argument-with-conclusion-reference
   "Creates new argument, but references the old conclusion by id."
   [discussion-id author-nickname conclusion-id premises argument-type]
   {:argument/author [:author/nickname author-nickname]
@@ -400,6 +390,26 @@
                      :premises (s/coll-of string?)
                      :argument-type :argument/type))
 
+(defn support-argument!
+  "Adds new statements support the argument's premises."
+  [discussion-id author-nickname argument premises]
+  (new-premises-for-argument! discussion-id author-nickname argument premises :argument.type/support))
+
+(s/fdef support-argument!
+        :args (s/cat :discussion-id number? :author-nickname :author/nickname
+                     :argument (s/keys :req [:argument/premises])
+                     :premises (s/coll-of string?)))
+
+(defn undermine-argument!
+  "Attack the argument's premises with own statements."
+  [discussion-id author-nickname argument premises]
+  (new-premises-for-argument! discussion-id author-nickname argument premises :argument.type/attack))
+
+(s/fdef undermine-argument!
+        :args (s/cat :discussion-id number? :author-nickname :author/nickname
+                     :argument (s/keys :req [:argument/premises])
+                     :premises (s/coll-of string?)))
+
 (defn rebut-argument!
   "Attack the argument's conclusion with own statements."
   [discussion-id author-nickname argument premises]
@@ -409,6 +419,11 @@
          discussion-id author-nickname conclusion-id
          premises :argument.type/attack)])))
 
+(s/fdef rebut-argument!
+        :args (s/cat :discussion-id number? :author-nickname :author/nickname
+                     :argument (s/keys :req [:argument/conclusion])
+                     :premises (s/coll-of string?)))
+
 (defn defend-argument!
   "Support the argument's conclusion with own premises"
   [discussion-id author-nickname argument premises]
@@ -417,6 +432,27 @@
       [(prepare-new-argument
          discussion-id author-nickname conclusion-id
          premises :argument.type/support)])))
+
+(s/fdef defend-argument!
+        :args (s/cat :discussion-id number? :author-nickname :author/nickname
+                     :argument (s/keys :req [:argument/conclusion])
+                     :premises (s/coll-of string?)))
+
+(defn undercut-argument!
+  "Undercut an argument and store it to the database."
+  [discussion-id author-nickname {:keys [db/id]} premises]
+  (transact
+    [{:argument/author [:author/nickname author-nickname]
+      :argument/premises (pack-premises premises author-nickname)
+      :argument/conclusion id
+      :argument/version 1
+      :argument/type :argument.type/undercut
+      :argument/discussions [discussion-id]}]))
+
+(s/fdef undercut-argument!
+        :args (s/cat :discussion-id number? :author-nickname :author/nickname
+                     :argument (s/keys :req [:db/id])
+                     :premises (s/coll-of string?)))
 
 (defn add-new-starting-argument!
   "Creates a new starting argument in a discussion."

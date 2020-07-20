@@ -1,5 +1,6 @@
 (ns dialog.engine.core
   (:require [dialog.discussion.database :as database]
+            [dialog.discussion.models :as models]
             [clojure.spec.alpha :as s]))
 
 ;; Das was der user angezeigt bekommt
@@ -67,14 +68,24 @@
   [[:defend/select args]
    [:defend/new (dissoc args :present/defends)]])
 
+(s/fdef step
+        :args (s/cat :step keyword?
+                     :args map?)
+        :ret (s/coll-of (s/tuple keyword? map?)))
+
+
 ;; -----------------------------------------------------------------------------
 
-(defn find-attacking-argument
+(defn- find-attacking-argument
   "Choose an attacker of `argument`."
   [argument]
   (let [attacking-arguments (database/get-attackers-for-argument (:db/id argument))]
     (when-not (empty? attacking-arguments)
       (rand-nth attacking-arguments))))
+
+(s/fdef find-attacking-argument
+        :args (s/cat :argument ::models/argument)
+        :ret ::models/argument)
 
 ;; TODO
 (defn find-argument-for-opinion
@@ -88,6 +99,10 @@
   [argument]
   (database/support-for-argument (:db/id argument)))
 
+(s/fdef find-defending-arguments
+        :args (s/cat :argument ::models/argument)
+        :ret (s/coll-of ::models/argument))
+
 
 ;; -----------------------------------------------------------------------------
 
@@ -97,6 +112,10 @@
           transitions is defined in the multimethods. Always provides the next
           state / node when going through the discussion-loop."
           (fn [current-step _args] current-step))
+
+(s/fdef react
+        :args (s/cat :current-step keyword? :args map?)
+        :ret (s/tuple keyword? map?))
 
 (defmethod react :arguments/subset
   ;; Chooses the arguments presented to the user. The arguments
@@ -245,9 +264,10 @@
 
 (defmethod react :undercut/new
   ;; User provided a new rebut. This needs to be stored and a new argument
-  ;; is chosen for the user.
-  ;; TODO: Store new undercut to database from new/undercut
-  [_step {:keys [argument/chosen] :as args}]
+  ;; is chosen for the user. `new/undercut` is a collection of strings.
+  [_step {:keys [argument/chosen new/undercut discussion/id user/nickname]
+          :as args}]
+  (database/undercut-argument! id nickname chosen undercut)
   (let [attacking-argument (find-attacking-argument chosen)]
     [:reactions/present (merge (dissoc args :new/undercut :present/undercuts)
                                {:argument/chosen attacking-argument})]))
