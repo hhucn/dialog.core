@@ -27,7 +27,7 @@
 (defn init!
   "Initialization function, which does everything needed at a fresh start.
   `config` must be a map which at lease contains `:datomic` with the datomic
-  config as a value and `:db-name` with the database name as a value."
+  config as a value and `:name` with the database name as a value."
   [config]
   (reset! db-config config)
   (create-discussion-schema (new-connection)))
@@ -37,7 +37,7 @@
   [new-config]
   (reset! db-config new-config))
 
-(defn load-testdata
+(defn load-testdata!
   "Load the toy example 'Cat or Dog?' discussion if needed."
   []
   (transact test-data/testdata-cat-or-dog))

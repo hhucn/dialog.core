@@ -9,8 +9,8 @@
     (spec-test/instrument))
   ;; This initializes the db with standard in memory data when run on its own.
   (db/init! {:datomic config/datomic
-            :name config/db-name})
-  (db/load-testdata))
+             :name config/db-name})
+  (db/load-testdata!))
 
 (comment
   (-main)
