@@ -35,7 +35,7 @@
     {:reaction/undermine "Attack the premise(s) (undermine)"
      :reaction/rebut "Attack the conclusion (rebut)"
      :reaction/undercut "Attack the relation (undercut)"
-     :reaction/support "Support the conclusion with own premises (use argument's premises as conclusion and add own premises)"
+     :reaction/support "Support the argument's premises with own premises (use argument's premises as conclusion to add own premises)"
      :reaction/defend "Defend my own point of view (add own premises to conclusion)"}
     reaction))
 
