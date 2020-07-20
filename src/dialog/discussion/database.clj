@@ -383,16 +383,40 @@
   [discussion-id author-nickname argument premises]
   (new-premises-for-argument! discussion-id author-nickname argument premises :argument.type/attack))
 
+(defn prepare-argument-with-conclusion-reference
+  "Creates new argument, but references the old conclusion by id."
+  [discussion-id author-nickname conclusion-id premises argument-type]
+  {:argument/author [:author/nickname author-nickname]
+   :argument/premises (pack-premises premises author-nickname)
+   :argument/conclusion conclusion-id
+   :argument/version 1
+   :argument/type argument-type
+   :argument/discussions [discussion-id]})
+
+(s/fdef prepare-argument-with-conclusion-reference
+        :args (s/cat :discussion-id number?
+                     :author/nickname :author/nickname
+                     :conclusion-id number?
+                     :premises (s/coll-of string?)
+                     :argument-type :argument/type))
+
 (defn rebut-argument!
   "Attack the argument's conclusion with own statements."
   [discussion-id author-nickname argument premises]
-  (let [conclusion-id-which-should-be-attacked (get-in argument [:argument/conclusion :db/id])]
-    (transact [{:argument/author [:author/nickname author-nickname]
-                :argument/premises (pack-premises premises author-nickname)
-                :argument/conclusion conclusion-id-which-should-be-attacked
-                :argument/version 1
-                :argument/type :argument.type/attack
-                :argument/discussions [discussion-id]}])))
+  (let [conclusion-id (get-in argument [:argument/conclusion :db/id])]
+    (transact
+      [(prepare-argument-with-conclusion-reference
+         discussion-id author-nickname conclusion-id
+         premises :argument.type/attack)])))
+
+(defn defend-argument!
+  "Support the argument's conclusion with own premises"
+  [discussion-id author-nickname argument premises]
+  (let [conclusion-id (get-in argument [:argument/conclusion :db/id])]
+    (transact
+      [(prepare-new-argument
+         discussion-id author-nickname conclusion-id
+         premises :argument.type/support)])))
 
 (defn add-new-starting-argument!
   "Creates a new starting argument in a discussion."
