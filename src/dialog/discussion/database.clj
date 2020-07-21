@@ -12,6 +12,13 @@
   []
   (d/connect (d/client (:datomic @db-config)) {:db-name (:name @db-config)}))
 
+(defn create-database-from-config!
+  "Re-create a database based on the config-file."
+  []
+  (d/create-database
+    (d/client (:datomic @db-config))
+    {:db-name (:name @db-config)}))
+
 (defn transact
   "Shorthand for transaction."
   [data]
@@ -28,6 +35,7 @@
   config as a value and `:name` with the database name as a value."
   [config]
   (reset! db-config config)
+  (create-database-from-config!)
   (create-discussion-schema (new-connection)))
 
 (defn change-config!
