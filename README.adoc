@@ -7,18 +7,23 @@ Do *not* assume that the methods do not change.
 == Usage as a Library
 
 To properly use the dialog.core as a library you need to call the
-`discussion.database/init` function with a configuration parameter first.
-It needs to have at least two keys: `:datomic` and a datomic config map. and `:name`
-with a database-name as value.
+`discussion.database/init` function with a configuration parameter first. It
+needs to have at least two keys: `:datomic`, a datomic config map, and
+`:name` with a database-name as value.
 
-== CLI
+== Local Development
 
-Configure the application and a datomic database with the script `run.clj`.
-You need to install https://github.com/borkdude/babashka/[babashka] for this script.
+We are using `datomic dev-local` as our in-memory database, which can be used
+during development and testing. Get the jar file containing datomic via this
+URL: https://docs.datomic.com/dev-local/get-dev-local.html
 
-Usage:
+Then, store the jar in "local_jars/dev-local/dev-local.jar". This database
+stores the data in a ".datomic" folder. Remove it to reset the database.
 
-    bb run.clj [options] argument
+=== CLI
+
+You can discuss on the console to test your discussion flow. Use the CLI in
+`dialog.cli.core/-main` to start it.
 
 == Structure
 
