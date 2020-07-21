@@ -1,7 +1,8 @@
 (ns dialog.utils
   (:require [clojure.spec.alpha :as s]
             [clojure.walk :as walk])
-  (:import (clojure.lang MapEntry)))
+  (:import (clojure.lang MapEntry)
+           (java.io File)))
 
 (defn- keyword->str
   "Stringify a keyword without the colon."
@@ -44,3 +45,10 @@
 
 (s/fdef ident-map->value
         :args (s/cat :coll map? :keys (s/coll-of keyword?)))
+
+(defn create-storage-directory!
+  "Locally creates a file to store datomic data."
+  []
+  (let [dir (File. ".datomic/dev-local/data")]
+    (.mkdir dir)
+    (.getAbsolutePath dir)))
