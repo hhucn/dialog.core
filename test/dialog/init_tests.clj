@@ -1,5 +1,10 @@
 (ns dialog.init-tests
   "Called before the tests are run."
-  (:require [dialog.discussion.core :as dbcore]))
+  (:require [taoensso.timbre :refer [debug]]
+            [dialog.discussion.core :as discussion-main]))
 
-(dbcore/-main)
+(defn -main []
+  (debug "Initializing and seeding the database.")
+  (discussion-main/-main))
+
+(-main)
