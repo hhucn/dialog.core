@@ -3,9 +3,7 @@
             [dialog.discussion.test-data :as test-data]
             [dialog.utils :as utils]
             [datomic.client.api :as d]
-            [clojure.spec.alpha :as s]
-            [clojure.walk :as walk]]
-  (:import (clojure.lang MapEntry)))
+            [clojure.spec.alpha :as s]])
 
 (def db-config (atom {}))
 
@@ -42,21 +40,6 @@
   []
   (transact test-data/testdata-cat-or-dog))
 
-(defn- ident-map->value
-  "Finds any occurrence of a member of `keys` in `coll`. Then replaced the corresponding
-   value with the value of its :db/ident entry.
-   E.g.
-   (ident-map->value {:foo {:db/ident :bar}, :baz {:db/ident :oof}} [:foo :baz])
-   => {:foo :bar, :baz :oof}
-
-   (ident-map->value {:foo {:db/ident :bar}} [:not-found])
-   => {:foo {:db/ident :bar}}"
-  [coll keys]
-  (walk/postwalk
-    #(if (and (= MapEntry (type %)) (contains? (set keys) (first %)))
-       [(first %) (:db/ident (second %))]
-       %)
-    coll))
 
 ;; -----------------------------------------------------------------------------
 ;; Patterns
@@ -98,7 +81,7 @@
   [query & args]
   (let [db (d/db (new-connection))
         arguments (apply d/q query db argument-pattern args)]
-    (map #(ident-map->value (first %) [:argument/type]) arguments)))
+    (map #(utils/ident-map->value (first %) [:argument/type]) arguments)))
 
 (defn all-arguments-for-discussion
   "Returns all arguments belonging to a discussion, identified by discussion id."
