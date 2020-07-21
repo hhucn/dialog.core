@@ -1,5 +1,5 @@
 {:paths ["src" "test"]
- :deps {com.datomic/client-pro {:mvn/version "0.9.61"}
+ :deps {com.datomic/client-pro {:mvn/version "0.9.62"}
         org.clojure/clojure {:mvn/version "1.10.1"}
         org.clojure/test.check {:mvn/version "1.1.0"}
         expound {:mvn/version "0.8.5"}
@@ -10,10 +10,11 @@
              "clojars" {:url "https://repo.clojars.org/"}}
 
  :aliases {:test {:extra-paths ["test"]
-                  :extra-deps {lambdaisland/kaocha {:mvn/version "1.0-612"}}
+                  :extra-deps {lambdaisland/kaocha {:mvn/version "1.0.641"}
+                               lambdaisland/kaocha-cloverage {:mvn/version "1.0-45"}}
                   :main-opts ["-m" "kaocha.runner"]}
 
-           :ancient {:extra-deps {olical/depot {:mvn/version "1.8.4"}}
+           :ancient {:extra-deps {olical/depot {:mvn/version "2.0.1"}}
                      :main-opts ["-m" "depot.outdated.main"]}
 
            :clj-kondo

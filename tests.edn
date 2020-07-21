@@ -1,8 +1,5 @@
 #kaocha/v1
-    {:tests [#_{:type :kaocha.type/spec.test.check
-                :id :generative-fdef-checks
-                :clojure.spec.test.check/opts {:num-tests 100
-                                               :max-size 100}}
-             {:id :unit
+    {:plugins [:kaocha.plugin/cloverage]
+     :tests [{:id :unit
               :test-paths ["test"]}]}
 
