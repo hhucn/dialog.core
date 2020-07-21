@@ -5,8 +5,10 @@ target/
 .nrepl-port
 pom.xml
 
+.datomic/
 datomic/
 datomic-*.zip
+local_jars/
 
 # IDEA related
 ## Project-specific

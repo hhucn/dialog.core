@@ -1,5 +1,9 @@
 test:
   image: clojure:openjdk-14-tools-deps-alpine
+  before_script:
+    - wget $DOWNLOAD_DEV_LOCAL
+    - mkdir -p local_jars/dev-local/
+    - mv dev-local.jar local_jars/dev-local
   script:
     - clojure -A:test
 
