@@ -3,7 +3,11 @@
             [dialog.discussion.test-data :as test-data]
             [dialog.utils :as utils]
             [datomic.client.api :as d]
-            [clojure.spec.alpha :as s]])
+            [clojure.spec.alpha :as s]
+            [taoensso.timbre :as log]
+            [dialog.discussion.config :as config]])
+
+(declare all-discussions-by-title)
 
 (def db-config (atom {}))
 
@@ -19,6 +23,12 @@
     (d/client (:datomic @db-config))
     {:db-name (:name @db-config)}))
 
+(defn delete-database-from-config!
+  []
+  (d/delete-database
+    (d/client (:datomic @db-config))
+    {:db-name (:name @db-config)}))
+
 (defn transact
   "Shorthand for transaction."
   [data]
@@ -29,6 +39,15 @@
   [connection]
   (d/transact connection {:tx-data models/datomic-schema}))
 
+(defn load-testdata!
+  "Load the toy example 'Cat or Dog?' discussion if needed."
+  []
+  (if (empty? (all-discussions-by-title "Cat or Dog?"))
+    (do
+      (log/debug "No test-data found. Seeding database...")
+      (transact test-data/testdata-cat-or-dog))
+    (log/debug "Database already seeded. Please clear it before seeding again.")))
+
 (defn init!
   "Initialization function, which does everything needed at a fresh start.
   `config` must be a map which at lease contains `:datomic` with the datomic
@@ -38,15 +57,20 @@
   (create-database-from-config!)
   (create-discussion-schema (new-connection)))
 
+(defn init-and-seed!
+  "Same as `init!`, but adds the seed to the database, if the test-discussion
+  was not found."
+  ([config]
+   (init! config)
+   (load-testdata!))
+  ([]
+   (init-and-seed! {:datomic config/datomic
+                    :name config/db-name})))
+
 (defn change-config!
   "Swap out the config for the database."
   [new-config]
   (reset! db-config new-config))
-
-(defn load-testdata!
-  "Load the toy example 'Cat or Dog?' discussion if needed."
-  []
-  (transact test-data/testdata-cat-or-dog))
 
 
 ;; -----------------------------------------------------------------------------
@@ -115,7 +139,7 @@
   [title]
   (query-discussions
     '[:find (pull ?discussions discussion-pattern)
-      :in $ discussion-pattern title
+      :in $ discussion-pattern ?title
       :where [?discussions :discussion/title ?title]]
     title))
 
