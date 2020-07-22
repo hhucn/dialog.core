@@ -529,23 +529,23 @@
   (all-arguments-by-content "we should get a dog")
   (add-new-starting-argument! 17592186045477 "Christian" "this is sparta" ["foo" "bar" "baz"])
   (all-arguments-for-discussion 17592186045477)
-  (all-discussion-titles-and-ids))
+  (all-discussion-titles-and-ids)
 
-(declare testargument)
-(undermine-argument! 17592186045477 "Christian" testargument ["irgendwas zum underminen"])
-(rebut-argument! 17592186045477 "Christian" testargument ["das ist eine doofe idee" "weil isso"])
+  (declare testargument)
+  (undermine-argument! 17592186045477 "Christian" testargument ["irgendwas zum underminen"])
+  (rebut-argument! 17592186045477 "Christian" testargument ["das ist eine doofe idee" "weil isso"])
 
-(def testargument
-  {:db/id 17592186045475,
-   :argument/version 1,
-   :argument/author #:author{:nickname "Christian"},
-   :argument/type :argument.type/support,
-   :argument/premises [{:db/id 17592186045476,
-                        :statement/content "several cats of my friends are real assholes",
-                        :statement/version 1,
-                        :statement/author #:author{:nickname "Christian"}}],
-   :argument/conclusion {:db/id 17592186045468,
-                         :statement/content "cats are capricious",
-                         :statement/version 1,
-                         :statement/author #:author{:nickname "Wegi"}}})
+  (def testargument
+    {:db/id 17592186045475,
+     :argument/version 1,
+     :argument/author #:author{:nickname "Christian"},
+     :argument/type :argument.type/support,
+     :argument/premises [{:db/id 17592186045476,
+                          :statement/content "several cats of my friends are real assholes",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Christian"}}],
+     :argument/conclusion {:db/id 17592186045468,
+                           :statement/content "cats are capricious",
+                           :statement/version 1,
+                           :statement/author #:author{:nickname "Wegi"}}}))
 :end
