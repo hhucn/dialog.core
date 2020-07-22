@@ -28,7 +28,7 @@
     <orderEntry type="library" name="Deps: org.clojure/tools.trace:0.7.10" level="project" />
     <orderEntry type="library" name="Deps: org.clojure/tools.analyzer.jvm:0.7.2" level="project" />
     <orderEntry type="library" name="Deps: net.incongru.watchservice/barbary-watchservice:1.0" level="project" />
-    <orderEntry type="library" name="Deps: Local com.datomic/dev-local (dev-local.jar)" level="project" />
+    <orderEntry type="library" name="Deps: " level="project" />
     <orderEntry type="library" name="Deps: com.cognitect/hmac-authn:0.1.195" level="project" />
     <orderEntry type="library" name="Deps: lambdaisland/kaocha-cloverage:1.0-45" level="project" />
     <orderEntry type="library" name="Deps: lambdaisland/deep-diff:0.0-47" level="project" />

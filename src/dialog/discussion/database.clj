@@ -52,6 +52,14 @@
 ;; -----------------------------------------------------------------------------
 ;; Patterns
 
+(def ^:private discussion-pattern
+  "Representation of a discussion. Oftentimes used in a Datalog pull pattern."
+  [:db/id
+   :discussion/title
+   :discussion/description
+   {:discussion/states [:db/ident]}
+   :discussion/starting-arguments])
+
 (def ^:private statement-pattern
   "Representation of a statement. Oftentimes used in a Datalog pull pattern."
   [:db/id
@@ -91,6 +99,35 @@
         arguments (apply d/q query db argument-pattern args)]
     (map #(utils/ident-map->value (first %) [:argument/type]) arguments)))
 
+(defn- query-discussions
+  "Same as `query-arguments`, but for discussions. Returns prettified
+  collections of discussions."
+  [query & args]
+  (let [db (d/db (new-connection))
+        discussions (apply d/q query db discussion-pattern args)]
+    discussions
+    ;; TODO: Fix ident-map-> value to always return the list of states
+    #_(map #(utils/ident-map->value (first %) [:discussion/states]) discussions)))
+
+(defn all-discussions-by-title
+  "Query all discussions based on the title. Could possible be multiple
+  entities."
+  [title]
+  (query-discussions
+    '[:find (pull ?discussions discussion-pattern)
+      :in $ discussion-pattern title
+      :where [?discussions :discussion/title ?title]]
+    title))
+
+(s/fdef all-discussions-by-title
+        :args (s/cat :title :discussion/title)
+        :ret (s/coll-of (s/tuple ::models/discussion)))
+
+(comment
+  ;; TODO delete after `query-discussions` is finished)
+  (all-discussions-by-title "Cat or Dog?")
+  :end)
+
 (defn all-arguments-for-discussion
   "Returns all arguments belonging to a discussion, identified by discussion id."
   [discussion-id]
@@ -120,14 +157,6 @@
       :in $ argument-pattern ?discussion-id
       :where [?discussion-id :discussion/starting-arguments ?starting-arguments]]
     discussion-id))
-
-(defn starting-conclusions-by-discussion
-  "Get all statements / conclusions (formerly positions) from the starting
-  arguments. Return only all non-undercuts."
-  [discussion-id]
-  (let [starting-arguments (starting-arguments-by-discussion discussion-id)
-        possible-statements (map :argument/conclusion starting-arguments)]
-    (filter #(s/valid? ::models/statement %) possible-statements)))
 
 (defn- statements-attacking-part
   "Generic template query for statements either attacking a conclusion or the premises
@@ -296,7 +325,7 @@
        (d/db (new-connection))))
 
 (s/fdef all-discussion-titles-and-ids
-        :ret (s/? number?))
+        :ret (s/tuple number? string?))
 
 (defn all-arguments-by-content
   "Query database for exact content matches of a statement and return the
@@ -466,6 +495,7 @@
   (all-arguments-by-content "we should get a dog")
   (add-new-starting-argument! 17592186045477 "Christian" "this is sparta" ["foo" "bar" "baz"])
   (all-arguments-for-discussion 17592186045477)
+  (all-discussion-titles-and-ids)
 
   (declare testargument)
   (undermine-argument! 17592186045477 "Christian" testargument ["irgendwas zum underminen"])
