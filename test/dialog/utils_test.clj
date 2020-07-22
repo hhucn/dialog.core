@@ -1,7 +1,7 @@
 (ns dialog.utils-test
   (:require [clojure.test :refer :all]
             [dialog.utils :as utils]
-            [dialog.test.utilities :as tutils]))
+            [dialog.test.toolbelt :as test-toolbelt]))
 
 (deftest map->nsmap-test
   (let [simple-map {:a 1}
@@ -27,4 +27,4 @@
                {:foo #:db{:ident :bar}}
                (utils/ident-map->value {:foo {:db/ident :bar}} [:non-existent])))
   (testing "Generative tests."
-    (is (tutils/check? `utils/ident-map->value))))
+    (is (test-toolbelt/check? `utils/ident-map->value))))

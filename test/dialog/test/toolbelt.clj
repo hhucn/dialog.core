@@ -1,4 +1,4 @@
-(ns dialog.test.utilities
+(ns dialog.test.toolbelt
   (:require [clojure.spec.test.alpha :as stest]
             [expound.alpha :as expound]
             [clojure.spec.alpha :as s]
@@ -7,13 +7,17 @@
 ;; -----------------------------------------------------------------------------
 ;; Fixtures
 
-(defn init-test-delete-db-fixture
+(defn init-db-test-fixture
   "Fixture to initialize, test, and afterwards delete the database."
   [f]
   (database/init-and-seed!)
-  (f)
-  (database/delete-database-from-config!))
+  (f))
 
+(defn init-test-delete-db-fixture
+  "Fixture to initialize, test, and afterwards delete the database."
+  [f]
+  (init-db-test-fixture f)
+  (database/delete-database-from-config!))
 
 ;; -----------------------------------------------------------------------------
 ;; Generative Test Helpers
