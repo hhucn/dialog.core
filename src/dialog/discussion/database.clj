@@ -129,9 +129,7 @@
   [query & args]
   (let [db (d/db (new-connection))
         discussions (apply d/q query db discussion-pattern args)]
-    discussions
-    ;; TODO: Fix ident-map-> value to always return the list of states
-    #_(map #(utils/ident-map->value (first %) [:discussion/states]) discussions)))
+    (map #(utils/ident-map->value (first %)) discussions)))
 
 (defn all-discussions-by-title
   "Query all discussions based on the title. Could possible be multiple
@@ -146,11 +144,6 @@
 (s/fdef all-discussions-by-title
         :args (s/cat :title :discussion/title)
         :ret (s/coll-of (s/tuple ::models/discussion)))
-
-(comment
-  ;; TODO delete after `query-discussions` is finished)
-  (all-discussions-by-title "Cat or Dog?")
-  :end)
 
 (defn all-arguments-for-discussion
   "Returns all arguments belonging to a discussion, identified by discussion id."
