@@ -1,7 +1,7 @@
 (ns dialog.utils
   (:require [clojure.spec.alpha :as s]
             [clojure.walk :as walk])
-  (:import (clojure.lang MapEntry)
+  (:import (clojure.lang MapEntry PersistentArrayMap)
            (java.io File)))
 
 (defn- keyword->str
@@ -30,18 +30,27 @@
 (defn ident-map->value
   "Finds any occurrence of a member of `keys` in `coll`. Then replaced the corresponding
    value with the value of its :db/ident entry.
+   If you do not specify an keys, *all* occurrences of a `:db/ident` map are replaced.
    E.g.
+   ```
    (ident-map->value {:foo {:db/ident :bar}, :baz {:db/ident :oof}} [:foo :baz])
    => {:foo :bar, :baz :oof}
 
    (ident-map->value {:foo {:db/ident :bar}} [:not-found])
-   => {:foo {:db/ident :bar}}"
-  [coll keys]
-  (walk/postwalk
-    #(if (and (= MapEntry (type %)) (contains? (set keys) (first %)))
-       [(first %) (:db/ident (second %))]
-       %)
-    coll))
+   => {:foo {:db/ident :bar}}
+   ```"
+  ([coll]
+   (walk/postwalk
+     #(if (and (= PersistentArrayMap (type %)) (contains? % :db/ident))
+        (:db/ident %)
+        %)
+     coll))
+  ([coll keys]
+   (walk/postwalk
+     #(if (and (= MapEntry (type %)) (contains? (set keys) (first %)))
+        [(first %) (:db/ident (second %))]
+        %)
+     coll)))
 
 (s/fdef ident-map->value
         :args (s/cat :coll map? :keys (s/coll-of keyword?)))
