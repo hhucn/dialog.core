@@ -438,7 +438,7 @@
   [discussion-id author-nickname argument premises]
   (let [conclusion-id (get-in argument [:argument/conclusion :db/id])]
     (transact
-      [(prepare-new-argument
+      [(prepare-argument-with-conclusion-reference
          discussion-id author-nickname conclusion-id
          premises :argument.type/support)])))
 
