@@ -1,9 +1,22 @@
 (ns dialog.test.utilities
-  (:require [clojure.test :refer [is]]
-            [clojure.pprint :refer [pprint]]
-            [clojure.spec.test.alpha :as stest]
+  (:require [clojure.spec.test.alpha :as stest]
             [expound.alpha :as expound]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [dialog.discussion.database :as database]))
+
+;; -----------------------------------------------------------------------------
+;; Fixtures
+
+(defn init-test-delete-db-fixture
+  "Fixture to initialize, test, and afterwards delete the database."
+  [f]
+  (database/init-and-seed!)
+  (f)
+  (database/delete-database-from-config!))
+
+
+;; -----------------------------------------------------------------------------
+;; Generative Test Helpers
 
 (defn- passed-all-tests?
   "`check` returns a list of tests. Get all results of these tests and check
