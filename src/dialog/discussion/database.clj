@@ -11,12 +11,12 @@
 
 (def db-config (atom {}))
 
-(defn new-connection
+(defn- new-connection
   "Connects to the database and returns a connection."
   []
   (d/connect (d/client (:datomic @db-config)) {:db-name (:name @db-config)}))
 
-(defn create-database-from-config!
+(defn- create-database-from-config!
   "Re-create a database based on the config-file."
   []
   (d/create-database
@@ -29,7 +29,7 @@
     (d/client (:datomic @db-config))
     {:db-name (:name @db-config)}))
 
-(defn transact
+(defn- transact
   "Shorthand for transaction."
   [data]
   (d/transact (new-connection) {:tx-data data}))
@@ -39,7 +39,7 @@
   [connection]
   (d/transact connection {:tx-data models/datomic-schema}))
 
-(defn load-testdata!
+(defn- load-testdata!
   "Load the toy example 'Cat or Dog?' discussion if needed."
   []
   (if (empty? (all-discussions-by-title "Cat or Dog?"))
