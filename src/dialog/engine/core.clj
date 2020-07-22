@@ -236,10 +236,13 @@
 (defmethod react :rebut/new
   ;; User provided a new rebut. This needs to be stored and a new argument
   ;; is chosen for the user.
-  [_step {:keys [argument/chosen discussion/id user/nickname new/rebut] :as args}]
-  (database/rebut-argument! id nickname chosen rebut)
-  (let [attacking-argument (find-attacking-argument chosen)]
-    [:reactions/present (merge (dissoc args :new/rebut :present/rebuts)
+  [_step {:keys [argument/chosen discussion/id user/nickname new/rebut starting-argument?]
+          :as args}]
+  (let [attacking-argument (find-attacking-argument chosen)
+        new-argument-id (database/rebut-argument! id nickname chosen rebut)]
+    (when starting-argument?
+      (database/set-argument-as-starting! id new-argument-id))
+    [:reactions/present (merge (dissoc args :new/rebut :present/rebuts :starting-argument?)
                                {:argument/chosen attacking-argument})]))
 
 
@@ -289,17 +292,20 @@
   [_step args]
   (let [attacking-argument (find-attacking-argument (:argument/chosen args))
         _selected-defend (:defend/selected args)]
+
     [:defends/present (merge (dissoc args :new/defend :present/defends)
                              {:argument/chosen attacking-argument})]))
 
 (defmethod react :defend/new
   ;; User provided a new rebut. This needs to be stored and a new argument
   ;; is chosen for the user.
-  [_step {:keys [argument/chosen new/defend discussion/id user/nickname]
+  [_step {:keys [argument/chosen new/defend discussion/id user/nickname starting-argument?]
           :as args}]
-  (database/defend-argument! id nickname chosen defend)
-  (let [attacking-argument (find-attacking-argument chosen)]
-    [:defends/present (merge (dissoc args :new/defend :present/defends)
+  (let [attacking-argument (find-attacking-argument chosen)
+        new-argument-id (database/defend-argument! id nickname chosen defend)]
+    (when starting-argument?
+      (database/set-argument-as-starting! id new-argument-id))
+    [:defends/present (merge (dissoc args :new/defend :present/defends :starting-argument?)
                              {:argument/chosen attacking-argument})]))
 
 
