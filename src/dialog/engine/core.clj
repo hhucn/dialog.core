@@ -147,10 +147,9 @@
   [_step {:keys [discussion/id user/nickname new/starting-argument-conclusion new/starting-argument-premises]
           :as args}]
   (database/add-new-starting-argument! id nickname starting-argument-conclusion starting-argument-premises)
-  (react :starting-argument/select
-         (dissoc args
-                 :new/starting-argument-conclusion
-                 :new/starting-argument-premises)))
+  [:discussion/id (dissoc args
+                          :new/starting-argument-conclusion
+                          :new/starting-argument-premises)])
 
 
 ;; -----------------------------------------------------------------------------
@@ -313,6 +312,7 @@
   [current-step args]
   (let [[next-step new-args] (react current-step args)]
     (step next-step new-args)))
+
 (s/fdef continue-discussion
         :args (s/cat :current-step keyword? :args map?)
         :ret vector?)
