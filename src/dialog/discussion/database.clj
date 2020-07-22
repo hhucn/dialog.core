@@ -429,7 +429,8 @@
 (defn- prepare-argument-with-conclusion-reference
   "Creates new argument, but references the old conclusion by id."
   [discussion-id author-nickname conclusion-id premises argument-type]
-  {:argument/author [:author/nickname author-nickname]
+  {:db/id "conclusion-argument-tempid"
+   :argument/author [:author/nickname author-nickname]
    :argument/premises (pack-premises premises author-nickname)
    :argument/conclusion conclusion-id
    :argument/version 1
@@ -467,10 +468,12 @@
   "Attack the argument's conclusion with own statements."
   [discussion-id author-nickname argument premises]
   (let [conclusion-id (get-in argument [:argument/conclusion :db/id])]
-    (transact
-      [(prepare-argument-with-conclusion-reference
-         discussion-id author-nickname conclusion-id
-         premises :argument.type/attack)])))
+    (get-in
+      (transact
+        [(prepare-argument-with-conclusion-reference
+           discussion-id author-nickname conclusion-id
+           premises :argument.type/attack)])
+      [:tempids "conclusion-argument-tempid"])))
 
 (s/fdef rebut-argument!
         :args (s/cat :discussion-id number? :author-nickname :author/nickname
@@ -481,10 +484,12 @@
   "Support the argument's conclusion with own premises"
   [discussion-id author-nickname argument premises]
   (let [conclusion-id (get-in argument [:argument/conclusion :db/id])]
-    (transact
-      [(prepare-new-argument
-         discussion-id author-nickname conclusion-id
-         premises :argument.type/support)])))
+    (get-in
+      (transact
+        [(prepare-argument-with-conclusion-reference
+           discussion-id author-nickname conclusion-id
+           premises :argument.type/support)])
+      [:tempids "conclusion-argument-tempid"])))
 
 (s/fdef defend-argument!
         :args (s/cat :discussion-id number? :author-nickname :author/nickname
@@ -515,27 +520,32 @@
     (transact [new-argument
                [:db/add discussion-id :discussion/starting-arguments temporary-id]])))
 
+(defn set-argument-as-starting!
+  "Sets an existing argument as a starting-argument."
+  [discussion-id argument-id]
+  (transact [[:db/add discussion-id :discussion/starting-arguments argument-id]]))
+
 (comment
   (all-arguments-by-content "we should get a dog")
   (add-new-starting-argument! 17592186045477 "Christian" "this is sparta" ["foo" "bar" "baz"])
   (all-arguments-for-discussion 17592186045477)
-  (all-discussion-titles-and-ids)
+  (all-discussion-titles-and-ids))
 
-  (declare testargument)
-  (undermine-argument! 17592186045477 "Christian" testargument ["irgendwas zum underminen"])
-  (rebut-argument! 17592186045477 "Christian" testargument ["das ist eine doofe idee" "weil isso"])
+(declare testargument)
+(undermine-argument! 17592186045477 "Christian" testargument ["irgendwas zum underminen"])
+(rebut-argument! 17592186045477 "Christian" testargument ["das ist eine doofe idee" "weil isso"])
 
-  (def testargument
-    {:db/id 17592186045475,
-     :argument/version 1,
-     :argument/author #:author{:nickname "Christian"},
-     :argument/type :argument.type/support,
-     :argument/premises [{:db/id 17592186045476,
-                          :statement/content "several cats of my friends are real assholes",
-                          :statement/version 1,
-                          :statement/author #:author{:nickname "Christian"}}],
-     :argument/conclusion {:db/id 17592186045468,
-                           :statement/content "cats are capricious",
-                           :statement/version 1,
-                           :statement/author #:author{:nickname "Wegi"}}})
-  :end)
+(def testargument
+  {:db/id 17592186045475,
+   :argument/version 1,
+   :argument/author #:author{:nickname "Christian"},
+   :argument/type :argument.type/support,
+   :argument/premises [{:db/id 17592186045476,
+                        :statement/content "several cats of my friends are real assholes",
+                        :statement/version 1,
+                        :statement/author #:author{:nickname "Christian"}}],
+   :argument/conclusion {:db/id 17592186045468,
+                         :statement/content "cats are capricious",
+                         :statement/version 1,
+                         :statement/author #:author{:nickname "Wegi"}}})
+:end
