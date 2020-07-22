@@ -7,4 +7,6 @@
 
 (deftest all-arguments-for-discussion-test
   (testing "Should return valid arguments for valid discussion."
-    (is (empty? (database/all-arguments-for-discussion 42)))))
+    (let [cat-or-dog-id (:db/id (first (database/all-discussions-by-title "Cat or Dog?")))]
+      (is (empty? (database/all-arguments-for-discussion -1)))
+      (is (seq (database/all-arguments-for-discussion cat-or-dog-id))))))
