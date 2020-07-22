@@ -16,9 +16,6 @@
           the user and calls the next step in the discussion engine."
           (fn [reaction _args] reaction))
 
-(s/fdef convert-options
-        :args (s/cat :reaction keyword? :args ::args))
-
 (defn- generic-collect-input
   "Generic function to present existing statements, which can be selected.
   Redirects to the specific create-new-entities functions and calls the
@@ -201,6 +198,7 @@
   (-main)
   (require '[clojure.spec.test.alpha :as stest])
   (stest/instrument)
+  (stest/unstrument)
 
   (require '[clojure.tools.trace :as trace])
   (trace/trace-ns 'dialog.engine.core)
