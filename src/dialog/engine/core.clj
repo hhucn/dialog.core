@@ -16,12 +16,6 @@
     [[:starting-argument/select (merge args {:present/arguments arguments})]
      [:starting-argument/new (dissoc args :present/arguments)]]))
 
-(defmethod step :arguments/present
-  ;; A list of arguments is presented to the user. The user can as a next step
-  ;; choose an argument from that list.
-  [_step args]
-  [[:argument/chosen args]])
-
 (defmethod step :reactions/present
   ;; The system chose an argument to confront the user. The user can now
   ;; react to that argument.
@@ -117,33 +111,19 @@
         :args (s/cat :current-step keyword? :args map?)
         :ret (s/tuple keyword? map?))
 
-(defmethod react :arguments/subset
-  ;; Chooses the arguments presented to the user. The arguments
-  ;; presented attack `argument/chosen` based on `user/attitude`.
-  [_step {:keys [user/attitude argument/chosen] :as args}]
-  (let [arguments (find-argument-for-opinion attitude chosen)]
-    [:arguments/present (merge args
-                               {:present/arguments arguments})]))
-
-(defmethod react :argument/chosen
-  ;; User has chosen an argument and the system is now asking for reactions.
-  [_step args]
-  [:reactions/present (dissoc args :present/arguments)])
-
 
 ;; -----------------------------------------------------------------------------
 ;; Starting Arguments
 
 (defmethod react :starting-argument/select
-  ;; User enters the discussion and now gets all starting arguments to the
-  ;; current discussion
-  [_step {:keys [argument/chosen] :as args}]
-  (let [arguments (distinct (database/all-arguments-for-conclusion (get-in chosen [:argument/conclusion :db/id])))]
-    [:arguments/present (merge args {:present/arguments arguments})]))
+  ;; User has seen all starting arguments and now selected one. Present appropriate
+  ;; reactions the user can take for that.
+  [_step args]
+  [:reactions/present (dissoc args :present/arguments)])
 
 (defmethod react :starting-argument/new
-  ;; User adds own starting argument. This is stored to the database and a new
-  ;; argument is chosen to
+  ;; User adds own starting argument. This is stored to the database and the
+  ;; discussion flow is reset.
   [_step {:keys [discussion/id user/nickname new/starting-argument-conclusion new/starting-argument-premises]
           :as args}]
   (database/add-new-starting-argument! id nickname starting-argument-conclusion starting-argument-premises)
