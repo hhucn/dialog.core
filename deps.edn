@@ -4,14 +4,14 @@
         org.clojure/test.check {:mvn/version "1.1.0"}
         expound {:mvn/version "0.8.5"}
         com.taoensso/timbre {:mvn/version "4.10.0"}
-        org.clojure/tools.trace {:mvn/version "0.7.10"}
-        com.datomic/dev-local {:local/root "local_jars/dev-local/dev-local.jar"}}
+        org.clojure/tools.trace {:mvn/version "0.7.10"}}
 
  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
              "clojars" {:url "https://repo.clojars.org/"}}
 
  :aliases {:test {:extra-paths ["test"]
-                  :extra-deps {lambdaisland/kaocha {:mvn/version "1.0.641"}
+                  :extra-deps {com.datomic/dev-local {:local/root "local_jars/dev-local/dev-local.jar"}
+                               lambdaisland/kaocha {:mvn/version "1.0.641"}
                                lambdaisland/kaocha-cloverage {:mvn/version "1.0-45"}}
                   :main-opts ["-m" "kaocha.runner"]}
 
@@ -19,12 +19,14 @@
                      :main-opts ["-m" "depot.outdated.main"]}
 
            :clj-kondo
-           {:extra-deps {clj-kondo {:mvn/version "RELEASE"}}
+           {:extra-deps {com.datomic/dev-local {:local/root "local_jars/dev-local/dev-local.jar"}
+                         clj-kondo {:mvn/version "RELEASE"}}
             :main-opts ["-m" "clj-kondo.main"]}
 
            :uberjar
-           {:extra-deps
-            {luchiniatwork/cambada {:mvn/version "1.0.2"}}
+           {:extra-deps {com.datomic/dev-local {:local/root "local_jars/dev-local/dev-local.jar"}
+                         luchiniatwork/cambada {:mvn/version "1.0.2"}}
             :main-opts ["-m" "cambada.uberjar"
-                        "-m" "dialog.discussion.core"]}}}
+                        "-m" "dialog.discussion.core"]}
+           :repl {:extra-deps {com.datomic/dev-local {:local/root "local_jars/dev-local/dev-local.jar"}}}}}
 
