@@ -3,7 +3,7 @@
     [clojure.test :refer [deftest is testing]]
     [clojure.string :as string]
     [dialog.cli.texts :as texts]
-    [dialog.test.utilities :as tutils]))
+    [dialog.test.toolbelt :as tutils]))
 
 (def argument-attack
   {:db/id 17592186045489,

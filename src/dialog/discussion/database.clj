@@ -11,12 +11,12 @@
 
 (def db-config (atom {}))
 
-(defn new-connection
+(defn- new-connection
   "Connects to the database and returns a connection."
   []
   (d/connect (d/client (:datomic @db-config)) {:db-name (:name @db-config)}))
 
-(defn create-database-from-config!
+(defn- create-database-from-config!
   "Re-create a database based on the config-file."
   []
   (d/create-database
@@ -29,7 +29,7 @@
     (d/client (:datomic @db-config))
     {:db-name (:name @db-config)}))
 
-(defn transact
+(defn- transact
   "Shorthand for transaction."
   [data]
   (d/transact (new-connection) {:tx-data data}))
@@ -129,9 +129,7 @@
   [query & args]
   (let [db (d/db (new-connection))
         discussions (apply d/q query db discussion-pattern args)]
-    discussions
-    ;; TODO: Fix ident-map-> value to always return the list of states
-    #_(map #(utils/ident-map->value (first %) [:discussion/states]) discussions)))
+    (map #(utils/ident-map->value (first %)) discussions)))
 
 (defn all-discussions-by-title
   "Query all discussions based on the title. Could possible be multiple
@@ -146,11 +144,6 @@
 (s/fdef all-discussions-by-title
         :args (s/cat :title :discussion/title)
         :ret (s/coll-of (s/tuple ::models/discussion)))
-
-(comment
-  ;; TODO delete after `query-discussions` is finished)
-  (all-discussions-by-title "Cat or Dog?")
-  :end)
 
 (defn all-arguments-for-discussion
   "Returns all arguments belonging to a discussion, identified by discussion id."
