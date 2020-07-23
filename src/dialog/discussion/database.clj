@@ -39,7 +39,7 @@
   [connection]
   (d/transact connection {:tx-data models/datomic-schema}))
 
-(defn- load-testdata!
+(defn load-testdata!
   "Load the toy example 'Cat or Dog?' discussion if needed."
   []
   (if (empty? (all-discussions-by-title "Cat or Dog?"))
