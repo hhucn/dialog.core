@@ -53,7 +53,7 @@
   `config` must be a map which at lease contains `:datomic` with the datomic
   config as a value and `:name` with the database name as a value.
 
-  If the Server-type is :peer-server, the connection does not initialize a database."
+  If the Server-type is :peer-server, the connection does not create a database."
   [config]
   (reset! db-config config)
   (when-not (= :peer-server (-> config :datomic :server-type))
