@@ -39,7 +39,8 @@
 (deftest statements-undercutting-premise-test
   (testing "Given a original-premise deliver all premises underucutting arguments that have original-premise
   as a premise"
-    (let [desired-result (:argument/premises
-                           (ffirst
-                             (database/arguments-with-premise-content "dogs can act as watchdogs")))]
-      (is (= desired-result (database/statements-undercutting-premise (:db/id desired-result)))))))
+    (let [to-undercut (first (:argument/premises
+                               (ffirst
+                                 (database/arguments-with-premise-content "dogs can act as watchdogs"))))]
+      (is (= "we have no use for a watchdog"
+             (:statement/content (ffirst (database/statements-undercutting-premise (:db/id to-undercut)))))))))
