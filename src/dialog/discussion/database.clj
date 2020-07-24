@@ -51,10 +51,13 @@
 (defn init!
   "Initialization function, which does everything needed at a fresh start.
   `config` must be a map which at lease contains `:datomic` with the datomic
-  config as a value and `:name` with the database name as a value."
+  config as a value and `:name` with the database name as a value.
+
+  If the Server-type is :peer-server, the connection does not initialize a database."
   [config]
   (reset! db-config config)
-  (create-database-from-config!)
+  (when-not (= :peer-server (-> config :datomic :server-type))
+    (create-database-from-config!))
   (create-discussion-schema (new-connection)))
 
 (defn init-and-seed!
