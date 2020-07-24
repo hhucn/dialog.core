@@ -21,7 +21,7 @@
   ;; The user can either select another premise for the current conclusion to discuss
   ;; or react with their own premise to the current conclusion.
   ;;TODO finish the arguments for each step
-  [_step args]
+  [_step {:keys [] :as args}]
   [[:premises/select :todo]
    [:support/new :todo]
    [:rebut/new :todo]
@@ -31,11 +31,11 @@
 (defmethod step :react-or-select-starting
   ;; The user can either select another premise for the current conclusion to discuss
   ;; or react with their own premise to the current conclusion.
-  ;;TODO finish the arguments for each step
   [_step args]
-  [[:premises/select :todo]
-   [:starting-support/new :todo]
-   [:starting-rebut/new :todo]])
+  (let [add-premise-args (dissoc args :present/premises)]
+    [[:premises/select args]
+     [:starting-support/new add-premise-args]
+     [:starting-rebut/new add-premise-args]]))
 
 (s/fdef step
         :args (s/cat :step keyword?
@@ -97,11 +97,18 @@
 ;; -----------------------------------------------------------------------------
 ;; Selections
 (defmethod react :premises/select
-  ;; User has seen all starting arguments and now selected one. Present appropriate
-  ;; reactions the user can take for that.
-  ;TODO argumente richtig setzen
-  [_step args]
-  [:react-or-select (dissoc args :present/conclusions)])
+  ;; User has selected a premise to some argument. Show all premises that have the
+  ;; selected premise as a conclusion. Also show all undercuts, which have a conclusion
+  ;; which has the chosen premise as a premise.
+  ;; A selected undercut has a normal statement as premise and the flow continues unabated.
+  [_step {:keys [premise/chosen] :as args}]
+  (let [arguments-to-select (database/all-arguments-for-conclusion (:db/id chosen))
+        premises-to-select (map :argument/premises arguments-to-select)
+        undercuts-to-select (map first (database/statements-undercutting-premise (:db/id chosen)))]
+    [:react-or-select (-> args
+                          (dissoc :present/conclusions)
+                          (assoc :present/premises premises-to-select)
+                          (assoc :present/undercuts undercuts-to-select))]))
 
 ;; -----------------------------------------------------------------------------
 ;; New Premises

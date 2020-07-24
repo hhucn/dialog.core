@@ -217,6 +217,16 @@
     :argument/type :argument.type/undercut
     :argument/discussions ["discussion/cat-or-dog"]}
    {:argument/author "author/schredder"
+    :argument/premises [{:db/id "statement/stinky-cats"
+                         :statement/author "author/schredder"
+                         :statement/content
+                         "cats are only moody if youre stinky."
+                         :statement/version 1}]
+    :argument/conclusion "argument/moody-cats"
+    :argument/version 1
+    :argument/type :argument.type/undercut
+    :argument/discussions ["discussion/cat-or-dog"]}
+   {:argument/author "author/schredder"
     :argument/premises [{:db/id "statement/catcatcatcat"
                          :statement/author "author/schredder"
                          :statement/content
