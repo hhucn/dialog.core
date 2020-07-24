@@ -218,6 +218,33 @@
         [?undercutting-arguments :argument/premises ?undercutting-premises]]
       db statement-pattern argument-id)))
 
+(defn arguments-with-premise-content
+  "Returns all arguments, which contain a certain content in one of their premises."
+  [content]
+  (let [db (d/db (new-connection))]
+    (d/q
+      '[:find (pull ?arguments-with-premise-content argument-pattern)
+        :in $ argument-pattern ?content
+        :where [?fitting-premises :statement/content ?content]
+        [?arguments-with-premise-content :argument/premises ?fitting-premises]]
+      db argument-pattern content)))
+
+(defn statements-undercutting-premise
+  "Return all statements that are used to undercut an argument where `premise`
+  is one of the premises."
+  [premise-id]
+  (let [db (d/db (new-connection))]
+    (d/q
+      '[:find (pull ?undercutting-statements statement-pattern)
+        :in $ statement-pattern ?premise-id
+        :where [?arguments :argument/premises ?premise-id]
+        [?undercutting-arguments :argument/conclusion ?arguments]
+        [?undercutting-arguments :argument/premises ?undercutting-statements]]
+      db statement-pattern premise-id)))
+
+(statements-undercutting-premise 92358976733279)
+;; "dogs can act as watchdogs" => "we have no use for a watchdog"
+
 (defn- direct-argument-attackers
   "Queries the arguments attacking the premises or conclusion of `argument-id`."
   [argument-id qualified-attribute]
@@ -302,7 +329,7 @@
 (comment
   (support-for-argument 17592186045447)
   (count (starting-arguments-by-discussion 17592186045477))
-  (count (all-arguments-for-discussion 17592186045477))
+  (count (all-arguments-for-discussion 92358976733323))
   :end)
 
 
