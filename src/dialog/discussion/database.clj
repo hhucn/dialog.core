@@ -242,9 +242,6 @@
         [?undercutting-arguments :argument/premises ?undercutting-statements]]
       db statement-pattern premise-id)))
 
-(statements-undercutting-premise 92358976733279)
-;; "dogs can act as watchdogs" => "we have no use for a watchdog"
-
 (defn- direct-argument-attackers
   "Queries the arguments attacking the premises or conclusion of `argument-id`."
   [argument-id qualified-attribute]
