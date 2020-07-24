@@ -34,8 +34,8 @@
   ;;TODO finish the arguments for each step
   [_step args]
   [[:premises/select :todo]
-   [:support/new :todo]
-   [:rebut/new :todo]])
+   [:starting-support/new :todo]
+   [:starting-rebut/new :todo]])
 
 (s/fdef step
         :args (s/cat :step keyword?
@@ -62,9 +62,14 @@
 (defmethod react :starting-conclusions/select
   ;; User has seen all starting arguments and now selected one. Present appropriate
   ;; reactions the user can take for that.
-  ;TODO argumente richtig setzen
-  [_step args]
-  [:react-or-select-starting (dissoc args :present/conclusions)])
+  [_step {:keys [conclusion/chosen] :as args}]
+  (let [arguments-to-select (database/all-arguments-for-conclusion (:db/id chosen))
+        premises-to-select (map :argument/premises arguments-to-select)]
+    ;; Add premises existing for chosen conclusion. Also keep the chosen conclusion
+    ;; to properly create new attacks / supports.
+    [:react-or-select-starting (-> args
+                                   (dissoc :present/conclusions)
+                                   (assoc :present/premises premises-to-select))]))
 
 (defmethod react :starting-argument/new
   ;; User adds own starting argument. This is stored to the database and the
@@ -75,6 +80,18 @@
   [:discussion/start (dissoc args
                              :new/starting-argument-conclusion
                              :new/starting-argument-premises)])
+
+(defmethod react :starting-support/new
+  ;; The user has chosen to support the shown conclusion with their own premise.
+  ;; TODO argumente richtig setzen
+  [_step args]
+  [:react-or-select :todo])
+
+(defmethod react :starting-rebut/new
+  ;; The user has chosen to attack the shown conclusion with their own premise.
+  ;; TODO argumente richtig setzen
+  [_step args]
+  [:react-or-select :todo])
 
 
 ;; -----------------------------------------------------------------------------
@@ -107,7 +124,6 @@
   ;; TODO argumente richtig setzen
   [_step args]
   [:react-or-select :todo])
-
 
 ;; -----------------------------------------------------------------------------
 ;; Comfort Functions
@@ -144,5 +160,4 @@
 
   (react :starting-argument/select
          {:user/nickname "Christian", :discussion/id 17592186045477})
-
   :end)
