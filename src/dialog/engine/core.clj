@@ -37,80 +37,10 @@
    [:support/new :todo]
    [:rebut/new :todo]])
 
-(defmethod step :reactions/present
-  ;; The system chose an argument to confront the user. The user can now
-  ;; react to that argument.
-  [_step args]
-  [[:reaction/support args]
-   [:reaction/defend args]
-   [:reaction/undermine args]
-   [:reaction/undercut args]
-   [:reaction/rebut args]])
-
-(defmethod step :reasons/present
-  ;; A user chose a reaction. The user can now give a reason for their choice
-  ;; or select a pre-defined one.
-  [_step args]
-  [[:reason/select args]
-   [:reason/new (dissoc args :present/reasons)]])
-
-(defmethod step :supports/present
-  ;; A user chose a reaction. The user can now give a reason for their choice
-  ;; or select a pre-defined one.
-  [_step args]
-  [[:support/select args]
-   [:support/new (dissoc args :present/supports)]])
-
-(defmethod step :undermines/present
-  ;; User wants to undermine an argument. Present existing ones and add option
-  ;; to create new attack.
-  [_step args]
-  [[:undermine/select args]
-   [:undermine/new (dissoc args :present/undermines)]])
-
-(defmethod step :rebuts/present
-  [_step args]
-  [[:rebut/select args]
-   [:rebut/new (dissoc args :present/rebuts)]])
-
-(defmethod step :undercuts/present
-  [_step args]
-  [[:undercut/select args]
-   [:undercut/new (dissoc args :present/undercuts)]])
-
-(defmethod step :defends/present
-  [_step args]
-  [[:defend/select args]
-   [:defend/new (dissoc args :present/defends)]])
-
 (s/fdef step
         :args (s/cat :step keyword?
                      :args map?)
         :ret (s/coll-of (s/tuple keyword? map?)))
-
-
-;; -----------------------------------------------------------------------------
-
-(defn- find-attacking-argument
-  "Choose an attacker of `argument`."
-  [argument]
-  (let [attacking-arguments (database/get-attackers-for-argument (:db/id argument))]
-    (when-not (empty? attacking-arguments)
-      (rand-nth attacking-arguments))))
-
-(s/fdef find-attacking-argument
-        :args (s/cat :argument ::models/argument)
-        :ret ::models/argument)
-
-(defn find-defending-arguments
-  "Choose a subset of arguments that defend the users original standpoint."
-  [argument]
-  (database/support-for-argument (:db/id argument)))
-
-(s/fdef find-defending-arguments
-        :args (s/cat :argument ::models/argument)
-        :ret (s/coll-of ::models/argument))
-
 
 ;; -----------------------------------------------------------------------------
 
