@@ -9,12 +9,33 @@
           which require user interaction."
           (fn [step _] step))
 
-(defmethod step :discussion/id
+(defmethod step :discussion/start
   ;; Show all starting arguments of a discussion.
   [_step args]
-  (let [arguments (distinct (database/starting-arguments-by-discussion (:discussion/id args)))]
-    [[:starting-argument/select (merge args {:present/arguments arguments})]
-     [:starting-argument/new (dissoc args :present/arguments)]]))
+  (let [arguments (distinct (database/starting-arguments-by-discussion (:discussion/id args)))
+        conclusions (distinct (map :argument/conclusion arguments))]
+    [[:starting-conclusions/select (merge args {:present/conclusions conclusions})]
+     [:starting-argument/new (dissoc args :present/conclusions)]]))
+
+(defmethod step :react-or-select
+  ;; The user can either select another premise for the current conclusion to discuss
+  ;; or react with their own premise to the current conclusion.
+  ;;TODO finish the arguments for each step
+  [_step args]
+  [[:premises/select :todo]
+   [:support/new :todo]
+   [:rebut/new :todo]
+   ;; if from starting, then nono undercut
+   [:undercut/new :todo]])
+
+(defmethod step :react-or-select-starting
+  ;; The user can either select another premise for the current conclusion to discuss
+  ;; or react with their own premise to the current conclusion.
+  ;;TODO finish the arguments for each step
+  [_step args]
+  [[:premises/select :todo]
+   [:support/new :todo]
+   [:rebut/new :todo]])
 
 (defmethod step :reactions/present
   ;; The system chose an argument to confront the user. The user can now
@@ -81,13 +102,6 @@
         :args (s/cat :argument ::models/argument)
         :ret ::models/argument)
 
-;; TODO
-(defn find-argument-for-opinion
-  "Choose an argument that defends the users opinion based on their `attitude`
-  towards the current `argument` they are looking at."
-  [_attitude argument]
-  argument)
-
 (defn find-defending-arguments
   "Choose a subset of arguments that defend the users original standpoint."
   [argument]
@@ -115,11 +129,12 @@
 ;; -----------------------------------------------------------------------------
 ;; Starting Arguments
 
-(defmethod react :starting-argument/select
+(defmethod react :starting-conclusions/select
   ;; User has seen all starting arguments and now selected one. Present appropriate
   ;; reactions the user can take for that.
+  ;TODO argumente richtig setzen
   [_step args]
-  [:reactions/present (dissoc args :present/arguments)])
+  [:react-or-select-starting (dissoc args :present/conclusions)])
 
 (defmethod react :starting-argument/new
   ;; User adds own starting argument. This is stored to the database and the
@@ -127,166 +142,41 @@
   [_step {:keys [discussion/id user/nickname new/starting-argument-conclusion new/starting-argument-premises]
           :as args}]
   (database/add-new-starting-argument! id nickname starting-argument-conclusion starting-argument-premises)
-  [:discussion/id (dissoc args
-                          :new/starting-argument-conclusion
-                          :new/starting-argument-premises)])
+  [:discussion/start (dissoc args
+                             :new/starting-argument-conclusion
+                             :new/starting-argument-premises)])
 
 
 ;; -----------------------------------------------------------------------------
-;; Supports
-
-(defmethod react :reaction/support
-  ;; User has chosen that they support the presented argument. Now, the user can
-  ;; choose of existing premises or bring own ones.
+;; Selections
+(defmethod react :premises/select
+  ;; User has seen all starting arguments and now selected one. Present appropriate
+  ;; reactions the user can take for that.
+  ;TODO argumente richtig setzen
   [_step args]
-  (let [supporting-arguments (database/arguments-supporting-premises
-                               (get-in args [:argument/chosen :db/id]))]
-    [:supports/present (merge args {:present/supports supporting-arguments})]))
+  [:react-or-select (dissoc args :present/conclusions)])
+
+;; -----------------------------------------------------------------------------
+;; New Premises
 
 (defmethod react :support/new
-  ;; User provided a new support. This needs to be stored and presented a new
-  ;; argument to the user.
-  [_step {:keys [discussion/id user/nickname new/support argument/chosen]
-          :as args}]
-  (database/support-argument! id nickname chosen support)
-  (let [attacking-argument (find-attacking-argument chosen)]
-    [:reactions/present (merge (dissoc args :new/support :present/supports)
-                               {:argument/chosen attacking-argument})]))
-
-(defmethod react :support/select
-  ;; User selected an existing support from a different user. This could be
-  ;; stored or noticed somewhere. Next the system searches an attacking
-  ;; argument.
+  ;; The user has chosen to support the shown conclusion with their own premise.
+  ;; TODO argumente richtig setzen
   [_step args]
-  (let [attacking-argument (find-attacking-argument (:argument/chosen args))
-        _selected-support (:support/selected args)]
-    [:reactions/present (merge (dissoc args :new/support :present/supports)
-                               {:argument/chosen attacking-argument})]))
-
-
-;; -----------------------------------------------------------------------------
-;; Undermines
-
-(defmethod react :reaction/undermine
-  ;; User wants to attack the premises of the shown `argument/chosen`.
-  [_step {:keys [argument/chosen] :as args}]
-  (let [statements (database/statements-attacking-premise (:db/id chosen))]
-    [:undermines/present (merge args {:present/undermines statements})]))
-
-(defmethod react :undermine/select
-  ;; User selected an existing undermine from a user. This could be
-  ;; stored or noticed somewhere. Next the system searches an attacking
-  ;; argument.
-  ;; Currently, we do nothing with the selected undermine.
-  [_step args]
-  (let [attacking-argument (find-attacking-argument (:argument/chosen args))
-        _selected-undermine (:undermine/selected args)]
-    [:reactions/present (merge (dissoc args :new/undermine :present/undermines)
-                               {:argument/chosen attacking-argument})]))
-
-(defmethod react :undermine/new
-  ;; User provided a new undermine. This needs to be stored and a new argument
-  ;; is chosen for the user
-  [_step {:keys [argument/chosen discussion/id user/nickname new/undermine]
-          :as args}]
-  (database/undermine-argument! id nickname chosen undermine)
-  (let [attacking-argument (find-attacking-argument chosen)]
-    [:reactions/present (merge (dissoc args :new/undermine :present/undermines)
-                               {:argument/chosen attacking-argument})]))
-
-
-;; -----------------------------------------------------------------------------
-;; Rebuts
-
-(defmethod react :reaction/rebut
-  [_step {:keys [argument/chosen] :as args}]
-  (let [rebuts (database/statements-attacking-conclusion (:db/id chosen))]
-    [:rebuts/present (merge args {:present/rebuts rebuts})]))
-
-(defmethod react :rebut/select
-  ;; User selected an existing rebut from a user. This could be
-  ;; stored or noticed somewhere. Next the system searches an attacking
-  ;; argument.
-  [_step args]
-  (let [attacking-argument (find-attacking-argument (:argument/chosen args))
-        _selected-rebut (:rebut/selected args)]
-    [:reactions/present (merge (dissoc args :new/rebut :present/rebuts)
-                               {:argument/chosen attacking-argument})]))
+  [:react-or-select :todo])
 
 (defmethod react :rebut/new
-  ;; User provided a new rebut. This needs to be stored and a new argument
-  ;; is chosen for the user.
-  [_step {:keys [argument/chosen discussion/id user/nickname new/rebut starting-argument?]
-          :as args}]
-  (let [attacking-argument (find-attacking-argument chosen)
-        new-argument-id (database/rebut-argument! id nickname chosen rebut)]
-    (when starting-argument?
-      (database/set-argument-as-starting! id new-argument-id))
-    [:reactions/present (merge (dissoc args :new/rebut :present/rebuts :starting-argument?)
-                               {:argument/chosen attacking-argument})]))
-
-
-;; -----------------------------------------------------------------------------
-;; Undercuts
-
-(defmethod react :reaction/undercut
-  [_step {:keys [argument/chosen] :as args}]
-  (let [undercuts (database/statements-undercutting-argument (:db/id chosen))]
-    [:undercuts/present (merge args {:present/undercuts undercuts})]))
-
-(defmethod react :undercut/select
-  ;; User selected an existing undercut from a user. This could be
-  ;; stored or noticed somewhere. Next the system searches an attacking
-  ;; argument.
+  ;; The user has chosen to attack the shown conclusion with their own premise.
+  ;; TODO argumente richtig setzen
   [_step args]
-  (let [attacking-argument (find-attacking-argument (:argument/chosen args))
-        _selected-undercut (:undercut/selected args)]
-    [:reactions/present (merge (dissoc args :new/undercut :present/undercuts)
-                               {:argument/chosen attacking-argument})]))
+  [:react-or-select :todo])
 
 (defmethod react :undercut/new
-  ;; User provided a new rebut. This needs to be stored and a new argument
-  ;; is chosen for the user. `new/undercut` is a collection of strings.
-  [_step {:keys [argument/chosen new/undercut discussion/id user/nickname]
-          :as args}]
-  (database/undercut-argument! id nickname chosen undercut)
-  (let [attacking-argument (find-attacking-argument chosen)]
-    [:reactions/present (merge (dissoc args :new/undercut :present/undercuts)
-                               {:argument/chosen attacking-argument})]))
-
-;; -----------------------------------------------------------------------------
-;; Defend own position
-
-(defmethod react :reaction/defend
-  ;; User accepts the presented argument, BUT still wants to defend their own
-  ;; opinion. Choose all arguments from the step before that represent the users
-  ;; opinion.
-  [_step {:keys [argument/chosen] :as args}]
-  (let [arguments-supporting-user (find-defending-arguments chosen)]
-    [:defends/present (merge args {:present/defends arguments-supporting-user})]))
-
-(defmethod react :defend/select
-  ;; User selected an existing defend from a user. This could be
-  ;; stored or noticed somewhere. Next, the system searches an attacking
-  ;; argument.
+  ;; The user has chosen to attack the relation between the shown conclusion and its predecessor
+  ;; with their own premise.
+  ;; TODO argumente richtig setzen
   [_step args]
-  (let [attacking-argument (find-attacking-argument (:argument/chosen args))
-        _selected-defend (:defend/selected args)]
-
-    [:defends/present (merge (dissoc args :new/defend :present/defends)
-                             {:argument/chosen attacking-argument})]))
-
-(defmethod react :defend/new
-  ;; User provided a new rebut. This needs to be stored and a new argument
-  ;; is chosen for the user.
-  [_step {:keys [argument/chosen new/defend discussion/id user/nickname starting-argument?]
-          :as args}]
-  (let [attacking-argument (find-attacking-argument chosen)
-        new-argument-id (database/defend-argument! id nickname chosen defend)]
-    (when starting-argument?
-      (database/set-argument-as-starting! id new-argument-id))
-    [:defends/present (merge (dissoc args :new/defend :present/defends :starting-argument?)
-                             {:argument/chosen attacking-argument})]))
+  [:react-or-select :todo])
 
 
 ;; -----------------------------------------------------------------------------
@@ -306,7 +196,7 @@
 (defn start-discussion
   "Start with all starting arguments from a discussion."
   [args]
-  (step :discussion/id args))
+  (step :discussion/start args))
 
 (s/fdef start-discussion
         :args (s/cat :args (s/keys :req [:discussion/id :user/nickname])))
