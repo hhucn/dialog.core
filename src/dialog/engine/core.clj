@@ -35,7 +35,7 @@
     [[:premises/select updated-args]
      [:support/new add-premise-args]
      [:rebut/new add-premise-args]
-     [:undercut/new (assoc add-premise-args :argument/id undercut-id)]]))
+     [:undercut/new (assoc add-premise-args :undercut/argument-id undercut-id)]]))
 
 (defmethod step :react-or-select-after-addition
   ;; The user can either select another premise for the current conclusion to discuss
@@ -48,7 +48,7 @@
     [[:premises/select args]
      [:support/new add-premise-args]
      [:rebut/new add-premise-args]
-     [:undercut/new (assoc add-premise-args :argument/id undercut-id)]]))
+     [:undercut/new (assoc add-premise-args :undercut/argument-id undercut-id)]]))
 
 (defmethod step :react-or-select-starting
   ;; The user can either select another premise for the current conclusion to discuss
@@ -149,11 +149,12 @@
   [:react-or-select-after-addition (dissoc args :new/rebut)])
 
 (defmethod react :undercut/new
-  ;; The user has chosen to attack the relation between the shown conclusion and its predecessor
-  ;; with their own premise.
-  ;; TODO argumente richtig setzen
-  [_step args]
-  [:react-or-select :todo])
+  ;; The user has chosen to attack the relation between the chosen premise and its previously
+  ;; chosen conclusion. The argument-id of the argument that constitutes this is saved in
+  ;; :undercut/argument-id of the map.
+  [_step {:keys [new/undercut discussion/id user/nickname undercut/argument-id] :as args}]
+  (database/undercut-argument! id nickname {:db/id argument-id} [undercut])
+  [:react-or-select (dissoc args :undercut/argument-id :new/undercut)])
 
 ;; -----------------------------------------------------------------------------
 ;; Comfort Functions
