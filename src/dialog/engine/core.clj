@@ -144,9 +144,9 @@
 
 (defmethod react :rebut/new
   ;; The user has chosen to attack the shown conclusion with their own premise.
-  ;; TODO argumente richtig setzen
-  [_step args]
-  [:react-or-select :todo])
+  [_step {:keys [new/rebut premise/chosen discussion/id user/nickname] :as args}]
+  (database/attack-statement! id nickname chosen rebut)
+  [:react-or-select-after-addition (dissoc args :new/rebut)])
 
 (defmethod react :undercut/new
   ;; The user has chosen to attack the relation between the shown conclusion and its predecessor

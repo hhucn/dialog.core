@@ -505,15 +505,26 @@
                      :premises (s/coll-of string?)))
 
 (defn support-statement!
-  "Add a new statement supporting a statement"
+  "Create a new argument supporting a statement"
   [discussion-id author-name statement support-string]
   (new-premises-for-statement! discussion-id author-name (:db/id statement) support-string :argument.type/support))
 
 (s/fdef support-statement!
-        :args (s/cat :discusison-id number?
+        :args (s/cat :discussion-id number?
                      :author-name string?
                      :statement (s/keys :req [:db/id])
                      :support-string string?))
+
+(defn attack-statement!
+  "Create a new statement attacking a statement"
+  [discussion-id author-name statement attacking-string]
+  (new-premises-for-statement! discussion-id author-name (:db/id statement) attacking-string :argument.type/attack))
+
+(s/fdef attack-statement!
+        :args (s/cat :discussion-id number?
+                     :author-name string?
+                     :statement (s/keys :req [:db/id])
+                     :attacking-string string?))
 
 (defn undermine-argument!
   "Attack the argument's premises with own statements."
