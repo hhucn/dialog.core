@@ -1,6 +1,5 @@
 (ns dialog.engine.core
   (:require [dialog.discussion.database :as database]
-            [dialog.discussion.models :as models]
             [clojure.spec.alpha :as s]))
 
 ;; Das was der user angezeigt bekommt
@@ -8,9 +7,6 @@
           "Execute one step in the discussion. Represents the states / nodes,
           which require user interaction."
           (fn [step _] step))
-
-;; TODO adding something new, should always go "one step back", since there is nothing that can be
-;; answered to a newly added premise / undercut.
 
 (defmethod step :discussion/start
   ;; Show all starting arguments of a discussion.
@@ -103,18 +99,20 @@
                              :new/starting-argument-conclusion
                              :new/starting-argument-premises)])
 
-; TODO same as others, but add them as starting-arguments.
+
 (defmethod react :starting-support/new
   ;; The user has chosen to support the shown starting conclusion with their own premise.
-  ;; TODO argumente richtig setzen
-  [_step {:keys [new/support-premise] :as args}]
-  [:react-or-select :todo])
+  [_step {:keys [new/support-premise conclusion/chosen discussion/id user/nickname] :as args}]
+  (let [new-argument-id (database/support-statement! id nickname chosen support-premise)]
+    (database/set-argument-as-starting! id new-argument-id))
+  [:react-or-select-after-addition (dissoc args :new/support-premise)])
 
 (defmethod react :starting-rebut/new
   ;; The user has chosen to attack the shown conclusion with their own premise.
-  ;; TODO argumente richtig setzen
-  [_step args]
-  [:react-or-select :todo])
+  [_step {:keys [new/rebut-premise conclusion/chosen discussion/id user/nickname] :as args}]
+  (let [new-argument-id (database/attack-statement! id nickname chosen rebut-premise)]
+    (database/set-argument-as-starting! id new-argument-id))
+  [:react-or-select (dissoc args :new/rebut-premise)])
 
 
 ;; -----------------------------------------------------------------------------

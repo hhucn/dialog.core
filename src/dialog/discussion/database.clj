@@ -507,7 +507,9 @@
 (defn support-statement!
   "Create a new argument supporting a statement"
   [discussion-id author-name statement support-string]
-  (new-premises-for-statement! discussion-id author-name (:db/id statement) support-string :argument.type/support))
+  (get-in
+    (new-premises-for-statement! discussion-id author-name (:db/id statement) support-string :argument.type/support)
+    [:tempids support-string]))
 
 (s/fdef support-statement!
         :args (s/cat :discussion-id number?
@@ -518,7 +520,9 @@
 (defn attack-statement!
   "Create a new statement attacking a statement"
   [discussion-id author-name statement attacking-string]
-  (new-premises-for-statement! discussion-id author-name (:db/id statement) attacking-string :argument.type/attack))
+  (get-in
+    (new-premises-for-statement! discussion-id author-name (:db/id statement) attacking-string :argument.type/attack)
+    [:tempids attacking-string]))
 
 (s/fdef attack-statement!
         :args (s/cat :discussion-id number?
