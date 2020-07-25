@@ -457,6 +457,25 @@
                      :argument ::models/argument :premises (s/coll-of string?)
                      :argument-type :argument/type))
 
+(defn- new-premises-for-statement!
+  "Creates a new argument based on a statement, which is used as conclusion."
+  [discussion-id author-nickname new-conclusion-id new-statement-string argument-type]
+  (let [new-arguments
+        [{:argument/author [:author/nickname author-nickname]
+          :argument/premises (pack-premises [new-statement-string] author-nickname)
+          :argument/conclusion new-conclusion-id
+          :argument/version 1
+          :argument/type argument-type
+          :argument/discussions [discussion-id]}]]
+    (transact new-arguments)))
+
+(s/fdef new-premises-for-statement!
+        :args (s/cat :discussion-id number?
+                     :author-nickname string?
+                     :new-conclusion-id number?
+                     :new-statement-string string?
+                     :argument-type :argument/type))
+
 (defn- prepare-argument-with-conclusion-reference
   "Creates new argument, but references the old conclusion by id."
   [discussion-id author-nickname conclusion-id premises argument-type]
@@ -484,6 +503,17 @@
         :args (s/cat :discussion-id number? :author-nickname :author/nickname
                      :argument (s/keys :req [:argument/premises])
                      :premises (s/coll-of string?)))
+
+(defn support-statement!
+  "Add a new statement supporting a statement"
+  [discussion-id author-name statement support-string]
+  (new-premises-for-statement! discussion-id author-name (:db/id statement) support-string :argument.type/support))
+
+(s/fdef support-statement!
+        :args (s/cat :discusison-id number?
+                     :author-name string?
+                     :statement (s/keys :req [:db/id])
+                     :support-string string?))
 
 (defn undermine-argument!
   "Attack the argument's premises with own statements."

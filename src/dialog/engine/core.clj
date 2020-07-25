@@ -9,6 +9,9 @@
           which require user interaction."
           (fn [step _] step))
 
+;; TODO adding something new, should always go "one step back", since there is nothing that can be
+;; answered to a newly added premise / undercut.
+
 (defmethod step :discussion/start
   ;; Show all starting arguments of a discussion.
   [_step args]
@@ -30,6 +33,19 @@
         ;; Get the id of the argument which can be undercut.
         undercut-id (database/argument-id-by-premise-conclusion (:premise/chosen args) (:conclusion/chosen args))]
     [[:premises/select updated-args]
+     [:support/new add-premise-args]
+     [:rebut/new add-premise-args]
+     [:undercut/new (assoc add-premise-args :argument/id undercut-id)]]))
+
+(defmethod step :react-or-select-after-addition
+  ;; The user can either select another premise for the current conclusion to discuss
+  ;; or react with their own premise to the current conclusion.
+  [_step args]
+  ;; Do not go one step forward, because a new premise / undercut has been added.
+  (let [add-premise-args (dissoc args :present/premises :present/undercuts)
+        ;; Get the id of the argument which can be undercut.
+        undercut-id (database/argument-id-by-premise-conclusion (:premise/chosen args) (:conclusion/chosen args))]
+    [[:premises/select args]
      [:support/new add-premise-args]
      [:rebut/new add-premise-args]
      [:undercut/new (assoc add-premise-args :argument/id undercut-id)]]))
@@ -87,10 +103,11 @@
                              :new/starting-argument-conclusion
                              :new/starting-argument-premises)])
 
+; TODO same as others, but add them as starting-arguments.
 (defmethod react :starting-support/new
-  ;; The user has chosen to support the shown conclusion with their own premise.
+  ;; The user has chosen to support the shown starting conclusion with their own premise.
   ;; TODO argumente richtig setzen
-  [_step args]
+  [_step {:keys [new/support-premise] :as args}]
   [:react-or-select :todo])
 
 (defmethod react :starting-rebut/new
@@ -121,9 +138,9 @@
 
 (defmethod react :support/new
   ;; The user has chosen to support the shown conclusion with their own premise.
-  ;; TODO argumente richtig setzen
-  [_step args]
-  [:react-or-select :todo])
+  [_step {:keys [new/support premise/chosen discussion/id user/nickname] :as args}]
+  (database/support-statement! id nickname chosen support)
+  [:react-or-select-after-addition (dissoc args :new/support)])
 
 (defmethod react :rebut/new
   ;; The user has chosen to attack the shown conclusion with their own premise.
