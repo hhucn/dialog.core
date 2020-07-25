@@ -229,6 +229,17 @@
         [?arguments-with-premise-content :argument/premises ?fitting-premises]]
       db argument-pattern content)))
 
+(defn argument-id-by-premise-conclusion
+  "Return the ID of an argument, which has at least the corresponding premise and
+  conclusion. If multiple are applicable, return any of them."
+  [premise-id conclusion-id]
+  (first (query-arguments
+           '[:find (pull ?argument argument-pattern)
+             :in $ argument-pattern ?premise-id ?conclusion-id
+             :where [?argument :argument/premises ?premise-id]
+             [?argument :argument/conclusion ?conclusion-id]]
+           premise-id conclusion-id)))
+
 (defn statements-undercutting-premise
   "Return all statements that are used to undercut an argument where `premise`
   is one of the premises."

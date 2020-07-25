@@ -20,13 +20,19 @@
 (defmethod step :react-or-select
   ;; The user can either select another premise for the current conclusion to discuss
   ;; or react with their own premise to the current conclusion.
-  ;;TODO finish the arguments for each step
-  [_step {:keys [] :as args}]
-  [[:premises/select :todo]
-   [:support/new :todo]
-   [:rebut/new :todo]
-   ;; if from starting, then nono undercut
-   [:undercut/new :todo]])
+  [_step args]
+  ;; First go one step further, by setting the last premise as the next conclusion
+  ;; This way the next chosen premise is still correctly matching it.
+  (let [updated-args (-> args
+                         (assoc :conclusion/chosen (:premise/chosen args))
+                         (dissoc :premise/chosen))
+        add-premise-args (dissoc updated-args :present/premises :present/undercuts)
+        ;; Get the id of the argument which can be undercut.
+        undercut-id (database/argument-id-by-premise-conclusion (:premise/chosen args) (:conclusion/chosen args))]
+    [[:premises/select updated-args]
+     [:support/new add-premise-args]
+     [:rebut/new add-premise-args]
+     [:undercut/new (assoc add-premise-args :argument/id undercut-id)]]))
 
 (defmethod step :react-or-select-starting
   ;; The user can either select another premise for the current conclusion to discuss
