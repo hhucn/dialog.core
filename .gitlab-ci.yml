@@ -1,3 +1,9 @@
+stages:
+  - build
+  - test
+  - report
+  - deploy
+
 before_script:
   - wget $DOWNLOAD_DEV_LOCAL
   - mkdir -p local_jars/dev-local/
@@ -9,8 +15,8 @@ test:
     - clojure -A:test
   artifacts:
     paths:
-      - target/coverage/index.html
-    expire_in: 1 day
+      - target/coverage/lcov.info
+    expire_in: 1 hour
 
 lint:
   image: clojure:openjdk-14-tools-deps-alpine
@@ -25,3 +31,12 @@ up-to-date?:
     - clojure -A:ancient
   allow_failure: true
   when: always
+
+coverage-report:
+  image: python:3-alpine
+  stage: report
+  script:
+    - wget -O - https://s3.cs.hhu.de/dialogo-ci/lcov_cobertura.py | python3 - target/coverage/lcov.info --output target/coverage/coverage.xml
+  artifacts:
+    reports:
+      cobertura: target/coverage/coverage.xml
