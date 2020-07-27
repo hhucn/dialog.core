@@ -57,12 +57,12 @@
         :ret string?)
 
 (defn start []
-  (let [discussions (database/all-discussion-titles-and-ids)]
+  (let [discussions (database/all-discussions)]
     (println
       "Welcome 🥳! Choose a discussion:\n"
-      (texts/list-options (map second discussions)))
+      (texts/list-options (map :discussion/title discussions)))
     (let [index (Integer/parseInt (read-line))
-          [id title] (nth discussions index)]
+          {:keys [db/id discussion/title]} (nth discussions index)]
       {:user/nickname "Christian"
        :discussion/id id
        :discussion/title title})))

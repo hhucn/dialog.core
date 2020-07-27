@@ -77,6 +77,9 @@
 ;; -----------------------------------------------------------------------------
 ;; Specs. Please keep in sync with model above. Extend as needed.
 
+;; General
+(s/def :db/id (s/or :transacted number? :temp string?))
+
 ;; Discussion
 (s/def :discussion/title string?)
 (s/def :discussion/description string?)
