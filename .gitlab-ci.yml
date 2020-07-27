@@ -7,6 +7,10 @@ test:
   image: clojure:openjdk-14-tools-deps-alpine
   script:
     - clojure -A:test
+  artifacts:
+    paths:
+      - target/coverage/index.html
+    expire_in: 1 day
 
 lint:
   image: clojure:openjdk-14-tools-deps-alpine
