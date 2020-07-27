@@ -1,9 +1,15 @@
 (ns dialog.discussion.database-test
   (:require [clojure.test :refer [deftest use-fixtures testing is]]
             [dialog.discussion.database :as database]
-            [dialog.test.toolbelt :as test-toolbelt]))
+            [dialog.test.toolbelt :as test-toolbelt]
+            [clojure.spec.alpha :as s]))
 
 (use-fixtures :each test-toolbelt/init-db-test-fixture)
+
+(deftest all-discussions-test
+  (testing "Return all discussions."
+    (is (= 1 (count (database/all-discussions))))
+    (is (test-toolbelt/check? `database/all-discussions))))
 
 (deftest all-discussions-by-title-test
   (testing "Should return discussions if title matches at least one discussion."

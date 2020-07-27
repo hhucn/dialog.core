@@ -137,7 +137,7 @@
 (>defn all-discussions
   "Return all discussions."
   []
-  [:ret (s/coll-of (s/tuple ::models/discussion))]
+  [:ret (s/coll-of ::models/discussion)]
   (query-discussions
     '[:find (pull ?discussions discussion-pattern)
       :in $ discussion-pattern
