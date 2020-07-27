@@ -80,14 +80,6 @@
 ;; -----------------------------------------------------------------------------
 ;; Patterns
 
-(def ^:private discussion-pattern
-  "Representation of a discussion. Oftentimes used in a Datalog pull pattern."
-  [:db/id
-   :discussion/title
-   :discussion/description
-   {:discussion/states [:db/ident]}
-   :discussion/starting-arguments])
-
 (def ^:private statement-pattern
   "Representation of a statement. Oftentimes used in a Datalog pull pattern."
   [:db/id
@@ -114,6 +106,13 @@
                                {:statement/author [:author/nickname]}]}
           {:argument/conclusion statement-pattern})}])
 
+(def ^:private discussion-pattern
+  "Representation of a discussion. Oftentimes used in a Datalog pull pattern."
+  [:db/id
+   :discussion/title
+   :discussion/description
+   {:discussion/states [:db/ident]}
+   {:discussion/starting-arguments argument-pattern}])
 
 ;; -----------------------------------------------------------------------------
 ;; Queries
@@ -135,12 +134,20 @@
         discussions (apply d/q query db discussion-pattern args)]
     (map #(utils/ident-map->value (first %)) discussions)))
 
+(>defn all-discussions
+  "Return all discussions."
+  []
+  [:ret (s/coll-of (s/tuple ::models/discussion))]
+  (query-discussions
+    '[:find (pull ?discussions discussion-pattern)
+      :in $ discussion-pattern
+      :where [?discussions :discussion/title]]))
+
 (>defn all-discussions-by-title
   "Query all discussions based on the title. Could possible be multiple
   entities."
   [title]
-  [string?
-   :ret (s/coll-of (s/tuple ::models/discussion))]
+  [string? :ret (s/coll-of ::models/discussion)]
   (query-discussions
     '[:find (pull ?discussions discussion-pattern)
       :in $ discussion-pattern ?title
