@@ -37,8 +37,8 @@
              (-> (ffirst test-result) :argument/conclusion :statement/content))))))
 
 (deftest statements-undercutting-premise-test
-  (testing "Given a original-premise deliver all premises underucutting arguments that have original-premise
-  as a premise"
+  (testing "Given a original-premise deliver all premises undercutting arguments
+  that have original-premise as a premise."
     (let [to-undercut (first (:argument/premises
                                (ffirst
                                  (database/arguments-with-premise-content "dogs can act as watchdogs"))))]
