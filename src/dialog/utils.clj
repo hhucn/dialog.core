@@ -53,7 +53,7 @@
      coll)))
 
 (s/fdef ident-map->value
-        :args (s/cat :coll map? :keys (s/coll-of keyword?)))
+        :args (s/cat :coll map? :keys (s/? (s/coll-of keyword?))))
 
 (defn create-storage-directory!
   "Locally creates a file to store datomic data."

@@ -218,6 +218,41 @@
         [?undercutting-arguments :argument/premises ?undercutting-premises]]
       db statement-pattern argument-id)))
 
+(defn arguments-with-premise-content
+  "Returns all arguments, which contain a certain content in one of their premises."
+  [content]
+  (let [db (d/db (new-connection))]
+    (d/q
+      '[:find (pull ?arguments-with-premise-content argument-pattern)
+        :in $ argument-pattern ?content
+        :where [?fitting-premises :statement/content ?content]
+        [?arguments-with-premise-content :argument/premises ?fitting-premises]]
+      db argument-pattern content)))
+
+(defn argument-id-by-premise-conclusion
+  "Return the ID of an argument, which has at least the corresponding premise and
+  conclusion. If multiple are applicable, return any of them."
+  [premise-id conclusion-id]
+  (first (query-arguments
+           '[:find (pull ?argument argument-pattern)
+             :in $ argument-pattern ?premise-id ?conclusion-id
+             :where [?argument :argument/premises ?premise-id]
+             [?argument :argument/conclusion ?conclusion-id]]
+           premise-id conclusion-id)))
+
+(defn statements-undercutting-premise
+  "Return all statements that are used to undercut an argument where `premise`
+  is one of the premises."
+  [premise-id]
+  (let [db (d/db (new-connection))]
+    (d/q
+      '[:find (pull ?undercutting-statements statement-pattern)
+        :in $ statement-pattern ?premise-id
+        :where [?arguments :argument/premises ?premise-id]
+        [?undercutting-arguments :argument/conclusion ?arguments]
+        [?undercutting-arguments :argument/premises ?undercutting-statements]]
+      db statement-pattern premise-id)))
+
 (defn- direct-argument-attackers
   "Queries the arguments attacking the premises or conclusion of `argument-id`."
   [argument-id qualified-attribute]
@@ -302,7 +337,7 @@
 (comment
   (support-for-argument 17592186045447)
   (count (starting-arguments-by-discussion 17592186045477))
-  (count (all-arguments-for-discussion 17592186045477))
+  (count (all-arguments-for-discussion 92358976733323))
   :end)
 
 
@@ -422,6 +457,25 @@
                      :argument ::models/argument :premises (s/coll-of string?)
                      :argument-type :argument/type))
 
+(defn- new-premises-for-statement!
+  "Creates a new argument based on a statement, which is used as conclusion."
+  [discussion-id author-nickname new-conclusion-id new-statement-string argument-type]
+  (let [new-arguments
+        [{:argument/author [:author/nickname author-nickname]
+          :argument/premises (pack-premises [new-statement-string] author-nickname)
+          :argument/conclusion new-conclusion-id
+          :argument/version 1
+          :argument/type argument-type
+          :argument/discussions [discussion-id]}]]
+    (transact new-arguments)))
+
+(s/fdef new-premises-for-statement!
+        :args (s/cat :discussion-id number?
+                     :author-nickname string?
+                     :new-conclusion-id number?
+                     :new-statement-string string?
+                     :argument-type :argument/type))
+
 (defn- prepare-argument-with-conclusion-reference
   "Creates new argument, but references the old conclusion by id."
   [discussion-id author-nickname conclusion-id premises argument-type]
@@ -449,6 +503,32 @@
         :args (s/cat :discussion-id number? :author-nickname :author/nickname
                      :argument (s/keys :req [:argument/premises])
                      :premises (s/coll-of string?)))
+
+(defn support-statement!
+  "Create a new argument supporting a statement"
+  [discussion-id author-name statement support-string]
+  (get-in
+    (new-premises-for-statement! discussion-id author-name (:db/id statement) support-string :argument.type/support)
+    [:tempids support-string]))
+
+(s/fdef support-statement!
+        :args (s/cat :discussion-id number?
+                     :author-name string?
+                     :statement (s/keys :req [:db/id])
+                     :support-string string?))
+
+(defn attack-statement!
+  "Create a new statement attacking a statement"
+  [discussion-id author-name statement attacking-string]
+  (get-in
+    (new-premises-for-statement! discussion-id author-name (:db/id statement) attacking-string :argument.type/attack)
+    [:tempids attacking-string]))
+
+(s/fdef attack-statement!
+        :args (s/cat :discussion-id number?
+                     :author-name string?
+                     :statement (s/keys :req [:db/id])
+                     :attacking-string string?))
 
 (defn undermine-argument!
   "Attack the argument's premises with own statements."
