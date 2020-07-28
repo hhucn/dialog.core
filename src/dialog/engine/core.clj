@@ -44,12 +44,15 @@
 (defmethod step :react-or-select
   ;; The user can either select another premise for the current conclusion to discuss
   ;; or react with their own premise to the current conclusion.
-  [_step args]
+  ;; Also show all undercuts, which undercut an argument with the chosen premise as a premise.
+  [_step {:keys [premise/chosen] :as args}]
   ;; First go one step further, by setting the last premise as the next conclusion
   ;; This way the next chosen premise is still correctly matching it.
-  (let [select-args (-> args
-                        (assoc :conclusion/chosen (:premise/chosen args))
-                        (dissoc :premise/chosen))
+  (let [select-args
+        (-> args
+            (assoc :conclusion/chosen (:premise/chosen args)
+                   :present/undercuts (map first (database/statements-undercutting-premise (:db/id chosen))))
+            (dissoc :premise/chosen))
         ;; Only rotate premise and conclusion in case of a new selected premise.
         add-premise-args (dissoc args :present/premises :present/undercuts)
         ;; Get the id of the argument which can be undercut.
@@ -64,14 +67,16 @@
 (defmethod step :react-or-select-after-addition
   ;; The user can either select another premise for the current conclusion to discuss
   ;; or react with their own premise to the current conclusion.
-  [_step args]
+  [_step {:keys [premise/chosen] :as args}]
   ;; Do not go one step forward, because a new premise / undercut has been added.
-  (let [add-premise-args (dissoc args :present/premises :present/undercuts)
+  (let [select-args
+        (assoc args :present/undercuts (map first (database/statements-undercutting-premise (:db/id chosen))))
+        add-premise-args (dissoc args :present/premises :present/undercuts)
         ;; Get the id of the argument which can be undercut.
         undercut-id (database/argument-id-by-premise-conclusion
                       (:db/id (:premise/chosen args))
                       (:db/id (:conclusion/chosen args)))]
-    [[:premises/select args]
+    [[:premises/select select-args]
      [:support/new add-premise-args]
      [:rebut/new add-premise-args]
      [:undercut/new (assoc add-premise-args :undercut/argument-id undercut-id)]]))
@@ -150,16 +155,13 @@
 ;; Selections
 (defmethod react :premises/select
   ;; User has selected a premise to some argument. Show all premises that have the
-  ;; selected premise as a conclusion. Also show all undercuts, which have a conclusion
-  ;; which has the chosen premise as a premise.
+  ;; selected premise as a conclusion.
   ;; A selected undercut has a normal statement as premise and the flow continues unabated.
   [_step {:keys [premise/chosen] :as args}]
-  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))
-        undercuts-to-select (map first (database/statements-undercutting-premise (:db/id chosen)))]
+  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))]
     [:react-or-select (-> args
                           (dissoc :present/conclusions)
-                          (assoc :present/premises premises-to-select)
-                          (assoc :present/undercuts undercuts-to-select))]))
+                          (assoc :present/premises premises-to-select))]))
 
 ;; -----------------------------------------------------------------------------
 ;; New Premises
@@ -218,132 +220,80 @@
 (comment
   (database/all-discussions-by-title "Cat or Dog?")
   (start-discussion {:user/nickname "Wegi"
-                     :discussion/id 87960930222221})
-  (continue-discussion
-    :starting-argument/new
-    {:user/nickname "Wegi", :discussion/id 87960930222221
-     :new/starting-argument-conclusion "Ich will zwei Hunde"
-     :new/starting-argument-premises ["Zwei ist besser als eins"]})
+                     :discussion/id 83562883711117})
   (continue-discussion
     :starting-conclusions/select
     {:user/nickname "Wegi",
-     :discussion/id 87960930222221,
-     :present/conclusions '({:db/id 79164837200033,
-                             :statement/content "Ich will zwei Hunde",
-                             :statement/version 1,
-                             :statement/author #:author{:nickname "Wegi"}}
-                            {:db/id 87960930222171,
+     :discussion/id 83562883711117,
+     :present/conclusions '({:db/id 83562883711067,
                              :statement/content "we should get a dog",
                              :statement/version 1,
                              :statement/author #:author{:nickname "Wegi"}}
-                            {:db/id 87960930222173,
+                            {:db/id 83562883711069,
                              :statement/content "we could get both, a dog and a cat",
                              :statement/version 1,
                              :statement/author #:author{:nickname "Christian"}}
-                            {:db/id 87960930222172,
+                            {:db/id 83562883711068,
                              :statement/content "we should get a cat",
                              :statement/version 1,
-                             :statement/author #:author{:nickname "Der Schredder"}}
-                            {:db/id 92358976733348,
-                             :statement/content "Ich will zwei Hunde",
-                             :statement/version 1,
-                             :statement/author #:author{:nickname "Wegi"}}
-                            {:db/id 101155069755550,
-                             :statement/content "Ich will zwei Hunde",
-                             :statement/version 1,
-                             :statement/author #:author{:nickname "Wegi"}})
-     :conclusion/chosen {:db/id 87960930222171,
+                             :statement/author #:author{:nickname "Der Schredder"}})
+     ;; Selbst gesetzt
+     :conclusion/chosen {:db/id 83562883711067,
                          :statement/content "we should get a dog",
                          :statement/version 1,
                          :statement/author #:author{:nickname "Wegi"}}})
-  (continue-discussion :starting-support/new
-                       {:user/nickname "Wegi",
-                        :discussion/id 87960930222221,
-                        :conclusion/chosen {:db/id 87960930222171,
-                                            :statement/content "we should get a dog",
-                                            :statement/version 1,
-                                            :statement/author #:author{:nickname "Wegi"}}
-                        :new/support-premise "Ich liebe doggos noch viel mehr"})
-  (continue-discussion :premises/select
-                       {:user/nickname "Wegi",
-                        :discussion/id 87960930222221,
-                        :conclusion/chosen {:db/id 87960930222171,
-                                            :statement/content "we should get a dog",
-                                            :statement/version 1,
-                                            :statement/author #:author{:nickname "Wegi"}},
-                        :present/premises '({:db/id 79164837200037,
-                                             :statement/content "Ich liebe doggos",
-                                             :statement/version 1,
-                                             :statement/author #:author{:nickname "Wegi"},
-                                             :meta/argument.type :argument.type/attack}
-                                            {:db/id 87960930222175,
-                                             :statement/content "dogs can act as watchdogs",
-                                             :statement/version 1,
-                                             :statement/author #:author{:nickname "Wegi"},
-                                             :meta/argument.type :argument.type/support}
-                                            {:db/id 87960930222177,
-                                             :statement/content "you have to take the dog for a walk every day, which is tedious",
-                                             :statement/version 1,
-                                             :statement/author #:author{:nickname "Der Schredder"},
-                                             :meta/argument.type :argument.type/attack}
-                                            {:db/id 101155069755558,
-                                             :statement/content "Ich liebe doggos noch viel mehr",
-                                             :statement/version 1,
-                                             :statement/author #:author{:nickname "Wegi"},
-                                             :meta/argument.type :argument.type/support})
-                        :premise/chosen {:db/id 87960930222175,
-                                         :statement/content "dogs can act as watchdogs",
-                                         :statement/version 1,
-                                         :statement/author #:author{:nickname "Wegi"},
-                                         :meta/argument.type :argument.type/support}})
-  (continue-discussion :support/new
-                       {:user/nickname "Wegi",
-                        :discussion/id 87960930222221,
-                        :conclusion/chosen {:db/id 87960930222171,
-                                            :statement/content "we should get a dog",
-                                            :statement/version 1,
-                                            :statement/author #:author{:nickname "Wegi"}},
-                        :premise/chosen {:db/id 87960930222175,
-                                         :statement/content "dogs can act as watchdogs",
-                                         :statement/version 1,
-                                         :statement/author #:author{:nickname "Wegi"},
-                                         :meta/argument.type :argument.type/support}
-                        :new/support "Einbrecher haben schiss vor hunden"})
-  (continue-discussion :premises/select
-                       {:user/nickname "Wegi",
-                        :discussion/id 87960930222221,
-                        :conclusion/chosen {:db/id 87960930222171,
-                                            :statement/content "we should get a dog",
-                                            :statement/version 1,
-                                            :statement/author #:author{:nickname "Wegi"}},
-                        :present/premises '({:db/id 79164837200037,
-                                             :statement/content "Ich liebe doggos",
-                                             :statement/version 1,
-                                             :statement/author #:author{:nickname "Wegi"},
-                                             :meta/argument.type :argument.type/attack}
-                                            {:db/id 87960930222175,
-                                             :statement/content "dogs can act as watchdogs",
-                                             :statement/version 1,
-                                             :statement/author #:author{:nickname "Wegi"},
-                                             :meta/argument.type :argument.type/support}
-                                            {:db/id 87960930222177,
-                                             :statement/content "you have to take the dog for a walk every day, which is tedious",
-                                             :statement/version 1,
-                                             :statement/author #:author{:nickname "Der Schredder"},
-                                             :meta/argument.type :argument.type/attack}
-                                            {:db/id 101155069755558,
-                                             :statement/content "Ich liebe doggos noch viel mehr",
-                                             :statement/version 1,
-                                             :statement/author #:author{:nickname "Wegi"},
-                                             :meta/argument.type :argument.type/support}
-                                            {:db/id 101155069755564,
-                                             :statement/content "Einbrecher haben schiss vor hunden",
-                                             :statement/version 1,
-                                             :statement/author #:author{:nickname "Wegi"},
-                                             :meta/argument.type :argument.type/support})
-                        :premise/chosen {:db/id 101155069755564,
-                                         :statement/content "Einbrecher haben schiss vor hunden",
-                                         :statement/version 1,
-                                         :statement/author #:author{:nickname "Wegi"},
-                                         :meta/argument.type :argument.type/support}})
+  (continue-discussion
+    :starting-support/new
+    {:user/nickname "Wegi",
+     :discussion/id 83562883711117,
+     :conclusion/chosen {:db/id 83562883711067,
+                         :statement/content "we should get a dog",
+                         :statement/version 1,
+                         :statement/author #:author{:nickname "Wegi"}}
+     ;; Selbst gesetzt
+     :new/support-premise "Hunde sind einfach die knuffigsten"})
+  (continue-discussion
+    :premises/select
+    {:user/nickname "Wegi",
+     :discussion/id 83562883711117,
+     :conclusion/chosen {:db/id 83562883711067,
+                         :statement/content "we should get a dog",
+                         :statement/version 1,
+                         :statement/author #:author{:nickname "Wegi"}},
+     :present/premises '({:db/id 74766790688910,
+                          :statement/content "Hunde sind einfach die knuffigsten",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Wegi"},
+                          :meta/argument.type :argument.type/support}
+                         {:db/id 83562883711071,
+                          :statement/content "dogs can act as watchdogs",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Wegi"},
+                          :meta/argument.type :argument.type/support}
+                         {:db/id 83562883711073,
+                          :statement/content "you have to take the dog for a walk every day, which is tedious",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Der Schredder"},
+                          :meta/argument.type :argument.type/attack})
+     ;; Selbst gesetzt
+     :premise/chosen {:db/id 83562883711071,
+                      :statement/content "dogs can act as watchdogs",
+                      :statement/version 1,
+                      :statement/author #:author{:nickname "Wegi"},
+                      :meta/argument.type :argument.type/support}})
+  (continue-discussion
+    :support/new
+    {:user/nickname "Wegi",
+     :discussion/id 83562883711117,
+     :conclusion/chosen {:db/id 83562883711067,
+                         :statement/content "we should get a dog",
+                         :statement/version 1,
+                         :statement/author #:author{:nickname "Wegi"}},
+     :premise/chosen {:db/id 83562883711071,
+                      :statement/content "dogs can act as watchdogs",
+                      :statement/version 1,
+                      :statement/author #:author{:nickname "Wegi"},
+                      :meta/argument.type :argument.type/support}
+     ;; Selbst gesetzt
+     :new/support "Jaaa, einbrecher haben tierische Angst vor Hunden"})
   :end)
