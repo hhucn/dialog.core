@@ -1,14 +1,22 @@
 (ns dialog.engine.core
   (:require [dialog.discussion.database :as database]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [ghostwheel.core :refer [>defn >defn-]]
+            [dialog.discussion.models :as models]))
 
-(defn- build-meta-premises
-  "Builds a meta-premise with additional information for the frontend out of a list of arguments."
+(>defn- build-meta-premises
+  "Builds a meta-premise with additional information for the frontend out of a
+  list of arguments."
   [arguments]
+  [(s/coll-of ::models/argument)
+   :ret (s/coll-of ::models/statement)]
   (flatten
     (map
-      #(assoc (:argument/premises %) :meetly-meta/argument.type (:argument/type %))
+      #(assoc (:argument/premises %) :meta/argument.type (:argument/type %))
       arguments)))
+
+
+;; -----------------------------------------------------------------------------
 
 ;; Das was der user angezeigt bekommt
 (defmulti ^:private step
