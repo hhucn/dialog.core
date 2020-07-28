@@ -52,7 +52,7 @@
 
 (deftest argument-id-by-premise-conclusion-test
   (testing "See if the argument with corresponding premise and conclusion can be found"
-    (is (nil? (database/argument-id-by-premise-conclusion "not-here" "or-here either")))
+    (is (nil? (database/argument-id-by-premise-conclusion 123 1234)))
     (let [cat-or-dog-id (:db/id (first (database/all-discussions-by-title "Cat or Dog?")))
           any-argument (first (filter
                                 #(not= :argument.type/undercut (:argument/type %))
