@@ -235,13 +235,12 @@
         [?arguments-with-premise-content :argument/premises ?fitting-premises]]
       db argument-pattern content)))
 
-;; TODO test this fucker
 (>defn argument-id-by-premise-conclusion
   "Return the ID of an argument, which has at least the corresponding premise and
   conclusion. If multiple are applicable, return any of them."
   [premise-id conclusion-id]
   [number? number?
-   :ret number?]
+   :ret (s/nilable number?)]
   (:db/id
     (first
       (query-arguments
