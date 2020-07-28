@@ -11,10 +11,10 @@
   [(s/coll-of ::models/argument)
    :ret (s/coll-of ::models/statement)]
   (flatten
-    (map
-      #(assoc (:argument/premises %) :meta/argument.type (:argument/type %))
-      arguments)))
-
+    (map (fn [args]
+           (map (fn [premise] (assoc premise :meta/argument.type (:argument/type args)))
+                (:argument/premises args)))
+         arguments)))
 
 ;; -----------------------------------------------------------------------------
 
