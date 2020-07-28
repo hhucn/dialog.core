@@ -128,7 +128,7 @@
   [_step {:keys [new/rebut-premise conclusion/chosen discussion/id user/nickname] :as args}]
   (let [new-argument-id (database/attack-statement! id nickname chosen rebut-premise)]
     (database/set-argument-as-starting! id new-argument-id))
-  [:react-or-select (dissoc args :new/rebut-premise)])
+  [:react-or-select-after-addition (dissoc args :new/rebut-premise)])
 
 
 ;; -----------------------------------------------------------------------------
@@ -168,7 +168,7 @@
   ;; :undercut/argument-id of the map.
   [_step {:keys [new/undercut discussion/id user/nickname undercut/argument-id] :as args}]
   (database/undercut-argument! id nickname {:db/id argument-id} [undercut])
-  [:react-or-select (dissoc args :undercut/argument-id :new/undercut)])
+  [:react-or-select-after-addition (dissoc args :undercut/argument-id :new/undercut)])
 
 ;; -----------------------------------------------------------------------------
 ;; Comfort Functions
