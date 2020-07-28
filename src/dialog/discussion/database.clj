@@ -439,7 +439,7 @@
   argument type to represent a generic argument construction function."
   [discussion-id author-nickname argument premises argument-type]
   [number? :author/nickname ::models/argument :argument/premises :argument/type
-   :ret map?]
+   :ret associative?]
   (let [premise-ids (map :db/id (:argument/premises argument))
         new-arguments (for [premise-id premise-ids]
                         {:argument/author [:author/nickname author-nickname]
@@ -482,7 +482,7 @@
   "Adds new statements support the argument's premises."
   [discussion-id author-nickname argument premises]
   [number? :author/nickname (s/keys :req [:argument/premises]) :argument/premises
-   :ret map?]
+   :ret associative?]
   (new-premises-for-argument! discussion-id author-nickname argument premises :argument.type/support))
 
 (>defn support-statement!
@@ -507,7 +507,7 @@
   "Attack the argument's premises with own statements."
   [discussion-id author-nickname argument premises]
   [number? :author/nickname (s/keys :req [:argument/premises]) :argument/premises
-   :ret map?]
+   :ret associative?]
   (new-premises-for-argument! discussion-id author-nickname argument premises :argument.type/attack))
 
 (>defn rebut-argument!
@@ -553,7 +553,7 @@
   "Creates a new starting argument in a discussion."
   [discussion-id author-nickname conclusion premises]
   [number? :author/nickname :statement/content (s/coll-of :statement/content)
-   :ret map?]
+   :ret associative?]
   (let [new-argument (prepare-new-argument discussion-id author-nickname conclusion premises "add/starting-argument")
         temporary-id (:db/id new-argument)]
     (transact [new-argument
@@ -562,7 +562,7 @@
 (>defn set-argument-as-starting!
   "Sets an existing argument as a starting-argument."
   [discussion-id argument-id]
-  [number? number? :ret map?]
+  [number? number? :ret associative?]
   (transact [[:db/add discussion-id :discussion/starting-arguments argument-id]]))
 
 (comment
