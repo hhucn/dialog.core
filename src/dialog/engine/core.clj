@@ -82,7 +82,7 @@
   ;; reactions the user can take for that.
   [_step {:keys [conclusion/chosen] :as args}]
   (let [arguments-to-select (database/all-arguments-for-conclusion (:db/id chosen))
-        premises-to-select (map :argument/premises arguments-to-select)]
+        premises-to-select (flatten (map :argument/premises arguments-to-select))]
     ;; Add premises existing for chosen conclusion. Also keep the chosen conclusion
     ;; to properly create new attacks / supports.
     [:react-or-select-starting (-> args
@@ -124,7 +124,7 @@
   ;; A selected undercut has a normal statement as premise and the flow continues unabated.
   [_step {:keys [premise/chosen] :as args}]
   (let [arguments-to-select (database/all-arguments-for-conclusion (:db/id chosen))
-        premises-to-select (map :argument/premises arguments-to-select)
+        premises-to-select (flatten (map :argument/premises arguments-to-select))
         undercuts-to-select (map first (database/statements-undercutting-premise (:db/id chosen)))]
     [:react-or-select (-> args
                           (dissoc :present/conclusions)
