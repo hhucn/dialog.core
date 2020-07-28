@@ -121,14 +121,14 @@
   [_step {:keys [new/support-premise conclusion/chosen discussion/id user/nickname] :as args}]
   (let [new-argument-id (database/support-statement! id nickname chosen support-premise)]
     (database/set-argument-as-starting! id new-argument-id))
-  [:react-or-select-after-addition (dissoc args :new/support-premise)])
+  [:react-or-select-starting (dissoc args :new/support-premise)])
 
 (defmethod react :starting-rebut/new
   ;; The user has chosen to attack the shown conclusion with their own premise.
   [_step {:keys [new/rebut-premise conclusion/chosen discussion/id user/nickname] :as args}]
   (let [new-argument-id (database/attack-statement! id nickname chosen rebut-premise)]
     (database/set-argument-as-starting! id new-argument-id))
-  [:react-or-select-after-addition (dissoc args :new/rebut-premise)])
+  [:react-or-select-starting (dissoc args :new/rebut-premise)])
 
 
 ;; -----------------------------------------------------------------------------
