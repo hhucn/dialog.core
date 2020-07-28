@@ -51,4 +51,4 @@
   (testing "Find all conclusions given a certain conclusion-id."
     (let [starting-arguments (:discussion/starting-arguments (first (database/all-discussions-by-title "Cat or Dog?")))
           any-conclusion-id (:db/id (:argument/conclusion (first starting-arguments)))]
-      (is (< 0 (count (engine/premises-for-conclusion-id any-conclusion-id)))))))
+      (is (< 0 (count (@#'engine/premises-for-conclusion-id any-conclusion-id)))))))
