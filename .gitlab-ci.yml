@@ -4,22 +4,29 @@ stages:
   - report
   - deploy
 
-before_script:
-  - wget $DOWNLOAD_DEV_LOCAL
-  - mkdir -p local_jars/dev-local/
-  - mv dev-local.jar local_jars/dev-local
+.add-dev-local: &add-dev-local
+  before_script:
+    - wget $DOWNLOAD_DEV_LOCAL
+    - mkdir -p local_jars/dev-local/
+    - mv dev-local.jar local_jars/dev-local
+
+
+# ------------------------------------------------------------------------------
+# Stage "test"
 
 test:
   image: clojure:openjdk-14-tools-deps-alpine
+  <<: *add-dev-local
   script:
     - clojure -A:test
   artifacts:
     paths:
-      - target/coverage/lcov.info
+      - target/coverage/
     expire_in: 1 hour
 
 lint:
   image: clojure:openjdk-14-tools-deps-alpine
+  <<: *add-dev-local
   script:
     - clojure -A:clj-kondo --lint src
   allow_failure: true
@@ -27,16 +34,36 @@ lint:
 
 up-to-date?:
   image: clojure:openjdk-14-tools-deps-alpine
+  <<: *add-dev-local
   script:
     - clojure -A:ancient
   allow_failure: true
   when: always
 
+
+# ------------------------------------------------------------------------------
+# Stage "reports"
+
 coverage-report:
   image: python:3-alpine
   stage: report
+  dependencies:
+    - test
   script:
     - wget -O - https://s3.cs.hhu.de/dialogo-ci/lcov_cobertura.py | python3 - target/coverage/lcov.info --output target/coverage/coverage.xml
   artifacts:
     reports:
       cobertura: target/coverage/coverage.xml
+
+pages:
+  stage: report
+  dependencies:
+    - test
+  script:
+    - mv target/coverage/ public/
+  artifacts:
+    paths:
+      - public
+    expire_in: 30 days
+#  only:
+#    - master
