@@ -540,7 +540,7 @@
   "Undercut an argument and store it to the database."
   [discussion-id author-nickname {:keys [db/id]} premises]
   [number? :author/nickname (s/keys :req [:db/id]) :argument/premises
-   :ret map?]
+   :ret associative?]
   (transact
     [{:argument/author [:author/nickname author-nickname]
       :argument/premises (pack-premises premises author-nickname)

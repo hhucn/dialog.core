@@ -45,22 +45,25 @@
   ;; The user can either select another premise for the current conclusion to discuss
   ;; or react with their own premise to the current conclusion.
   ;; Also show all undercuts, which undercut an argument with the chosen premise as a premise.
-  [_step {:keys [premise/chosen] :as args}]
+  [_step {:keys [premise/chosen statement/selected] :as args}]
   ;; First go one step further, by setting the last premise as the next conclusion
   ;; This way the next chosen premise is still correctly matching it.
-  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))
-        undercuts-to-select (map first (database/statements-undercutting-premise (:db/id chosen)))
-        select-args
-        (-> args
-            (assoc :conclusion/chosen (:premise/chosen args)
-                   :present/undercuts undercuts-to-select
-                   :present/premises premises-to-select)
-            (dissoc :premise/chosen))
+  ;; If premise/chosen has never been set it needs to be done once.
+  (let [premises-to-select (premises-for-conclusion-id (:db/id selected))
+        undercuts-to-select (map first (database/statements-undercutting-premise (:db/id selected)))
+        raw-react-select-args (assoc (dissoc args :statement/selected)
+                                :premise/chosen selected
+                                :present/undercuts undercuts-to-select
+                                :present/premises premises-to-select)
+        ;; Rotate premise back if it exists, otherwise just set the selected as premise and leave conclusion
+        select-args (if chosen
+                      (assoc raw-react-select-args :conclusion/chosen chosen)
+                      raw-react-select-args)
         ;; Only rotate premise and conclusion in case of a new selected premise.
-        add-premise-args (dissoc args :present/premises :present/undercuts)
+        add-premise-args (dissoc select-args :present/premises :present/undercuts)
         ;; Get the id of the argument which can be undercut.
         undercut-id (database/argument-id-by-premise-conclusion
-                      (:db/id (:premise/chosen args))
+                      (:db/id (or chosen selected))
                       (:db/id (:conclusion/chosen args)))]
     [[:premises/select select-args]
      [:support/new add-premise-args]
@@ -90,10 +93,13 @@
 (defmethod step :react-or-select-starting
   ;; The user can either select another premise for the current conclusion to discuss
   ;; or react with their own premise to the current conclusion.
-  [_step {:keys [conclusion/chosen] :as args}]
-  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))
-        select-args (assoc args :present/premises premises-to-select)
-        add-premise-args (dissoc args :present/premises)]
+  [_step {:keys [statement/selected conclusion/chosen] :as args}]
+  (let [chosen (or chosen selected)
+        ;; In the case the user comes from a fresh start, selected is set as the chosen conclusion
+        premises-to-select (premises-for-conclusion-id (:db/id chosen))
+        temp-args (assoc (dissoc args :statement/selected) :conclusion/chosen chosen)
+        select-args (assoc temp-args :present/premises premises-to-select)
+        add-premise-args (dissoc temp-args :present/premises)]
     [[:premises/select select-args]
      [:starting-support/new add-premise-args]
      [:starting-rebut/new add-premise-args]]))
@@ -123,8 +129,8 @@
 (defmethod react :starting-conclusions/select
   ;; User has seen all starting arguments and now selected one. Present appropriate
   ;; reactions the user can take for that.
-  [_step {:keys [conclusion/chosen] :as args}]
-  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))]
+  [_step {:keys [statement/selected] :as args}]
+  (let [premises-to-select (premises-for-conclusion-id (:db/id selected))]
     ;; Add premises existing for chosen conclusion. Also keep the chosen conclusion
     ;; to properly create new attacks / supports.
     [:react-or-select-starting (-> args
@@ -136,7 +142,7 @@
   ;; discussion flow is reset.
   [_step {:keys [discussion/id user/nickname new/starting-argument-conclusion new/starting-argument-premises]
           :as args}]
-  (database/add-new-starting-argument! id nickname starting-argument-conclusion starting-argument-premises)
+  (database/add-new-starting-argument! id nickname starting-argument-conclusion [starting-argument-premises])
   [:discussion/start (dissoc args
                              :new/starting-argument-conclusion
                              :new/starting-argument-premises)])
@@ -214,35 +220,45 @@
 ;; -----------------------------------------------------------------------------
 
 (comment
-  (database/all-discussions-by-title "Cat or Dog?")
+  (:db/id (first (database/all-discussions-by-title "Cat or Dog?")))
   (start-discussion {:user/nickname "Wegi"
-                     :discussion/id 79164837200013})
+                     :discussion/id 96757023244429})
+  (continue-discussion
+    :starting-argument/new
+    {:user/nickname "Wegi", :discussion/id 96757023244429
+     ;; gesetzt
+     :new/starting-argument-conclusion "Ich will eine Schildkröte."
+     :new/starting-argument-premises "Schildkrötenpanzer sind Hella stark."})
   (continue-discussion
     :starting-conclusions/select
     {:user/nickname "Wegi",
-     :discussion/id 79164837200013,
-     :present/conclusions '({:db/id 79164837199963,
+     :discussion/id 96757023244429,
+     :present/conclusions '({:db/id 83562883711120,
+                             :statement/content "Ich will eine Schildkröte.",
+                             :statement/version 1,
+                             :statement/author #:author{:nickname "Wegi"}}
+                            {:db/id 96757023244379,
                              :statement/content "we should get a dog",
                              :statement/version 1,
                              :statement/author #:author{:nickname "Wegi"}}
-                            {:db/id 79164837199965,
+                            {:db/id 96757023244381,
                              :statement/content "we could get both, a dog and a cat",
                              :statement/version 1,
                              :statement/author #:author{:nickname "Christian"}}
-                            {:db/id 79164837199964,
+                            {:db/id 96757023244380,
                              :statement/content "we should get a cat",
                              :statement/version 1,
                              :statement/author #:author{:nickname "Der Schredder"}})
-     ;; Selbst gesetzt
-     :conclusion/chosen {:db/id 79164837199963,
-                         :statement/content "we should get a dog",
-                         :statement/version 1,
-                         :statement/author #:author{:nickname "Wegi"}}})
+     ;; gesetzt
+     :statement/selected {:db/id 96757023244379,
+                          :statement/content "we should get a dog",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Wegi"}}})
   (continue-discussion
     :starting-support/new
     {:user/nickname "Wegi",
-     :discussion/id 79164837200013,
-     :conclusion/chosen {:db/id 79164837199963,
+     :discussion/id 96757023244429,
+     :conclusion/chosen {:db/id 96757023244379,
                          :statement/content "we should get a dog",
                          :statement/version 1,
                          :statement/author #:author{:nickname "Wegi"}}
@@ -251,77 +267,76 @@
   (continue-discussion
     :premises/select
     {:user/nickname "Wegi",
-     :discussion/id 79164837200013,
-     :conclusion/chosen {:db/id 79164837199963,
+     :discussion/id 96757023244429,
+     :conclusion/chosen {:db/id 96757023244379,
                          :statement/content "we should get a dog",
                          :statement/version 1,
                          :statement/author #:author{:nickname "Wegi"}},
-     :present/premises '({:db/id 79164837199967,
+     :present/premises '({:db/id 96757023244383,
                           :statement/content "dogs can act as watchdogs",
                           :statement/version 1,
                           :statement/author #:author{:nickname "Wegi"},
                           :meta/argument.type :argument.type/support}
-                         {:db/id 79164837199969,
+                         {:db/id 96757023244385,
                           :statement/content "you have to take the dog for a walk every day, which is tedious",
                           :statement/version 1,
                           :statement/author #:author{:nickname "Der Schredder"},
                           :meta/argument.type :argument.type/attack}
-                         {:db/id 87960930222222,
+                         {:db/id 96757023244433,
                           :statement/content "Hunde sind einfach die knuffigsten",
                           :statement/version 1,
                           :statement/author #:author{:nickname "Wegi"},
                           :meta/argument.type :argument.type/support})
      ;; Selbst gesetzt
-     :premise/chosen {:db/id 79164837199967,
-                      :statement/content "dogs can act as watchdogs",
-                      :statement/version 1,
-                      :statement/author #:author{:nickname "Wegi"},
-                      :meta/argument.type :argument.type/support}})
+     :statement/selected {:db/id 96757023244383,
+                          :statement/content "dogs can act as watchdogs",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Wegi"},
+                          :meta/argument.type :argument.type/support}})
   (continue-discussion
     :support/new
     {:user/nickname "Wegi",
-     :discussion/id 79164837200013,
-     :conclusion/chosen {:db/id 79164837199963,
+     :discussion/id 96757023244429,
+     :conclusion/chosen {:db/id 96757023244379,
                          :statement/content "we should get a dog",
                          :statement/version 1,
                          :statement/author #:author{:nickname "Wegi"}},
-     :premise/chosen {:db/id 79164837199967,
+     :premise/chosen {:db/id 96757023244383,
                       :statement/content "dogs can act as watchdogs",
                       :statement/version 1,
                       :statement/author #:author{:nickname "Wegi"},
                       :meta/argument.type :argument.type/support}
      ;; Selbst gesetzt
      :new/support "Jaaa, Einbrecher haben tierische Angst vor Hunden"})
-  ;; TODO die rotation in select-or-react-after-add oder so muss wohl auch laufen.
-  ;; sonst überschreiben wir einfach nur die premise und lassen die conclusion stehen
-  ;; solange wir was neues einfügen.
-  ;; Andersrum kann es aber sein dass wir eventuell bei mehrmaligem hinzufügen nacheinander
-  ;; zu sehr rotieren und nil irgendwo rein schieben.
   (continue-discussion
-    :premises/select
+    :rebut/new
     {:user/nickname "Wegi",
-     :discussion/id 79164837200013,
-     :conclusion/chosen {:db/id 79164837199963,
+     :discussion/id 96757023244429,
+     :conclusion/chosen {:db/id 96757023244379,
                          :statement/content "we should get a dog",
                          :statement/version 1,
                          :statement/author #:author{:nickname "Wegi"}},
-     #_:premise/chosen #_{:db/id 79164837199967,
-                          :statement/content "dogs can act as watchdogs",
-                          :statement/version 1,
-                          :statement/author #:author{:nickname "Wegi"},
-                          :meta/argument.type :argument.type/support},
-     :present/premises '({:db/id 83562883711119,
-                          :statement/content "Jaaa, einbrecher haben tierische Angst vor Hunden",
-                          :statement/version 1,
-                          :statement/author #:author{:nickname "Wegi"},
-                          :meta/argument.type :argument.type/support}),
-     :present/undercuts '({:db/id 79164837199971,
-                           :statement/content "we have no use for a watchdog",
-                           :statement/version 1,
-                           :statement/author #:author{:nickname "Der miese Peter"}})
-     ;; Selbst gesetzt
-     :premise/chosen {:db/id 79164837199971,
-                      :statement/content "we have no use for a watchdog",
+     :premise/chosen {:db/id 96757023244383,
+                      :statement/content "dogs can act as watchdogs",
                       :statement/version 1,
-                      :statement/author #:author{:nickname "Der miese Peter"}}})
+                      :statement/author #:author{:nickname "Wegi"},
+                      :meta/argument.type :argument.type/support}
+     ;; gesetzt
+     :new/rebut "Viele Hunde sind dafür gar nicht geeignet"})
+  (continue-discussion
+    :undercut/new
+    {:user/nickname "Wegi",
+     :discussion/id 96757023244429,
+     :conclusion/chosen {:db/id 96757023244379,
+                         :statement/content "we should get a dog",
+                         :statement/version 1,
+                         :statement/author #:author{:nickname "Wegi"}},
+     :premise/chosen {:db/id 96757023244383,
+                      :statement/content "dogs can act as watchdogs",
+                      :statement/version 1,
+                      :statement/author #:author{:nickname "Wegi"},
+                      :meta/argument.type :argument.type/support},
+     :undercut/argument-id 96757023244382
+     ;; gesetzt
+     :new/undercut "Was hat eine Funktion mit einem Haustier zu tun?"})
   :end)
