@@ -48,10 +48,13 @@
   [_step {:keys [premise/chosen] :as args}]
   ;; First go one step further, by setting the last premise as the next conclusion
   ;; This way the next chosen premise is still correctly matching it.
-  (let [select-args
+  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))
+        undercuts-to-select (map first (database/statements-undercutting-premise (:db/id chosen)))
+        select-args
         (-> args
             (assoc :conclusion/chosen (:premise/chosen args)
-                   :present/undercuts (map first (database/statements-undercutting-premise (:db/id chosen))))
+                   :present/undercuts undercuts-to-select
+                   :present/premises premises-to-select)
             (dissoc :premise/chosen))
         ;; Only rotate premise and conclusion in case of a new selected premise.
         add-premise-args (dissoc args :present/premises :present/undercuts)
@@ -69,8 +72,11 @@
   ;; or react with their own premise to the current conclusion.
   [_step {:keys [premise/chosen] :as args}]
   ;; Do not go one step forward, because a new premise / undercut has been added.
-  (let [select-args
-        (assoc args :present/undercuts (map first (database/statements-undercutting-premise (:db/id chosen))))
+  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))
+        undercuts-to-select (map first (database/statements-undercutting-premise (:db/id chosen)))
+        select-args (assoc args
+                      :present/premises premises-to-select
+                      :present/undercuts undercuts-to-select)
         add-premise-args (dissoc args :present/premises :present/undercuts)
         ;; Get the id of the argument which can be undercut.
         undercut-id (database/argument-id-by-premise-conclusion
@@ -84,9 +90,11 @@
 (defmethod step :react-or-select-starting
   ;; The user can either select another premise for the current conclusion to discuss
   ;; or react with their own premise to the current conclusion.
-  [_step args]
-  (let [add-premise-args (dissoc args :present/premises)]
-    [[:premises/select args]
+  [_step {:keys [conclusion/chosen] :as args}]
+  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))
+        select-args (assoc args :present/premises premises-to-select)
+        add-premise-args (dissoc args :present/premises)]
+    [[:premises/select select-args]
      [:starting-support/new add-premise-args]
      [:starting-rebut/new add-premise-args]]))
 
@@ -139,29 +147,23 @@
   [_step {:keys [new/support-premise conclusion/chosen discussion/id user/nickname] :as args}]
   (let [new-argument-id (database/support-statement! id nickname chosen support-premise)]
     (database/set-argument-as-starting! id new-argument-id)
-    [:react-or-select-starting
-     (assoc (dissoc args :new/support-premise) :present/premises (premises-for-conclusion-id (:db/id chosen)))]))
+    [:react-or-select-starting (dissoc args :new/support-premise)]))
 
 (defmethod react :starting-rebut/new
   ;; The user has chosen to attack the shown conclusion with their own premise.
   [_step {:keys [new/rebut-premise conclusion/chosen discussion/id user/nickname] :as args}]
   (let [new-argument-id (database/attack-statement! id nickname chosen rebut-premise)]
     (database/set-argument-as-starting! id new-argument-id)
-    [:react-or-select-starting
-     (assoc (dissoc args :new/rebut-premise) :present/premises (premises-for-conclusion-id (:db/id chosen)))]))
+    [:react-or-select-starting (dissoc args :new/rebut-premise)]))
 
 
 ;; -----------------------------------------------------------------------------
 ;; Selections
 (defmethod react :premises/select
-  ;; User has selected a premise to some argument. Show all premises that have the
-  ;; selected premise as a conclusion.
+  ;; User has selected a premise to some argument.
   ;; A selected undercut has a normal statement as premise and the flow continues unabated.
-  [_step {:keys [premise/chosen] :as args}]
-  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))]
-    [:react-or-select (-> args
-                          (dissoc :present/conclusions)
-                          (assoc :present/premises premises-to-select))]))
+  [_step args]
+  [:react-or-select (dissoc args :present/conclusions)])
 
 ;; -----------------------------------------------------------------------------
 ;; New Premises
@@ -170,27 +172,21 @@
   ;; The user has chosen to support the shown conclusion with their own premise.
   [_step {:keys [new/support premise/chosen discussion/id user/nickname] :as args}]
   (database/support-statement! id nickname chosen support)
-  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))]
-    [:react-or-select-after-addition
-     (assoc (dissoc args :new/support) :present/premises premises-to-select)]))
+  [:react-or-select-after-addition (dissoc args :new/support)])
 
 (defmethod react :rebut/new
   ;; The user has chosen to attack the shown conclusion with their own premise.
   [_step {:keys [new/rebut premise/chosen discussion/id user/nickname] :as args}]
   (database/attack-statement! id nickname chosen rebut)
-  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))]
-    [:react-or-select-after-addition
-     (assoc (dissoc args :new/rebut) :present/premises premises-to-select)]))
+  [:react-or-select-after-addition (dissoc args :new/rebut)])
 
 (defmethod react :undercut/new
   ;; The user has chosen to attack the relation between the chosen premise and its previously
   ;; chosen conclusion. The argument-id of the argument that constitutes this is saved in
   ;; :undercut/argument-id of the map.
-  [_step {:keys [new/undercut discussion/id user/nickname undercut/argument-id premise/chosen] :as args}]
+  [_step {:keys [new/undercut discussion/id user/nickname undercut/argument-id] :as args}]
   (database/undercut-argument! id nickname {:db/id argument-id} [undercut])
-  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))]
-    [:react-or-select-after-addition
-     (assoc (dissoc args :undercut/argument-id :new/undercut) :present/premises premises-to-select)]))
+  [:react-or-select-after-addition (dissoc args :undercut/argument-id :new/undercut)])
 
 ;; -----------------------------------------------------------------------------
 ;; Comfort Functions
