@@ -216,33 +216,33 @@
 (comment
   (database/all-discussions-by-title "Cat or Dog?")
   (start-discussion {:user/nickname "Wegi"
-                     :discussion/id 83562883711117})
+                     :discussion/id 79164837200013})
   (continue-discussion
     :starting-conclusions/select
     {:user/nickname "Wegi",
-     :discussion/id 83562883711117,
-     :present/conclusions '({:db/id 83562883711067,
+     :discussion/id 79164837200013,
+     :present/conclusions '({:db/id 79164837199963,
                              :statement/content "we should get a dog",
                              :statement/version 1,
                              :statement/author #:author{:nickname "Wegi"}}
-                            {:db/id 83562883711069,
+                            {:db/id 79164837199965,
                              :statement/content "we could get both, a dog and a cat",
                              :statement/version 1,
                              :statement/author #:author{:nickname "Christian"}}
-                            {:db/id 83562883711068,
+                            {:db/id 79164837199964,
                              :statement/content "we should get a cat",
                              :statement/version 1,
                              :statement/author #:author{:nickname "Der Schredder"}})
      ;; Selbst gesetzt
-     :conclusion/chosen {:db/id 83562883711067,
+     :conclusion/chosen {:db/id 79164837199963,
                          :statement/content "we should get a dog",
                          :statement/version 1,
                          :statement/author #:author{:nickname "Wegi"}}})
   (continue-discussion
     :starting-support/new
     {:user/nickname "Wegi",
-     :discussion/id 83562883711117,
-     :conclusion/chosen {:db/id 83562883711067,
+     :discussion/id 79164837200013,
+     :conclusion/chosen {:db/id 79164837199963,
                          :statement/content "we should get a dog",
                          :statement/version 1,
                          :statement/author #:author{:nickname "Wegi"}}
@@ -251,28 +251,28 @@
   (continue-discussion
     :premises/select
     {:user/nickname "Wegi",
-     :discussion/id 83562883711117,
-     :conclusion/chosen {:db/id 83562883711067,
+     :discussion/id 79164837200013,
+     :conclusion/chosen {:db/id 79164837199963,
                          :statement/content "we should get a dog",
                          :statement/version 1,
                          :statement/author #:author{:nickname "Wegi"}},
-     :present/premises '({:db/id 74766790688910,
-                          :statement/content "Hunde sind einfach die knuffigsten",
-                          :statement/version 1,
-                          :statement/author #:author{:nickname "Wegi"},
-                          :meta/argument.type :argument.type/support}
-                         {:db/id 83562883711071,
+     :present/premises '({:db/id 79164837199967,
                           :statement/content "dogs can act as watchdogs",
                           :statement/version 1,
                           :statement/author #:author{:nickname "Wegi"},
                           :meta/argument.type :argument.type/support}
-                         {:db/id 83562883711073,
+                         {:db/id 79164837199969,
                           :statement/content "you have to take the dog for a walk every day, which is tedious",
                           :statement/version 1,
                           :statement/author #:author{:nickname "Der Schredder"},
-                          :meta/argument.type :argument.type/attack})
+                          :meta/argument.type :argument.type/attack}
+                         {:db/id 87960930222222,
+                          :statement/content "Hunde sind einfach die knuffigsten",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Wegi"},
+                          :meta/argument.type :argument.type/support})
      ;; Selbst gesetzt
-     :premise/chosen {:db/id 83562883711071,
+     :premise/chosen {:db/id 79164837199967,
                       :statement/content "dogs can act as watchdogs",
                       :statement/version 1,
                       :statement/author #:author{:nickname "Wegi"},
@@ -280,16 +280,48 @@
   (continue-discussion
     :support/new
     {:user/nickname "Wegi",
-     :discussion/id 83562883711117,
-     :conclusion/chosen {:db/id 83562883711067,
+     :discussion/id 79164837200013,
+     :conclusion/chosen {:db/id 79164837199963,
                          :statement/content "we should get a dog",
                          :statement/version 1,
                          :statement/author #:author{:nickname "Wegi"}},
-     :premise/chosen {:db/id 83562883711071,
+     :premise/chosen {:db/id 79164837199967,
                       :statement/content "dogs can act as watchdogs",
                       :statement/version 1,
                       :statement/author #:author{:nickname "Wegi"},
                       :meta/argument.type :argument.type/support}
      ;; Selbst gesetzt
-     :new/support "Jaaa, einbrecher haben tierische Angst vor Hunden"})
+     :new/support "Jaaa, Einbrecher haben tierische Angst vor Hunden"})
+  ;; TODO die rotation in select-or-react-after-add oder so muss wohl auch laufen.
+  ;; sonst überschreiben wir einfach nur die premise und lassen die conclusion stehen
+  ;; solange wir was neues einfügen.
+  ;; Andersrum kann es aber sein dass wir eventuell bei mehrmaligem hinzufügen nacheinander
+  ;; zu sehr rotieren und nil irgendwo rein schieben.
+  (continue-discussion
+    :premises/select
+    {:user/nickname "Wegi",
+     :discussion/id 79164837200013,
+     :conclusion/chosen {:db/id 79164837199963,
+                         :statement/content "we should get a dog",
+                         :statement/version 1,
+                         :statement/author #:author{:nickname "Wegi"}},
+     #_:premise/chosen #_{:db/id 79164837199967,
+                          :statement/content "dogs can act as watchdogs",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Wegi"},
+                          :meta/argument.type :argument.type/support},
+     :present/premises '({:db/id 83562883711119,
+                          :statement/content "Jaaa, einbrecher haben tierische Angst vor Hunden",
+                          :statement/version 1,
+                          :statement/author #:author{:nickname "Wegi"},
+                          :meta/argument.type :argument.type/support}),
+     :present/undercuts '({:db/id 79164837199971,
+                           :statement/content "we have no use for a watchdog",
+                           :statement/version 1,
+                           :statement/author #:author{:nickname "Der miese Peter"}})
+     ;; Selbst gesetzt
+     :premise/chosen {:db/id 79164837199971,
+                      :statement/content "we have no use for a watchdog",
+                      :statement/version 1,
+                      :statement/author #:author{:nickname "Der miese Peter"}}})
   :end)
