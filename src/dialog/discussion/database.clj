@@ -235,16 +235,21 @@
         [?arguments-with-premise-content :argument/premises ?fitting-premises]]
       db argument-pattern content)))
 
-(defn argument-id-by-premise-conclusion
+;; TODO test this fucker
+(>defn argument-id-by-premise-conclusion
   "Return the ID of an argument, which has at least the corresponding premise and
   conclusion. If multiple are applicable, return any of them."
   [premise-id conclusion-id]
-  (first (query-arguments
-           '[:find (pull ?argument argument-pattern)
-             :in $ argument-pattern ?premise-id ?conclusion-id
-             :where [?argument :argument/premises ?premise-id]
-             [?argument :argument/conclusion ?conclusion-id]]
-           premise-id conclusion-id)))
+  [number? number?
+   :ret number?]
+  (:db/id
+    (first
+      (query-arguments
+        '[:find (pull ?argument argument-pattern)
+          :in $ argument-pattern ?premise-id ?conclusion-id
+          :where [?argument :argument/premises ?premise-id]
+          [?argument :argument/conclusion ?conclusion-id]]
+        premise-id conclusion-id))))
 
 (defn statements-undercutting-premise
   "Return all statements that are used to undercut an argument where `premise`
@@ -399,7 +404,7 @@
 (>defn- pack-premises
   "Packs premises into a statement-structure."
   [premises author-nickname]
-  [(s/coll-of :argument/premises) :author/nickname
+  [(s/coll-of :statement/content) :author/nickname
    :ret (s/coll-of map?)]
   (mapv (fn [premise] {:db/id premise
                        :statement/author [:author/nickname author-nickname]
@@ -410,13 +415,13 @@
 (>defn- prepare-new-argument
   "Prepares a new argument for transaction. Optionally sets a temporary id."
   ([discussion-id author-nickname conclusion premises temporary-id]
-   [number? :author/nickname :argument/conclusion :argument/premises :db/id
+   [number? :author/nickname :statement/content (s/coll-of :statement/content) :db/id
     :ret map?]
    (merge
      (prepare-new-argument discussion-id author-nickname conclusion premises)
      {:db/id temporary-id}))
   ([discussion-id author-nickname conclusion premises]
-   [number? :author/nickname :argument/conclusion :argument/premises
+   [number? :author/nickname :statement/content (s/coll-of :statement/content)
     :ret map?]
    {:argument/author [:author/nickname author-nickname]
     :argument/premises (pack-premises premises author-nickname)
@@ -547,7 +552,7 @@
 (>defn add-new-starting-argument!
   "Creates a new starting argument in a discussion."
   [discussion-id author-nickname conclusion premises]
-  [number? :author/nickname :argument/conclusion :argument/premises
+  [number? :author/nickname :statement/content (s/coll-of :statement/content)
    :ret map?]
   (let [new-argument (prepare-new-argument discussion-id author-nickname conclusion premises "add/starting-argument")
         temporary-id (:db/id new-argument)]
