@@ -63,13 +63,13 @@
     (.mkdir dir)
     (.getAbsolutePath dir)))
 
-;;TODO test this shit
 (>defn args-for-step
   "Given a vector of `continue-steps` and a `step` returns the corresponding arguments."
   [continue-steps step]
   [vector? keyword?
    :ret map?]
-  (let [steps (map first continue-steps)
-        args (map second continue-steps)
-        idx (.indexOf steps step)]
-    (nth args idx)))
+  (when (seq continue-steps)
+    (let [steps (map first continue-steps)
+          args (map second continue-steps)
+          idx (.indexOf steps step)]
+      (nth args idx))))
