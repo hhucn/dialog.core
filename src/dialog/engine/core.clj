@@ -1,7 +1,7 @@
 (ns dialog.engine.core
   (:require [dialog.discussion.database :as database]
             [clojure.spec.alpha :as s]
-            [ghostwheel.core :refer [>defn >defn-]]
+            [ghostwheel.core :refer [>defn-]]
             [dialog.discussion.models :as models]))
 
 (>defn- build-meta-premises
