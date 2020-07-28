@@ -451,7 +451,8 @@
   [number? :author/nickname number? :statement/content :argument/type
    :ret nil?]
   (let [new-arguments
-        [{:argument/author [:author/nickname author-nickname]
+        [{:db/id new-statement-string
+          :argument/author [:author/nickname author-nickname]
           :argument/premises (pack-premises [new-statement-string] author-nickname)
           :argument/conclusion new-conclusion-id
           :argument/version 1
