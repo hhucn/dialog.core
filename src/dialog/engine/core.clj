@@ -16,6 +16,13 @@
                 (:argument/premises args)))
          arguments)))
 
+(>defn- premises-for-conclusion-id
+  "Builds all meta-premises for a given conclusion."
+  [conclusion-id]
+  [number?
+   :ret (s/coll-of ::models/statement)]
+  (build-meta-premises (database/all-arguments-for-conclusion conclusion-id)))
+
 ;; -----------------------------------------------------------------------------
 
 ;; Das was der user angezeigt bekommt
@@ -97,8 +104,7 @@
   ;; User has seen all starting arguments and now selected one. Present appropriate
   ;; reactions the user can take for that.
   [_step {:keys [conclusion/chosen] :as args}]
-  (let [arguments-to-select (database/all-arguments-for-conclusion (:db/id chosen))
-        premises-to-select (build-meta-premises arguments-to-select)]
+  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))]
     ;; Add premises existing for chosen conclusion. Also keep the chosen conclusion
     ;; to properly create new attacks / supports.
     [:react-or-select-starting (-> args
@@ -119,16 +125,18 @@
 (defmethod react :starting-support/new
   ;; The user has chosen to support the shown starting conclusion with their own premise.
   [_step {:keys [new/support-premise conclusion/chosen discussion/id user/nickname] :as args}]
-  (let [new-argument-id (database/support-statement! id nickname chosen support-premise)]
-    (database/set-argument-as-starting! id new-argument-id))
-  [:react-or-select-starting (dissoc args :new/support-premise)])
+  (let [selected-premises (premises-for-conclusion-id (:db/id chosen))
+        new-argument-id (database/support-statement! id nickname chosen support-premise)]
+    (database/set-argument-as-starting! id new-argument-id)
+    [:react-or-select-starting (assoc (dissoc args :new/support-premise) :present/premises selected-premises)]))
 
 (defmethod react :starting-rebut/new
   ;; The user has chosen to attack the shown conclusion with their own premise.
   [_step {:keys [new/rebut-premise conclusion/chosen discussion/id user/nickname] :as args}]
-  (let [new-argument-id (database/attack-statement! id nickname chosen rebut-premise)]
-    (database/set-argument-as-starting! id new-argument-id))
-  [:react-or-select-starting (dissoc args :new/rebut-premise)])
+  (let [selected-premises (premises-for-conclusion-id (:db/id chosen))
+        new-argument-id (database/attack-statement! id nickname chosen rebut-premise)]
+    (database/set-argument-as-starting! id new-argument-id)
+    [:react-or-select-starting (assoc (dissoc args :new/rebut-premise) :present/premises selected-premises)]))
 
 
 ;; -----------------------------------------------------------------------------
@@ -139,8 +147,7 @@
   ;; which has the chosen premise as a premise.
   ;; A selected undercut has a normal statement as premise and the flow continues unabated.
   [_step {:keys [premise/chosen] :as args}]
-  (let [arguments-to-select (database/all-arguments-for-conclusion (:db/id chosen))
-        premises-to-select (build-meta-premises arguments-to-select)
+  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))
         undercuts-to-select (map first (database/statements-undercutting-premise (:db/id chosen)))]
     [:react-or-select (-> args
                           (dissoc :present/conclusions)
@@ -154,21 +161,27 @@
   ;; The user has chosen to support the shown conclusion with their own premise.
   [_step {:keys [new/support premise/chosen discussion/id user/nickname] :as args}]
   (database/support-statement! id nickname chosen support)
-  [:react-or-select-after-addition (dissoc args :new/support)])
+  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))]
+    [:react-or-select-after-addition
+     (assoc (dissoc args :new/support) :present/premises premises-to-select)]))
 
 (defmethod react :rebut/new
   ;; The user has chosen to attack the shown conclusion with their own premise.
   [_step {:keys [new/rebut premise/chosen discussion/id user/nickname] :as args}]
   (database/attack-statement! id nickname chosen rebut)
-  [:react-or-select-after-addition (dissoc args :new/rebut)])
+  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))]
+    [:react-or-select-after-addition
+     (assoc (dissoc args :new/rebut) :present/premises premises-to-select)]))
 
 (defmethod react :undercut/new
   ;; The user has chosen to attack the relation between the chosen premise and its previously
   ;; chosen conclusion. The argument-id of the argument that constitutes this is saved in
   ;; :undercut/argument-id of the map.
-  [_step {:keys [new/undercut discussion/id user/nickname undercut/argument-id] :as args}]
+  [_step {:keys [new/undercut discussion/id user/nickname undercut/argument-id premise/chosen] :as args}]
   (database/undercut-argument! id nickname {:db/id argument-id} [undercut])
-  [:react-or-select-after-addition (dissoc args :undercut/argument-id :new/undercut)])
+  (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))]
+    [:react-or-select-after-addition
+     (assoc (dissoc args :undercut/argument-id :new/undercut) :present/premises premises-to-select)]))
 
 ;; -----------------------------------------------------------------------------
 ;; Comfort Functions
@@ -205,4 +218,13 @@
 
   (react :starting-argument/select
          {:user/nickname "Christian", :discussion/id 17592186045477})
+  (database/all-discussions-by-title "Cat or Dog?")
+  (start-discussion {:user/nickname "Wegi"
+                     :discussion/id 87960930222221})
+  (continue-discussion
+    :starting-argument/new
+    {:user/nickname "Wegi", :discussion/id 87960930222221
+     :new/starting-argument-conclusion "Ich will zwei Hunde"
+     :new/starting-argument-premises ["Zwei ist besser als eins"]})
+
   :end)

@@ -1,6 +1,10 @@
 (ns dialog.engine.core-test
   (:require [clojure.test :refer [deftest use-fixtures testing is]]
-            [dialog.engine.core :as engine]))
+            [dialog.engine.core :as engine]
+            [dialog.test.toolbelt :as test-toolbelt]
+            [dialog.discussion.database :as database]))
+
+(use-fixtures :each test-toolbelt/init-db-test-fixture)
 
 (def ^:private two-test-arguments
   [{:db/id 92358976733280,
@@ -42,3 +46,9 @@
               :statement/author #:author{:nickname "Der Schredder"},
               :meta/argument.type :argument.type/support})
            (@#'engine/build-meta-premises two-test-arguments)))))
+
+(deftest premises-from-conclusion-id-test
+  (testing "Find all conclusions given a certain conclusion-id."
+    (let [starting-arguments (:discussion/starting-arguments (first (database/all-discussions-by-title "Cat or Dog?")))
+          any-conclusion-id (:db/id (:argument/conclusion (first starting-arguments)))]
+      (is (< 0 (count (engine/premises-for-conclusion-id any-conclusion-id)))))))
