@@ -1,6 +1,22 @@
 (ns dialog.engine.core
   (:require [dialog.discussion.database :as database]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [ghostwheel.core :refer [>defn-]]
+            [dialog.discussion.models :as models]))
+
+(>defn- build-meta-premises
+  "Builds a meta-premise with additional information for the frontend out of a
+  list of arguments."
+  [arguments]
+  [(s/coll-of ::models/argument)
+   :ret (s/coll-of ::models/statement)]
+  (flatten
+    (map (fn [args]
+           (map (fn [premise] (assoc premise :meta/argument.type (:argument/type args)))
+                (:argument/premises args)))
+         arguments)))
+
+;; -----------------------------------------------------------------------------
 
 ;; Das was der user angezeigt bekommt
 (defmulti ^:private step
@@ -82,7 +98,7 @@
   ;; reactions the user can take for that.
   [_step {:keys [conclusion/chosen] :as args}]
   (let [arguments-to-select (database/all-arguments-for-conclusion (:db/id chosen))
-        premises-to-select (map :argument/premises arguments-to-select)]
+        premises-to-select (build-meta-premises arguments-to-select)]
     ;; Add premises existing for chosen conclusion. Also keep the chosen conclusion
     ;; to properly create new attacks / supports.
     [:react-or-select-starting (-> args
@@ -124,7 +140,7 @@
   ;; A selected undercut has a normal statement as premise and the flow continues unabated.
   [_step {:keys [premise/chosen] :as args}]
   (let [arguments-to-select (database/all-arguments-for-conclusion (:db/id chosen))
-        premises-to-select (map :argument/premises arguments-to-select)
+        premises-to-select (build-meta-premises arguments-to-select)
         undercuts-to-select (map first (database/statements-undercutting-premise (:db/id chosen)))]
     [:react-or-select (-> args
                           (dissoc :present/conclusions)
