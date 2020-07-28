@@ -37,7 +37,7 @@
     <orderEntry type="library" name="Deps: aero:1.1.6" level="project" />
     <orderEntry type="library" name="Deps: lambdaisland/tools.namespace:0.0-237" level="project" />
     <orderEntry type="library" name="Deps: mvxcvi/arrangement:1.2.0" level="project" />
-    <orderEntry type="library" name="Deps: com.datomic/client-pro:0.9.62" level="project" />
+    <orderEntry type="library" name="Deps: com.datomic/client-pro:0.9.63" level="project" />
     <orderEntry type="library" name="Deps: com.taoensso/truss:1.5.0" level="project" />
     <orderEntry type="library" name="Deps: com.datomic/client:0.8.111" level="project" />
     <orderEntry type="library" name="Deps: riddley:0.2.0" level="project" />
