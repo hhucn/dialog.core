@@ -49,6 +49,11 @@
       (transact test-data/testdata-cat-or-dog))
     (log/debug "Database already seeded. Please clear it before seeding again.")))
 
+(defn fast-pull
+  "Pulls any entity with star-syntax and current db."
+  [id]
+  (d/pull (d/db (new-connection)) '[*] id))
+
 (defn init!
   "Initialization function, which does everything needed at a fresh start.
   `config` must be a map which at lease contains `:datomic` with the datomic
@@ -224,6 +229,19 @@
         [?undercutting-arguments :argument/premises ?undercutting-premises]]
       db statement-pattern argument-id)))
 
+(>defn statements-by-content
+  "Returns all statements that have the matching `content`."
+  [content]
+  [:statement/content
+   :ret (s/coll-of ::models/statement)]
+  (map first
+       (let [db (d/db (new-connection))]
+         (d/q
+           '[:find (pull ?statements statement-pattern)
+             :in $ statement-pattern ?content
+             :where [?statements :statement/content ?content]]
+           db statement-pattern content))))
+
 (defn arguments-with-premise-content
   "Returns all arguments, which contain a certain content in one of their premises."
   [content]
@@ -249,6 +267,24 @@
           :where [?argument :argument/premises ?premise-id]
           [?argument :argument/conclusion ?conclusion-id]]
         premise-id conclusion-id))))
+
+(>defn argument-id-by-undercut-and-premise
+  "Returns one argument that is an with a premise `undercut-premise-id` and which has a conclusion
+  that has a premise which contains `conclusion-premise-id`. Basically identifies an undercut by the premise
+  and the conclusions premise."
+  [undercut-premise-id conclusion-premise-id]
+  [number? number?
+   :ret number?]
+  (:db/id
+    (ffirst
+      (let [db (d/db (new-connection))]
+        (d/q
+          '[:find (pull ?undercut argument-pattern)
+            :in $ argument-pattern ?undercut-premise-id ?conclusion-premise-id
+            :where [?undercut :argument/premises ?undercut-premise-id]
+            [?undercut :argument/conclusion ?undercutted-argument]
+            [?undercutted-argument :argument/premises ?conclusion-premise-id]]
+          db argument-pattern undercut-premise-id conclusion-premise-id)))))
 
 (defn statements-undercutting-premise
   "Return all statements that are used to undercut an argument where `premise-id`

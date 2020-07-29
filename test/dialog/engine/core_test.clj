@@ -91,3 +91,16 @@
         (is (= "dogs can act as watchdogs" (get-in new-rebut-args [:premise/chosen :statement/content])))
         (is (= 2 (count (:present/premises select-args))))
         (is (= 2 (count (:present/undercuts select-args))))))))
+
+(deftest non-nil-after-undercut-selection-test
+  (testing "After selecting an undercut the argument-id still needs to be non-nil."
+    (let [discussion-id (:db/id (first (database/all-discussions-by-title "Cat or Dog?")))
+          start (engine/start-discussion {:user/nickname "Wegi"
+                                          :discussion/id discussion-id})
+          result (->
+                   start
+                   (step-with-statement :starting-conclusions/select :present/conclusions "we should get a dog")
+                   (step-with-statement :premises/select :present/premises "dogs can act as watchdogs")
+                   (step-with-statement :premises/select :present/undercuts "we have no use for a watchdog"))
+          new-undercut-args (utils/args-for-step result :undercut/new)]
+      (is (not (nil? (:undercut/argument-id new-undercut-args)))))))
