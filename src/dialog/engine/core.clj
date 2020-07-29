@@ -16,6 +16,13 @@
                 (:argument/premises args)))
          arguments)))
 
+(>defn- annotate-undercut-premise-meta
+  "Annotates undercut-statements with proper meta-information."
+  [statements]
+  [(s/coll-of ::models/statement)
+   :ret (s/coll-of ::models/statement)]
+  (map #(assoc % :meta/argument.type :argument.type/undercut) statements))
+
 (>defn- premises-for-conclusion-id
   "Builds all meta-premises for a given conclusion."
   [conclusion-id]
@@ -50,7 +57,8 @@
   ;; This way the next chosen premise is still correctly matching it.
   ;; If premise/chosen has never been set it needs to be done once.
   (let [premises-to-select (premises-for-conclusion-id (:db/id selected))
-        undercuts-to-select (map first (database/statements-undercutting-premise (:db/id selected)))
+        undercuts-to-select (annotate-undercut-premise-meta
+                              (map first (database/statements-undercutting-premise (:db/id selected))))
         raw-react-select-args (assoc (dissoc args :statement/selected)
                                 :premise/chosen selected
                                 :present/undercuts undercuts-to-select
@@ -76,7 +84,8 @@
   [_step {:keys [premise/chosen] :as args}]
   ;; Do not go one step forward, because a new premise / undercut has been added.
   (let [premises-to-select (premises-for-conclusion-id (:db/id chosen))
-        undercuts-to-select (map first (database/statements-undercutting-premise (:db/id chosen)))
+        undercuts-to-select (annotate-undercut-premise-meta
+                              (map first (database/statements-undercutting-premise (:db/id chosen))))
         select-args (assoc args
                       :present/premises premises-to-select
                       :present/undercuts undercuts-to-select)

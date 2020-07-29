@@ -251,7 +251,7 @@
         premise-id conclusion-id))))
 
 (defn statements-undercutting-premise
-  "Return all statements that are used to undercut an argument where `premise`
+  "Return all statements that are used to undercut an argument where `premise-id`
   is one of the premises."
   [premise-id]
   (let [db (d/db (new-connection))]
