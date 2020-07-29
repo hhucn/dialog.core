@@ -70,7 +70,10 @@
         ;; Only rotate premise and conclusion in case of a new selected premise.
         add-premise-args (dissoc select-args :present/premises :present/undercuts)
         ;; Get the id of the argument which can be undercut.
-        undercut-id (database/argument-id-by-premise-conclusion
+        undercut-id-fn (if (= :argument.type/undercut (:meta/argument.type selected))
+                         database/argument-id-by-undercut-and-premise
+                         database/argument-id-by-premise-conclusion)
+        undercut-id (undercut-id-fn
                       (:db/id selected)
                       (:db/id (:conclusion/chosen select-args)))]
     [[:premises/select select-args]
@@ -91,8 +94,11 @@
                       :present/undercuts undercuts-to-select)
         add-premise-args (dissoc args :present/premises :present/undercuts)
         ;; Get the id of the argument which can be undercut.
-        undercut-id (database/argument-id-by-premise-conclusion
-                      (:db/id (:premise/chosen args))
+        undercut-id-fn (if (= :argument.type/undercut (:meta/argument.type chosen))
+                         database/argument-id-by-undercut-and-premise
+                         database/argument-id-by-premise-conclusion)
+        undercut-id (undercut-id-fn
+                      (:db/id chosen)
                       (:db/id (:conclusion/chosen args)))]
     [[:premises/select select-args]
      [:support/new add-premise-args]
