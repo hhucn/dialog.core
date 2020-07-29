@@ -19,6 +19,8 @@
 (>defn- annotate-undercut-premise-meta
   "Annotates undercut-statements with proper meta-information."
   [statements]
+  [(s/coll-of ::models/statement)
+   :ret (s/coll-of ::models/statement)]
   (map #(assoc % :meta/argument.type :argument.type/undercut) statements))
 
 (>defn- premises-for-conclusion-id
