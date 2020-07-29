@@ -78,5 +78,6 @@
           conclusion-premise-id (:db/id (first (database/statements-by-content "dogs can act as watchdogs")))
           result (database/argument-id-by-undercut-and-premise undercut-id conclusion-premise-id)
           result-conclusion-id (:db/id (:argument/conclusion (database/fast-pull result)))
-          result-con-con (:statement/content (:argument/conclusion (database/fast-pull result-conclusion-id)))]
+          result-con-con-id (:db/id (:argument/conclusion (database/fast-pull result-conclusion-id)))
+          result-con-con (:statement/content (database/fast-pull result-con-con-id))]
       (is (= "we should get a dog" result-con-con)))))
