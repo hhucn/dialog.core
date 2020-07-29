@@ -64,3 +64,19 @@
           premise (:db/id (first (:argument/premises any-argument)))
           conclusion (:db/id (:argument/conclusion any-argument))]
       (is (= (:db/id any-argument) (database/argument-id-by-premise-conclusion premise conclusion))))))
+
+(deftest statements-by-content-test
+  (testing "Statements are identified by identical content."
+    (is (= 1 (count (database/statements-by-content "dogs can act as watchdogs"))))
+    (is (= 1 (count (database/statements-by-content "we have no use for a watchdog"))))
+    (is (empty? (database/statements-by-content "foo-baar-ajshdjkahsjdkljsadklja")))))
+
+(deftest argument-id-by-undercut-and-premise-test
+  (testing "See whether the right argument can be identified by providing undercuts premise and
+  the premise of its conclusion."
+    (let [undercut-id (:db/id (first (database/statements-by-content "we have no use for a watchdog")))
+          conclusion-premise-id (:db/id (first (database/statements-by-content "dogs can act as watchdogs")))
+          result (database/argument-id-by-undercut-and-premise undercut-id conclusion-premise-id)
+          result-conclusion-id (:db/id (:argument/conclusion (database/fast-pull result)))
+          result-con-con (:statement/content (database/fast-pull result-conclusion-id))]
+      (is (= "we should get a dog" result-con-con)))))
