@@ -453,9 +453,9 @@
   "Creates a new argument based on a statement, which is used as conclusion."
   [discussion-id author-nickname new-conclusion-id new-statement-string argument-type]
   [number? :author/nickname number? :statement/content :argument/type
-   :ret nil?]
+   :ret associative?]
   (let [new-arguments
-        [{:db/id new-statement-string
+        [{:db/id (str "id-" new-statement-string)
           :argument/author [:author/nickname author-nickname]
           :argument/premises (pack-premises [new-statement-string] author-nickname)
           :argument/conclusion new-conclusion-id
@@ -491,7 +491,7 @@
    :ret number?]
   (get-in
     (new-premises-for-statement! discussion-id author-name (:db/id statement) support-string :argument.type/support)
-    [:tempids support-string]))
+    [:tempids (str "id-" support-string)]))
 
 (>defn attack-statement!
   "Create a new statement attacking a statement"
@@ -500,7 +500,7 @@
    :ret number?]
   (get-in
     (new-premises-for-statement! discussion-id author-name (:db/id statement) attacking-string :argument.type/attack)
-    [:tempids attacking-string]))
+    [:tempids (str "id-" attacking-string)]))
 
 (>defn undermine-argument!
   "Attack the argument's premises with own statements."

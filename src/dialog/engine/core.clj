@@ -71,8 +71,8 @@
         add-premise-args (dissoc select-args :present/premises :present/undercuts)
         ;; Get the id of the argument which can be undercut.
         undercut-id (database/argument-id-by-premise-conclusion
-                      (:db/id (or chosen selected))
-                      (:db/id (:conclusion/chosen args)))]
+                      (:db/id selected)
+                      (:db/id (:conclusion/chosen select-args)))]
     [[:premises/select select-args]
      [:support/new add-premise-args]
      [:rebut/new add-premise-args]
