@@ -1,5 +1,5 @@
 {:paths ["src" "test"]
- :deps {com.datomic/client-pro {:mvn/version "0.9.62"}
+ :deps {com.datomic/client-pro {:mvn/version "0.9.63"}
         org.clojure/clojure {:mvn/version "1.10.1"}
         org.clojure/test.check {:mvn/version "1.1.0"}
         expound {:mvn/version "0.8.5"}

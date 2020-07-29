@@ -28,3 +28,11 @@
                (utils/ident-map->value {:foo {:db/ident :bar}} [:non-existent])))
   (testing "Generative tests."
     (is (test-toolbelt/check? `utils/ident-map->value))))
+
+(deftest args-for-step-tst
+  (testing "Tests, whether the right args are returned from a continue-steps vector."
+    (is (nil? (utils/args-for-step [] :foo)))
+    (is (= [] (utils/args-for-step [[:foo []]] :foo)))
+    (is (= :bar (utils/args-for-step [[:foo :bar]] :foo)))
+    (is (= :bar (utils/args-for-step [[:foo2 :barbar] [:foo :bar]] :foo)))
+    (is (= {:bar :baz} (utils/args-for-step [[:foo2 :barbar] [:foo {:bar :baz}]] :foo)))))

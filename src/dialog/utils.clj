@@ -1,6 +1,7 @@
 (ns dialog.utils
   (:require [clojure.spec.alpha :as s]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [ghostwheel.core :refer [>defn]])
   (:import (clojure.lang MapEntry PersistentArrayMap)
            (java.io File)))
 
@@ -61,3 +62,14 @@
   (let [dir (File. ".datomic/dev-local/data")]
     (.mkdir dir)
     (.getAbsolutePath dir)))
+
+(>defn args-for-step
+  "Given a vector of `continue-steps` and a `step` returns the corresponding arguments."
+  [continue-steps step]
+  [vector? keyword?
+   :ret map?]
+  (when (seq continue-steps)
+    (let [steps (map first continue-steps)
+          args (map second continue-steps)
+          idx (.indexOf steps step)]
+      (nth args idx))))

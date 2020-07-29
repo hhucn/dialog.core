@@ -1,8 +1,7 @@
 (ns dialog.discussion.database-test
   (:require [clojure.test :refer [deftest use-fixtures testing is]]
             [dialog.discussion.database :as database]
-            [dialog.test.toolbelt :as test-toolbelt]
-            [clojure.spec.alpha :as s]))
+            [dialog.test.toolbelt :as test-toolbelt]))
 
 (use-fixtures :each test-toolbelt/init-db-test-fixture)
 
@@ -47,6 +46,21 @@
   that have original-premise as a premise."
     (let [to-undercut (first (:argument/premises
                                (ffirst
-                                 (database/arguments-with-premise-content "dogs can act as watchdogs"))))]
-      (is (= "we have no use for a watchdog"
-             (:statement/content (ffirst (database/statements-undercutting-premise (:db/id to-undercut)))))))))
+                                 (database/arguments-with-premise-content "dogs can act as watchdogs"))))
+          undercutting-statements (:statement/content (ffirst (database/statements-undercutting-premise (:db/id to-undercut))))]
+      (is (or
+            (= "Was hat eine Funktion mit einem Haustier zu tun?" undercutting-statements)
+            (= "we have no use for a watchdog" undercutting-statements))))))
+;; Note, the first statement in the or form comes from the engine test. The problem here
+;; is the db not being emptied between tests.
+
+(deftest argument-id-by-premise-conclusion-test
+  (testing "See if the argument with corresponding premise and conclusion can be found"
+    (is (nil? (database/argument-id-by-premise-conclusion 123 1234)))
+    (let [cat-or-dog-id (:db/id (first (database/all-discussions-by-title "Cat or Dog?")))
+          any-argument (first (filter
+                                #(not= :argument.type/undercut (:argument/type %))
+                                (database/all-arguments-for-discussion cat-or-dog-id)))
+          premise (:db/id (first (:argument/premises any-argument)))
+          conclusion (:db/id (:argument/conclusion any-argument))]
+      (is (= (:db/id any-argument) (database/argument-id-by-premise-conclusion premise conclusion))))))
