@@ -268,6 +268,7 @@
           [?argument :argument/conclusion ?conclusion-id]]
         premise-id conclusion-id))))
 
+
 (>defn argument-id-by-undercut-and-premise
   "Returns one argument that is an with a premise `undercut-premise-id` and which has a conclusion
   that has a premise which contains `conclusion-premise-id`. Basically identifies an undercut by the premise
@@ -574,7 +575,7 @@
 (>defn undercut-argument!
   "Undercut an argument and store it to the database."
   [discussion-id author-nickname {:keys [db/id]} premises]
-  [number? :author/nickname (s/keys :req [:db/id]) :argument/premises
+  [number? :author/nickname (s/keys :req [:db/id]) (s/coll-of :statement/content)
    :ret associative?]
   (transact
     [{:argument/author [:author/nickname author-nickname]
