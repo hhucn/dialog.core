@@ -442,7 +442,7 @@
   [premises author-nickname]
   [(s/coll-of :statement/content) :author/nickname
    :ret (s/coll-of map?)]
-  (mapv (fn [premise] {:db/id premise
+  (mapv (fn [premise] {:db/id (str "premise-" premise)
                        :statement/author [:author/nickname author-nickname]
                        :statement/content premise
                        :statement/version 1})
@@ -461,7 +461,7 @@
     :ret map?]
    {:argument/author [:author/nickname author-nickname]
     :argument/premises (pack-premises premises author-nickname)
-    :argument/conclusion {:db/id conclusion
+    :argument/conclusion {:db/id (str "conclusion-" conclusion)
                           :statement/author [:author/nickname author-nickname]
                           :statement/content conclusion
                           :statement/version 1}
