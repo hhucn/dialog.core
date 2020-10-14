@@ -2,7 +2,7 @@
  :deps {com.datomic/client-pro {:mvn/version "0.9.63"}
         org.clojure/clojure {:mvn/version "1.10.1"}
         org.clojure/test.check {:mvn/version "1.1.0"}
-        expound {:mvn/version "0.8.5"}
+        expound/expound {:mvn/version "0.8.5"}
         com.taoensso/timbre {:mvn/version "4.10.0"}
         gnl/ghostwheel {:mvn/version "0.3.9"}
         org.clojure/tools.trace {:mvn/version "0.7.10"}}
@@ -22,7 +22,7 @@
 
            :clj-kondo
            {:extra-deps {com.datomic/dev-local {:local/root "local_jars/dev-local/dev-local.jar"}
-                         clj-kondo {:mvn/version "RELEASE"}}
+                         clj-kondo/clj-kondo {:mvn/version "RELEASE"}}
             :main-opts ["-m" "clj-kondo.main"]}
 
            :uberjar
