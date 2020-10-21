@@ -40,12 +40,12 @@
               :statement/content "you have to take the dog for a walk every day, which is tedious",
               :statement/version 1,
               :statement/author #:author{:nickname "Der Schredder"},
-              :meta/argument.type :argument.type/attack}
+              :meta/argument-type :argument.type/attack}
              {:db/id 1234,
               :statement/content "test me baby one more time",
               :statement/version 1,
               :statement/author #:author{:nickname "Der Schredder"},
-              :meta/argument.type :argument.type/support})
+              :meta/argument-type :argument.type/support})
            (@#'engine/build-meta-premises two-test-arguments)))))
 
 (deftest premises-from-conclusion-id-test

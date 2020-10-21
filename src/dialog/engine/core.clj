@@ -12,7 +12,7 @@
    :ret (s/coll-of ::models/statement)]
   (flatten
     (map (fn [args]
-           (map (fn [premise] (assoc premise :meta/argument.type (:argument/type args)))
+           (map (fn [premise] (assoc premise :meta/argument-type (:argument/type args)))
                 (:argument/premises args)))
          arguments)))
 
@@ -21,7 +21,7 @@
   [statements]
   [(s/coll-of ::models/statement)
    :ret (s/coll-of ::models/statement)]
-  (map #(assoc % :meta/argument.type :argument.type/undercut) statements))
+  (map #(assoc % :meta/argument-type :argument.type/undercut) statements))
 
 (>defn- premises-for-conclusion-id
   "Builds all meta-premises for a given conclusion."
@@ -70,7 +70,7 @@
         ;; Only rotate premise and conclusion in case of a new selected premise.
         add-premise-args (dissoc select-args :present/premises :present/undercuts)
         ;; Get the id of the argument which can be undercut.
-        undercut-id-fn (if (= :argument.type/undercut (:meta/argument.type selected))
+        undercut-id-fn (if (= :argument.type/undercut (:meta/argument-type selected))
                          database/argument-id-by-undercut-and-premise
                          database/argument-id-by-premise-conclusion)
         undercut-id (undercut-id-fn
@@ -94,7 +94,7 @@
                       :present/undercuts undercuts-to-select)
         add-premise-args (dissoc args :present/premises :present/undercuts)
         ;; Get the id of the argument which can be undercut.
-        undercut-id-fn (if (= :argument.type/undercut (:meta/argument.type chosen))
+        undercut-id-fn (if (= :argument.type/undercut (:meta/argument-type chosen))
                          database/argument-id-by-undercut-and-premise
                          database/argument-id-by-premise-conclusion)
         undercut-id (undercut-id-fn
